@@ -21,6 +21,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         private string devicePath; // WPD device path
         private NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
+        private NEKCS.NikonCamera camera; // Camera object for operations
 
 
 
@@ -30,16 +31,44 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public string Name { get => "Nikon " + cameraInfo.Model; }
         public string DisplayName { get => "Nikon " + cameraInfo.Model + " (NEK Experimental)"; }
         public string Category { get => "Nikon"; }
-        public bool Connected { get => throw new NotImplementedException(); }
+        public bool Connected {
+            get {
+                if (camera == null) {
+                    return false;
+                }
+                return camera.isConnected();
+            }
+        }
         public string Description { get => throw new NotImplementedException(); }
         public string DriverInfo { get => "Nikon Ekrynox SDK"; }
         public string DriverVersion { get => cameraInfo.DeviceVersion; }
 
-        #region Unsupported
 
-        public Task<bool> Connect(CancellationToken token) { throw new NotImplementedException(); }
+        public Task<bool> Connect(CancellationToken token) { //TODO: Add error management
+            return Task.Run(() => {
+                try {
+                    this.camera = new NEKCS.NikonCamera(devicePath, 1);
+                    if (!this.camera.isConnected()) {
+                        return false;
+                    }
 
-        public void Disconnect() { throw new NotImplementedException(); }
+                    this.cameraInfo = this.camera.GetDeviceInfo();
+
+                    return this.camera.isConnected();
+                } catch (Exception ex) {
+                    // Handle connection errors
+                    Console.WriteLine($"Error connecting to Nikon camera: {ex.Message}");
+                }
+                return false;
+            }, token);
+        }
+
+        public void Disconnect() {
+            if (this.camera != null) {
+                this.camera.Dispose();
+                this.camera = null;
+            }
+        }
 
         public void SetupDialog() { throw new NotImplementedException(); }
 
@@ -136,6 +165,5 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void UpdateSubSampleArea() { throw new NotImplementedException(); }
 
-        #endregion Unsupported
     }
 }
