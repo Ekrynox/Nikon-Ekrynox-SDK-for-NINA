@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Nikon Ekrynox SDK for NINA": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
