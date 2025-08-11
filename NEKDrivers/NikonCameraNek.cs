@@ -74,7 +74,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void SetupDialog() { throw new NotImplementedException(); }
 
-        public IList<string> SupportedActions { get => throw new NotImplementedException(); }
+        public IList<string> SupportedActions { get => new List<string>(); } //TODO
 
         public string Action(string actionName, string actionParameters) { throw new NotImplementedException(); }
 
@@ -144,7 +144,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double CoolerPower { get => double.NaN; }
         public bool HasDewHeater { get => false; }
         public bool DewHeaterOn { get => false; set { } }
-        public CameraStates CameraState { get => throw new NotImplementedException(); } //TODO
+        public CameraStates CameraState { //TO IMPROVE: event busydevice, ...
+            get {
+                if (this.camera != null && this.camera.isConnected()) {
+                    return CameraStates.Idle;
+                }
+                return CameraStates.Error;
+            }
+        }
         public bool CanSubSample { get => false; } //TO RECHECK:
         public bool EnableSubSample { get; set; } //TO RECHECK:
         public int SubSampleX { get; set; } //TO RECHECK:
@@ -160,7 +167,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
                         byte level = 0;
-                        return result.TryGetUInt8(ref level) ? level : 0;
+                        return result.TryGetUInt8(ref level) ? (int)level : 0;
                     } catch {
                         throw;
                     }
@@ -205,7 +212,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             } 
             set => throw new NotImplementedException(); 
         }
-        public double ElectronsPerADU { get => throw new NotImplementedException(); } //TO CHECK: seem hard to do...
+        public double ElectronsPerADU { get => double.NaN; } //TO CHECK: seem hard to do...
         public IList<string> ReadoutModes { get => new List<String> { "Default" }; } //TO CHECK
         public short ReadoutMode { get => 0; set {} } //TO CHECK
         public short ReadoutModeForSnapImages { get => 0; set {} } //TO CHECK
