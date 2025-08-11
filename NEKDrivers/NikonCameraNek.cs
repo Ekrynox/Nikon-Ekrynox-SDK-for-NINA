@@ -99,26 +99,60 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public short BayerOffsetY { get => throw new NotImplementedException(); }
         public int CameraXSize { get => 0; } //TODO
         public int CameraYSize { get => 0; } //TODO
-        public double ExposureMin { get => throw new NotImplementedException(); }
-        public double ExposureMax { get => throw new NotImplementedException(); }
+        public double ExposureMin { 
+            get {
+                if (Connected) {
+                    try {
+                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                        NikonDevicePropDescDS<UInt32> exp = new();
+                        if (!result.TryGetUInt32(ref exp)) return double.NaN;
+                        var exps = exp.EnumFORM.ToList();
+                        exps.Remove(0xFFFFFFFF); //Bulb
+                        exps.Remove(0xFFFFFFFD); //Time
+                        return exps.Min() / 10000.0;
+                    } catch {
+                        throw;
+                    }
+                }
+                return double.NaN;
+            }
+        }
+        public double ExposureMax { //TODO: set to infinity or large value when in bulb/time
+            get {
+                if (Connected) {
+                    try {
+                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                        NikonDevicePropDescDS<UInt32> exp = new();
+                        if (!result.TryGetUInt32(ref exp)) return double.NaN;
+                        var exps = exp.EnumFORM.ToList();
+                        exps.Remove(0xFFFFFFFF); //Bulb
+                        exps.Remove(0xFFFFFFFD); //Time
+                        return exps.Max() / 10000.0;
+                    } catch {
+                        throw;
+                    }
+                }
+                return double.NaN;
+            }
+        }
         public short MaxBinX { get => 1; } //TODO
         public short MaxBinY { get => 1; } //TODO
         public double PixelSizeX { get => 0; } //TODO
         public double PixelSizeY { get => 0; } //TODO
         public bool CanSetTemperature { get => false; } //TO RECHECK: doesn't seem possible
-        public bool CoolerOn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public double CoolerPower { get => throw new NotImplementedException(); }
-        public bool HasDewHeater { get => throw new NotImplementedException(); }
-        public bool DewHeaterOn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public CameraStates CameraState { get => throw new NotImplementedException(); }
+        public bool CoolerOn { get => false; set {} }
+        public double CoolerPower { get => double.NaN; }
+        public bool HasDewHeater { get => false; }
+        public bool DewHeaterOn { get => false; set { } }
+        public CameraStates CameraState { get => throw new NotImplementedException(); } //TODO
         public bool CanSubSample { get => false; } //TO RECHECK:
-        public bool EnableSubSample { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int SubSampleX { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int SubSampleY { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int SubSampleWidth { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int SubSampleHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool EnableSubSample { get; set; } //TO RECHECK:
+        public int SubSampleX { get; set; } //TO RECHECK:
+        public int SubSampleY { get; set; } //TO RECHECK:
+        public int SubSampleWidth { get; set; } //TO RECHECK:
+        public int SubSampleHeight { get; set; } //TO RECHECK:
         public bool CanShowLiveView { get => false; } //TODO: that temporary ;)
-        public bool LiveViewEnabled { get => throw new NotImplementedException(); }
+        public bool LiveViewEnabled { get => false; } //TODO: that temporary ;)
         public bool HasBattery { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.BatteryLevel); }
         public int BatteryLevel {
             get {
@@ -134,7 +168,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return -1;
             } 
         }
-        public int BitDepth { get => throw new NotImplementedException(); }
+        public int BitDepth { get => 16; } //TODO: set at 16bits for dcraw
 
         public bool CanSetOffset { get => false; } //TO RECHECK: doesn't seem possible
         public int Offset { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
