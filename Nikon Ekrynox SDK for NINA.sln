@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36401.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nikon Ekrynox SDK for NINA", "Nikon Ekrynox SDK for NINA.csproj", "{F01890E6-B980-808B-CA72-D0AB52918392}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NEK", "NEK-SDK\NEK\NEK.vcxproj", "{F29DC9DC-E000-488D-8894-158922C33A36}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NEKCS.Wrapper", "NEK-SDK\NEKCS.Wrapper\NEKCS.Wrapper.vcxproj", "{81BC0E73-2AE9-6A35-3BF1-CE6187D1B4A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F01890E6-B980-808B-CA72-D0AB52918392}.Debug|x64.ActiveCfg = Debug|x64
+		{F01890E6-B980-808B-CA72-D0AB52918392}.Debug|x64.Build.0 = Debug|x64
+		{F01890E6-B980-808B-CA72-D0AB52918392}.Release|x64.ActiveCfg = Release|x64
+		{F01890E6-B980-808B-CA72-D0AB52918392}.Release|x64.Build.0 = Release|x64
+		{F29DC9DC-E000-488D-8894-158922C33A36}.Debug|x64.ActiveCfg = Debug|x64
+		{F29DC9DC-E000-488D-8894-158922C33A36}.Debug|x64.Build.0 = Debug|x64
+		{F29DC9DC-E000-488D-8894-158922C33A36}.Release|x64.ActiveCfg = Release|x64
+		{F29DC9DC-E000-488D-8894-158922C33A36}.Release|x64.Build.0 = Release|x64
+		{81BC0E73-2AE9-6A35-3BF1-CE6187D1B4A8}.Debug|x64.ActiveCfg = Debug|x64
+		{81BC0E73-2AE9-6A35-3BF1-CE6187D1B4A8}.Debug|x64.Build.0 = Debug|x64
+		{81BC0E73-2AE9-6A35-3BF1-CE6187D1B4A8}.Release|x64.ActiveCfg = Release|x64
+		{81BC0E73-2AE9-6A35-3BF1-CE6187D1B4A8}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {31A1A5C0-A519-4589-90B9-CC6F72171785}
+	EndGlobalSection
+EndGlobal
