@@ -146,7 +146,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool DewHeaterOn { get => false; set { } }
         public CameraStates CameraState { //TO IMPROVE: event busydevice, ...
             get {
-                if (this.camera != null && this.camera.isConnected()) {
+                if (Connected) {
                     return CameraStates.Idle;
                 }
                 return CameraStates.Error;
@@ -187,7 +187,27 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int USBLimitMax { get; }
         public int USBLimitStep { get; }
         public bool CanGetGain { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
-        public bool CanSetGain { get => false; } //TODO: false just for now => need to implement GetDevicePropDesc
+        public bool CanSetGain {
+            get {
+                if (Connected) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
+                            NikonDevicePropDescDS<UInt32> gain = new();
+                            return result.TryGetUInt32(ref gain) ? gain.GetSet > 0 : false;
+                        } else if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex)) {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
+                            NikonDevicePropDescDS<UInt16> gain = new();
+                            return result.TryGetUInt16(ref gain) ? gain.GetSet > 0 : false;
+                        }
+                        return false;
+                    } catch {
+                        throw;
+                    }
+                }
+                return false;
+            }
+        }
         public int GainMax { get => this.Gains.Min(); }
         public int GainMin { get => this.Gains.Max(); }
         public int Gain {
@@ -210,7 +230,20 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
                 return -1;
             } 
-            set => throw new NotImplementedException(); 
+            set {
+                if (Connected) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                            this.camera.SetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx, new MtpDatatypeVariant((UInt32)value));
+                        } else {
+                            this.camera.SetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex, new MtpDatatypeVariant((UInt16)value));
+                        }
+                        RaisePropertyChanged();
+                    } catch {
+                        throw;
+                    }
+                }
+            }
         }
         public double ElectronsPerADU { get => double.NaN; } //TO CHECK: seem hard to do...
         public IList<string> ReadoutModes { get => new List<String> { "Default" }; } //TO CHECK
