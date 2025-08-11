@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "NEKCS.TestApp": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}
