@@ -208,8 +208,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return false;
             }
         }
-        public int GainMax { get => this.Gains.Min(); }
-        public int GainMin { get => this.Gains.Max(); }
+        public int GainMax { get => this.Gains.Max(); }
+        public int GainMin { get => this.Gains.Min(); }
         public int Gain {
             get { 
                 if (Connected) {
