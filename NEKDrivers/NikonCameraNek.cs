@@ -88,15 +88,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 
         // ICamera
-        public bool HasShutter { get => throw new NotImplementedException(); }
-        public double Temperature { get => throw new NotImplementedException(); }
-        public double TemperatureSetPoint { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public short BinX { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public short BinY { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
+        public double Temperature { get => double.NaN; }
+        public double TemperatureSetPoint { get; set; }
+        public short BinX { get => 1; set {} } //TO RECHECK
+        public short BinY { get => 1; set {} } //TO RECHECK
         public string SensorName { get => ""; } //TO RECHECK: doesn't seem easly feasible
         public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
-        public short BayerOffsetX { get => throw new NotImplementedException(); }
-        public short BayerOffsetY { get => throw new NotImplementedException(); }
+        public short BayerOffsetX { get => 0; } //TO RECHECK
+        public short BayerOffsetY { get => 0; } //TO RECHECK
         public int CameraXSize { get => 0; } //TODO
         public int CameraYSize { get => 0; } //TODO
         public double ExposureMin { 
@@ -171,14 +171,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int BitDepth { get => 16; } //TODO: set at 16bits for dcraw
 
         public bool CanSetOffset { get => false; } //TO RECHECK: doesn't seem possible
-        public int Offset { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int OffsetMin { get => throw new NotImplementedException(); }
-        public int OffsetMax { get => throw new NotImplementedException(); }
+        public int Offset { get; set; }
+        public int OffsetMin { get; }
+        public int OffsetMax { get; }
         public bool CanSetUSBLimit { get => false; } //TO RECHECK: that doesn't seem possible
-        public int USBLimit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int USBLimitMin { get => throw new NotImplementedException(); }
-        public int USBLimitMax { get => throw new NotImplementedException(); }
-        public int USBLimitStep { get => throw new NotImplementedException(); }
+        public int USBLimit { get; set; }
+        public int USBLimitMin { get; }
+        public int USBLimitMax { get; }
+        public int USBLimitStep { get; }
         public bool CanGetGain { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
         public bool CanSetGain { get => false; } //TODO: false just for now => need to implement GetDevicePropDesc
         public int GainMax { get => this.Gains.Min(); }
@@ -205,11 +205,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             } 
             set => throw new NotImplementedException(); 
         }
-        public double ElectronsPerADU { get => throw new NotImplementedException(); } //TOCHECK: seem hard to do...
-        public IList<string> ReadoutModes { get => throw new NotImplementedException(); }
-        public short ReadoutMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public short ReadoutModeForSnapImages { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public short ReadoutModeForNormalImages { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public double ElectronsPerADU { get => throw new NotImplementedException(); } //TO CHECK: seem hard to do...
+        public IList<string> ReadoutModes { get => new List<String> { "Default" }; } //TO CHECK
+        public short ReadoutMode { get => 0; set {} } //TO CHECK
+        public short ReadoutModeForSnapImages { get => 0; set {} } //TO CHECK
+        public short ReadoutModeForNormalImages { get => 0; set {} } //TO CHECK
 
         public IList<int> Gains { 
             get {
@@ -232,9 +232,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public AsyncObservableCollection<BinningMode> BinningModes { get => throw new NotImplementedException(); }
+        public AsyncObservableCollection<BinningMode> BinningModes { get => new AsyncObservableCollection<BinningMode> { new BinningMode(1, 1) }; } //TO RECHECK
 
-        public void SetBinning(short x, short y) { throw new NotImplementedException(); }
+        public void SetBinning(short x, short y) {} //TO RECHECK
 
         public void StartExposure(CaptureSequence sequence) { throw new NotImplementedException(); }
 
