@@ -1,4 +1,5 @@
-﻿using NINA.Core.Enum;
+﻿using NEKCS;
+using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
@@ -6,6 +7,7 @@ using NINA.Equipment.Model;
 using NINA.Image.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,7 +41,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return camera.isConnected();
             }
         }
-        public string Description { get => throw new NotImplementedException(); }
+        public string Description { get => "Your Nikon Camera"; }
         public string DriverInfo { get => "Nikon Ekrynox SDK"; }
         public string DriverVersion { get => cameraInfo.DeviceVersion; }
 
@@ -91,57 +93,110 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double TemperatureSetPoint { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public short BinX { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public short BinY { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public string SensorName { get => throw new NotImplementedException(); }
-        public SensorType SensorType { get => throw new NotImplementedException(); }
+        public string SensorName { get => ""; } //TO RECHECK: doesn't seem easly feasible
+        public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
         public short BayerOffsetX { get => throw new NotImplementedException(); }
         public short BayerOffsetY { get => throw new NotImplementedException(); }
-        public int CameraXSize { get => throw new NotImplementedException(); }
-        public int CameraYSize { get => throw new NotImplementedException(); }
+        public int CameraXSize { get => 0; } //TODO
+        public int CameraYSize { get => 0; } //TODO
         public double ExposureMin { get => throw new NotImplementedException(); }
         public double ExposureMax { get => throw new NotImplementedException(); }
-        public short MaxBinX { get => throw new NotImplementedException(); }
-        public short MaxBinY { get => throw new NotImplementedException(); }
-        public double PixelSizeX { get => throw new NotImplementedException(); }
-        public double PixelSizeY { get => throw new NotImplementedException(); }
-        public bool CanSetTemperature { get => throw new NotImplementedException(); }
+        public short MaxBinX { get => 1; } //TODO
+        public short MaxBinY { get => 1; } //TODO
+        public double PixelSizeX { get => 0; } //TODO
+        public double PixelSizeY { get => 0; } //TODO
+        public bool CanSetTemperature { get => false; } //TO RECHECK: doesn't seem possible
         public bool CoolerOn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double CoolerPower { get => throw new NotImplementedException(); }
         public bool HasDewHeater { get => throw new NotImplementedException(); }
         public bool DewHeaterOn { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public CameraStates CameraState { get => throw new NotImplementedException(); }
-        public bool CanSubSample { get => throw new NotImplementedException(); }
+        public bool CanSubSample { get => false; } //TO RECHECK:
         public bool EnableSubSample { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int SubSampleX { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int SubSampleY { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int SubSampleWidth { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int SubSampleHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public bool CanShowLiveView { get => throw new NotImplementedException(); }
+        public bool CanShowLiveView { get => false; } //TODO: that temporary ;)
         public bool LiveViewEnabled { get => throw new NotImplementedException(); }
-        public bool HasBattery { get => throw new NotImplementedException(); }
-        public int BatteryLevel { get => throw new NotImplementedException(); }
+        public bool HasBattery { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.BatteryLevel); }
+        public int BatteryLevel {
+            get {
+                if (Connected) {
+                    try {
+                        var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
+                        byte level = 0;
+                        return result.TryGetUInt8(ref level) ? level : 0;
+                    } catch {
+                        throw;
+                    }
+                }
+                return -1;
+            } 
+        }
         public int BitDepth { get => throw new NotImplementedException(); }
 
-        public bool CanSetOffset { get => throw new NotImplementedException(); }
+        public bool CanSetOffset { get => false; } //TO RECHECK: doesn't seem possible
         public int Offset { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int OffsetMin { get => throw new NotImplementedException(); }
         public int OffsetMax { get => throw new NotImplementedException(); }
-        public bool CanSetUSBLimit { get => throw new NotImplementedException(); }
+        public bool CanSetUSBLimit { get => false; } //TO RECHECK: that doesn't seem possible
         public int USBLimit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int USBLimitMin { get => throw new NotImplementedException(); }
         public int USBLimitMax { get => throw new NotImplementedException(); }
         public int USBLimitStep { get => throw new NotImplementedException(); }
-        public bool CanGetGain { get => throw new NotImplementedException(); }
-        public bool CanSetGain { get => throw new NotImplementedException(); }
-        public int GainMax { get => throw new NotImplementedException(); }
-        public int GainMin { get => throw new NotImplementedException(); }
-        public int Gain { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public double ElectronsPerADU { get => throw new NotImplementedException(); }
+        public bool CanGetGain { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
+        public bool CanSetGain { get => false; } //TODO: false just for now => need to implement GetDevicePropDesc
+        public int GainMax { get => this.Gains.Min(); }
+        public int GainMin { get => this.Gains.Max(); }
+        public int Gain {
+            get { 
+                if (Connected) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                            var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
+                            UInt32 gain = 0;
+                            return result.TryGetUInt32(ref gain) ? (int)gain : 0;
+                        } else {
+                            var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
+                            UInt16 gain = 0;
+                            return result.TryGetUInt16(ref gain) ? (int)gain : 0;
+                        }
+                    } 
+                    catch {
+                        throw;
+                    }
+                }
+                return -1;
+            } 
+            set => throw new NotImplementedException(); 
+        }
+        public double ElectronsPerADU { get => throw new NotImplementedException(); } //TOCHECK: seem hard to do...
         public IList<string> ReadoutModes { get => throw new NotImplementedException(); }
         public short ReadoutMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public short ReadoutModeForSnapImages { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public short ReadoutModeForNormalImages { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public IList<int> Gains { get => throw new NotImplementedException(); }
+        public IList<int> Gains { 
+            get {
+                if (Connected) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
+                            NikonDevicePropDescDS<UInt32> gains = new();
+                            return result.TryGetUInt32(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                        } else {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
+                            NikonDevicePropDescDS<UInt16> gains = new();
+                            return result.TryGetUInt16(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                        }
+                    } catch {
+                        throw;
+                    }
+                }
+                return new List<int>();
+            }
+        }
 
         public AsyncObservableCollection<BinningMode> BinningModes { get => throw new NotImplementedException(); }
 
