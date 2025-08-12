@@ -71,6 +71,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                     this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
 
+                    lock (_gateCameraState) {
+                        _cameraState = CameraStates.Idle;
+                    }
+
                     return this.camera.isConnected();
                 } catch (Exception ex) {
                     // Handle connection errors
@@ -82,8 +86,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void Disconnect() {
             if (this.camera != null) {
+                lock(_gateCameraState) {
+                    _cameraState = CameraStates.NoState;
+                }
+
+                this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
                 this.camera.Dispose();
                 this.camera = null;
+
+                foreach (var i in _awaitersCameraState) {
+                    i.Value.SetCanceled();
+                }
+                RaiseAllPropertiesChanged();
             }
         }
 
@@ -313,8 +328,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
             if (e.eventCode == NikonMtpEventCode.DeviceInfoChanged) {
-                this.cameraInfo = this.camera.GetDeviceInfo();
-                RaiseAllPropertiesChanged();
+                if (Connected) {
+                    //this.cameraInfo = this.camera.GetDeviceInfo();
+                    //RaiseAllPropertiesChanged();
+                } else {
+                    this.Disconnect();
+                }
             } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
                 switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
                     case NikonMtpDevicePropCode.BatteryLevel:
@@ -381,6 +400,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void StartExposure(CaptureSequence sequence) {
             lock (_gateCameraState) {
+                if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
+
                 if (_cameraState != CameraStates.Idle) {
                     AbortExposure(); //Need to add support for CameraStateBusy
                 }
@@ -405,7 +426,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 lock (_gateCameraState) {
                     _cameraState = CameraStates.Idle;
                 }
-                    throw;
+                throw;
             }
         }
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
