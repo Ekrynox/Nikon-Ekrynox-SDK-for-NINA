@@ -102,69 +102,36 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         // ICamera
         public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
-        public double Temperature { get => double.NaN; }
-        public double TemperatureSetPoint { get; set; }
-        public short BinX { get => 1; set {} } //TO RECHECK
-        public short BinY { get => 1; set {} } //TO RECHECK
         public string SensorName { get => ""; } //TO RECHECK: doesn't seem easly feasible
         public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
         public short BayerOffsetX { get => 0; } //TO RECHECK
         public short BayerOffsetY { get => 0; } //TO RECHECK
         public int CameraXSize { get => 0; } //TODO
         public int CameraYSize { get => 0; } //TODO
-        public double ExposureMin { 
-            get {
-                if (Connected) {
-                    try {
-                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        NikonDevicePropDescDS<UInt32> exp = new();
-                        if (!result.TryGetUInt32(ref exp)) return double.NaN;
-                        var exps = exp.EnumFORM.ToList();
-                        exps.Remove(0xFFFFFFFF); //Bulb
-                        exps.Remove(0xFFFFFFFD); //Time
-                        return exps.Min() / 10000.0;
-                    } catch {
-                        throw;
-                    }
-                }
-                return double.NaN;
-            }
-        }
-        public double ExposureMax { //TODO: set to infinity or large value when in bulb/time
-            get {
-                if (Connected) {
-                    try {
-                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        NikonDevicePropDescDS<UInt32> exp = new();
-                        if (!result.TryGetUInt32(ref exp)) return double.NaN;
-                        var exps = exp.EnumFORM.ToList();
-                        exps.Remove(0xFFFFFFFF); //Bulb
-                        exps.Remove(0xFFFFFFFD); //Time
-                        return exps.Max() / 10000.0;
-                    } catch {
-                        throw;
-                    }
-                }
-                return double.NaN;
-            }
-        }
-        public short MaxBinX { get => 1; } //TODO
-        public short MaxBinY { get => 1; } //TODO
         public double PixelSizeX { get => 0; } //TODO
         public double PixelSizeY { get => 0; } //TODO
-        public bool CanSetTemperature { get => false; } //TO RECHECK: doesn't seem possible
-        public bool CoolerOn { get => false; set {} }
-        public double CoolerPower { get => double.NaN; }
-        public bool HasDewHeater { get => false; }
-        public bool DewHeaterOn { get => false; set { } }
+        public int BitDepth { get => 16; } //TODO: set at 16bits for dcraw
+
+        public short BinX { get => 1; set { } } //TO RECHECK
+        public short BinY { get => 1; set { } } //TO RECHECK
+        public AsyncObservableCollection<BinningMode> BinningModes { get => new AsyncObservableCollection<BinningMode> { new BinningMode(1, 1) }; } //TO RECHECK
+        public void SetBinning(short x, short y) { } //TO RECHECK
+        public short MaxBinX { get => 1; } //TODO
+        public short MaxBinY { get => 1; } //TODO
+
         public bool CanSubSample { get => false; } //TO RECHECK:
-        public bool EnableSubSample { get; set; } //TO RECHECK:
-        public int SubSampleX { get; set; } //TO RECHECK:
-        public int SubSampleY { get; set; } //TO RECHECK:
-        public int SubSampleWidth { get; set; } //TO RECHECK:
-        public int SubSampleHeight { get; set; } //TO RECHECK:
-        public bool CanShowLiveView { get => false; } //TODO: that temporary ;)
-        public bool LiveViewEnabled { get => false; } //TODO: that temporary ;)
+        public bool EnableSubSample { get; set; }
+        public int SubSampleX { get; set; }
+        public int SubSampleY { get; set; }
+        public int SubSampleWidth { get; set; }
+        public int SubSampleHeight { get; set; }
+        public void UpdateSubSampleArea() { throw new NotImplementedException(); }
+
+        public bool CanSetOffset { get => false; } //TO RECHECK: doesn't seem possible
+        public int Offset { get; set; }
+        public int OffsetMin { get; }
+        public int OffsetMax { get; }
+
         public bool HasBattery { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.BatteryLevel); }
         public int BatteryLevel {
             get {
@@ -178,19 +145,29 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                 }
                 return -1;
-            } 
+            }
         }
-        public int BitDepth { get => 16; } //TODO: set at 16bits for dcraw
 
-        public bool CanSetOffset { get => false; } //TO RECHECK: doesn't seem possible
-        public int Offset { get; set; }
-        public int OffsetMin { get; }
-        public int OffsetMax { get; }
+        public bool CanSetTemperature { get => false; } //TO RECHECK: doesn't seem possible
+        public double Temperature { get => double.NaN; }
+        public double TemperatureSetPoint { get; set; }
+        public bool CoolerOn { get => false; set {} }
+        public double CoolerPower { get => double.NaN; }
+        public bool HasDewHeater { get => false; }
+        public bool DewHeaterOn { get => false; set { } }
+
         public bool CanSetUSBLimit { get => false; } //TO RECHECK: that doesn't seem possible
         public int USBLimit { get; set; }
         public int USBLimitMin { get; }
         public int USBLimitMax { get; }
         public int USBLimitStep { get; }
+
+        public double ElectronsPerADU { get => double.NaN; } //TO CHECK: seem hard to do...
+        public IList<string> ReadoutModes { get => new List<String> { "Default" }; } //TO CHECK
+        public short ReadoutMode { get => 0; set { } } //TO CHECK
+        public short ReadoutModeForSnapImages { get => 0; set { } } //TO CHECK
+        public short ReadoutModeForNormalImages { get => 0; set { } } //TO CHECK
+
         public bool CanGetGain { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
         public bool CanSetGain {
             get {
@@ -215,6 +192,26 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
         public int GainMax { get => this.Gains.Max(); }
         public int GainMin { get => this.Gains.Min(); }
+        public IList<int> Gains {
+            get {
+                if (Connected) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
+                            NikonDevicePropDescDS<UInt32> gains = new();
+                            return result.TryGetUInt32(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                        } else {
+                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
+                            NikonDevicePropDescDS<UInt16> gains = new();
+                            return result.TryGetUInt16(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                        }
+                    } catch {
+                        throw;
+                    }
+                }
+                return new List<int>();
+            }
+        }
         public int Gain {
             get { 
                 if (Connected) {
@@ -250,37 +247,66 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
             }
         }
-        public double ElectronsPerADU { get => double.NaN; } //TO CHECK: seem hard to do...
-        public IList<string> ReadoutModes { get => new List<String> { "Default" }; } //TO CHECK
-        public short ReadoutMode { get => 0; set {} } //TO CHECK
-        public short ReadoutModeForSnapImages { get => 0; set {} } //TO CHECK
-        public short ReadoutModeForNormalImages { get => 0; set {} } //TO CHECK
 
-        public IList<int> Gains { 
+        public IList<double> Exposures {
             get {
                 if (Connected) {
                     try {
-                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
-                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            NikonDevicePropDescDS<UInt32> gains = new();
-                            return result.TryGetUInt32(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
-                        } else {
-                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            NikonDevicePropDescDS<UInt16> gains = new();
-                            return result.TryGetUInt16(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
-                        }
+                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                        NikonDevicePropDescDS<UInt32> exp = new();
+                        if (!result.TryGetUInt32(ref exp)) return new List<double>();
+                        var exps = exp.EnumFORM.ToList();
+                        exps.Remove(0xFFFFFFFF); //Bulb
+                        exps.Remove(0xFFFFFFFD); //Time
+                        return exps.Select(x => x / 10000.0).ToList();
                     } catch {
                         throw;
                     }
                 }
-                return new List<int>();
+                return new List<double>();
             }
         }
-
-        public AsyncObservableCollection<BinningMode> BinningModes { get => new AsyncObservableCollection<BinningMode> { new BinningMode(1, 1) }; } //TO RECHECK
-
-        public void SetBinning(short x, short y) {} //TO RECHECK
-
+        public double ExposureMin {
+            get {
+                if (Connected) {
+                    return Exposures.Min();
+                }
+                return double.NaN;
+            }
+        }
+        public double ExposureMax { //TODO: set to infinity or large value when in bulb/time
+            get {
+                if (Connected) {
+                    return Exposures.Max();
+                }
+                return double.NaN;
+            }
+        }
+        public double ExposureTime {
+            get {
+                if (Connected) {
+                    try {
+                        var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                        UInt32 exp = 0;
+                        return result.TryGetUInt32(ref exp) ? (double)exp / 10000.0 : 0;
+                    } catch {
+                        throw;
+                    }
+                }
+                return 0;
+            }
+            set {
+                if (Connected) {
+                    try {
+                        UInt32 newExp = (UInt32)(Exposures.OrderBy(x => Math.Abs(value - x)).First() * 10000);
+                        this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant(newExp));
+                        RaisePropertyChanged();
+                    } catch {
+                        throw;
+                    }
+                }
+            }
+        }
 
 
         private CameraStates _cameraState;
@@ -329,7 +355,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-
         public void StartExposure(CaptureSequence sequence) {
             lock (_gateCameraState) {
                 if (_cameraState != CameraStates.Idle) {
@@ -342,7 +367,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
             try {
-                this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)sequence.ExposureTime*10000));
+                this.ExposureTime = sequence.ExposureTime;
 
                 NEKCS.MtpParams param = new();
                 param.addUint32(0xFFFFFFFF);
@@ -359,7 +384,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     throw;
             }
         }
-
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
             lock (_gateCameraState) {
                 if (_cameraState > CameraStates.Exposing) {
@@ -407,14 +431,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
 
+        public bool CanShowLiveView { get => false; } //TODO: that temporary ;)
+        public bool LiveViewEnabled { get => false; } //TODO: that temporary ;)
 
         public void StartLiveView(CaptureSequence sequence) { throw new NotImplementedException(); }
 
         public Task<IExposureData> DownloadLiveView(CancellationToken token) { throw new NotImplementedException(); }
 
         public void StopLiveView() { throw new NotImplementedException(); }
-
-        public void UpdateSubSampleArea() { throw new NotImplementedException(); }
 
     }
 }
