@@ -67,6 +67,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     this.cameraInfo = this.camera.GetDeviceInfo();
 
+                    this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                     this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
 
                     return this.camera.isConnected();
@@ -304,6 +305,28 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     } catch {
                         throw;
                     }
+                }
+            }
+        }
+
+
+        private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
+            if (e.eventCode == NikonMtpEventCode.DeviceInfoChanged) {
+                this.cameraInfo = this.camera.GetDeviceInfo();
+                RaiseAllPropertiesChanged();
+            } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
+                switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
+                    case NikonMtpDevicePropCode.BatteryLevel:
+                        RaisePropertyChanged("BatteryLevel");
+                        break;
+                    case NikonMtpDevicePropCode.ExposureIndexEx:
+                    case NikonMtpDevicePropCode.ExposureIndex:
+                        RaisePropertyChanged("Gain");
+                        break;
+                    case NikonMtpDevicePropCode.ExposureTime:
+                        RaisePropertyChanged("ExposureMin");
+                        RaisePropertyChanged("ExposureMax");
+                        break;
                 }
             }
         }
