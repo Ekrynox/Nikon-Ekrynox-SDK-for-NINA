@@ -43,8 +43,10 @@ NikonCamera::NikonCamera(System::String^ devicePath, System::Byte additionThread
 NikonCamera::NikonCamera(System::String^ devicePath) : NikonCamera(devicePath, 0) {};
 NikonCamera::~NikonCamera() { this->!NikonCamera(); };
 NikonCamera::!NikonCamera() {
-	delete m_nativeClass;
-	m_nativeClass = nullptr;
+	if (m_nativeClass != nullptr) {
+		delete m_nativeClass;
+		m_nativeClass = nullptr;
+	}
 };
 
 
