@@ -65,6 +65,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return false;
                     }
 
+                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams()); //Try to purge the Camera SDRAM to correctly receive handle 
                     this.cameraInfo = this.camera.GetDeviceInfo();
 
                     this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
