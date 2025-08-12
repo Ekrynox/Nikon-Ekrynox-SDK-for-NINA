@@ -1,6 +1,7 @@
 ﻿using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.ViewModel;
+using NINA.Image.Interfaces;
 using NINA.Profile.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 	[Export(typeof(IEquipmentProvider))]
 	public class NikonCameraNekProvider : IEquipmentProvider<ICamera> {
 		private IProfileService profileService;
+        private IExposureDataFactory exposureDataFactory;
 
-		[ImportingConstructor]
-		public NikonCameraNekProvider(IProfileService profileService) {
+        [ImportingConstructor]
+		public NikonCameraNekProvider(IProfileService profileService, IExposureDataFactory exposureDataFactory) {
 			this.profileService = profileService;
+            this.exposureDataFactory = exposureDataFactory;
 		}
 
 		public string Name => "Nikon";
@@ -29,7 +32,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 			var nekCameraList = NEKCS.NikonCamera.listNikonCameras();
 			foreach (var camera in nekCameraList) {
-			    devices.Add(new NikonCameraNek(camera.Key, camera.Value));
+			    devices.Add(new NikonCameraNek(camera.Key, camera.Value, profileService, exposureDataFactory));
 			}
 
 			return devices;

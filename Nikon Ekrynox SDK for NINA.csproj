@@ -10,6 +10,16 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="NEK-SDK\**" />
+    <Compile Remove="x64\**" />
+    <EmbeddedResource Remove="NEK-SDK\**" />
+    <EmbeddedResource Remove="x64\**" />
+    <None Remove="NEK-SDK\**" />
+    <None Remove="x64\**" />
+    <Page Remove="NEK-SDK\**" />
+    <Page Remove="x64\**" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="NINA.Plugin" Version="3.2.0.2001-beta" />
   </ItemGroup>
   <ItemGroup>
