@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{5fbb2a33-1581-4493-9bfa-e8797686ec0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{567c065f-a500-4c68-92e4-b8b157e07e33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\mtp">
+      <UniqueIdentifier>{c855d07b-50fa-4e2e-aadf-b2f7041275d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtp">
+      <UniqueIdentifier>{d814666b-f1a7-482f-9236-3ef93b9fbc36}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="nek.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nikon.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nikon_enum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\nek_threading.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\nek_int128.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\nek_mtp.hpp">
+      <Filter>Header Files\mtp</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\nek_mtp_enum.hpp">
+      <Filter>Header Files\mtp</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\nek_mtp_except.hpp">
+      <Filter>Header Files\mtp</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\nek_mtp_struct.hpp">
+      <Filter>Header Files\mtp</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\nek_mtp_utils.hpp">
+      <Filter>Header Files\mtp</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="nikon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\nek_threading.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="mtp\nek_mtp.cpp">
+      <Filter>Source Files\mtp</Filter>
+    </ClCompile>
+    <ClCompile Include="mtp\nek_mtp_except.cpp">
+      <Filter>Source Files\mtp</Filter>
+    </ClCompile>
+    <ClCompile Include="mtp\nek_mtp_utils.cpp">
+      <Filter>Source Files\mtp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NEK.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

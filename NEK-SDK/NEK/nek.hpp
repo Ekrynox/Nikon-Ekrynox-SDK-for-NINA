@@ -1,0 +1,7 @@
+#pragma once
+
+#ifdef NEK_EXPORTS
+#define NEK_API __declspec(dllexport)
+#else
+#define NEK_API __declspec(dllimport)
+#endif
