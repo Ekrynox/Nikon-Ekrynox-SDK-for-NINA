@@ -507,17 +507,18 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StartLiveView(CaptureSequence sequence) { 
-            this.Gain = sequence.Gain;
-            this.ExposureTime = sequence.ExposureTime;
-            camera.StartLiveView();
-        }
+        public void StartLiveView(CaptureSequence sequence) { camera.StartLiveView(); }
 
         public Task<IExposureData> DownloadLiveView(CancellationToken token) {
             return Task.Run<IExposureData>(() => {
                 NEKCS.MtpParams parameters = new();
-                var response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
-                if (response.responseCode != NikonMtpResponseCode.OK) {
+                NEKCS.MtpResponse response;
+                try {
+                    response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
+                    if (response.responseCode != NikonMtpResponseCode.OK) {
+                        return null;
+                    }
+                } catch {
                     return null;
                 }
 
