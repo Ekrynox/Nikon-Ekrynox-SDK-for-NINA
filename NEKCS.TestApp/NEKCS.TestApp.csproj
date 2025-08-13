@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>True</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <Target Name="CopyNativeDeps" AfterTargets="Build">
+	  <ItemGroup>
+		<NativeDeps Include="$(SolutionDir)x64\$(Configuration)\NEK.dll" />
+	  </ItemGroup>
+	<Copy SourceFiles="@(NativeDeps)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NEKCS.Wrapper\NEKCS.Wrapper.vcxproj" />
+  </ItemGroup>
+
+</Project>
