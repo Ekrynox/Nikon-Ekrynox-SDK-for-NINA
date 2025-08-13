@@ -76,6 +76,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         _cameraState = CameraStates.Idle;
                     }
 
+                    updateLensInfo();
+
                     return this.camera.isConnected();
                 } catch (Exception ex) {
                     // Handle connection errors
@@ -348,9 +350,40 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         RaisePropertyChanged("ExposureMin");
                         RaisePropertyChanged("ExposureMax");
                         break;
+                    case NikonMtpDevicePropCode.Fnumber:
+                    case NikonMtpDevicePropCode.FocalLength:
+                        updateLensInfo();
+                        break;
                 }
             }
         }
+
+        private bool isCpuLensMounted() {
+            try {
+                var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
+                byte lensSort = 0;
+                return result.TryGetUInt8(ref lensSort) && lensSort == 1;
+            } catch { return false; }
+        }
+        private void updateLensInfo() {
+            if (isCpuLensMounted()) {
+                try {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
+                    UInt32 flength = 0;
+                    if (result.TryGetUInt32(ref flength)) {
+                        this.profileService.ActiveProfile.TelescopeSettings.FocalLength = flength / 100.0;
+                    }
+                } catch { }
+                try {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.Fnumber);
+                    UInt16 fnumber = 0;
+                    if (result.TryGetUInt16(ref fnumber)) {
+                        this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = fnumber / 100.0;
+                    }
+                } catch { }
+            }
+        }
+
 
 
         private CameraStates _cameraState;
