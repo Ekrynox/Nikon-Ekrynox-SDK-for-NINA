@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 
 
@@ -395,6 +396,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     throw;
                 }
+            } else if (e.eventCode == NikonMtpEventCode.LiveViewStateChanged) {
+                RaisePropertyChanged("LiveViewEnabled");
             }
         }
 
@@ -490,14 +493,57 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
 
-        public bool CanShowLiveView { get => false; } //TODO: that temporary ;)
-        public bool LiveViewEnabled { get => false; } //TODO: that temporary ;)
+        int liveviewHeaderSize = -1;
+        public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
+        public bool LiveViewEnabled {
+            get {
+                try {
+                    byte lvState = 0;
+                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(ref lvState);
+                    return (lvState == 1);
+                } catch {
+                    return false;
+                }
+            }
+        }
 
-        public void StartLiveView(CaptureSequence sequence) { throw new NotImplementedException(); }
+        public void StartLiveView(CaptureSequence sequence) { 
+            this.Gain = sequence.Gain;
+            this.ExposureTime = sequence.ExposureTime;
+            camera.StartLiveView();
+        }
 
-        public Task<IExposureData> DownloadLiveView(CancellationToken token) { throw new NotImplementedException(); }
+        public Task<IExposureData> DownloadLiveView(CancellationToken token) {
+            return Task.Run<IExposureData>(() => {
+                NEKCS.MtpParams parameters = new();
+                var response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
+                if (response.responseCode != NikonMtpResponseCode.OK) {
+                    return null;
+                }
 
-        public void StopLiveView() { throw new NotImplementedException(); }
+                if (liveviewHeaderSize < 0) {
+                    liveviewHeaderSize = 0;
+                    for (int i = 1; i < response.data.Length; i++) {
+                        if (response.data[i] == 0xD8 && response.data[i - 1] == 0xFF) {
+                            liveviewHeaderSize = i - 1;
+                        }
+                    }
+                }
+
+                var imageStream = new MemoryStream(response.data.Skip(liveviewHeaderSize).ToArray());
+                JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
+
+                FormatConvertedBitmap bitmap = new FormatConvertedBitmap();
+                bitmap.BeginInit();
+                bitmap.Source = decoder.Frames[0];
+                bitmap.DestinationFormat = System.Windows.Media.PixelFormats.Gray16;
+                bitmap.EndInit();
+
+                return exposureDataFactory.CreateImageArrayExposureDataFromBitmapSource(decoder.Frames[0]).Result;
+            }, token);
+        }
+
+        public void StopLiveView() { camera.EndLiveView(); }
 
     }
 }
