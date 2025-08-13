@@ -98,7 +98,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 foreach (var i in _awaitersCameraState) {
                     i.Value.SetCanceled();
                 }
-                RaiseAllPropertiesChanged();
+                RaisePropertyChanged("Connected");
             }
         }
 
@@ -207,8 +207,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return false;
             }
         }
-        public int GainMax { get => this.Gains.Max(); }
-        public int GainMin { get => this.Gains.Min(); }
+        public int GainMax { get; }
+        public int GainMin { get; }
         public IList<int> Gains {
             get {
                 if (Connected) {
@@ -398,7 +398,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StartExposure(CaptureSequence sequence) {
+        public void StartExposure(CaptureSequence sequence) { //TODO bulb
             lock (_gateCameraState) {
                 if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
 
