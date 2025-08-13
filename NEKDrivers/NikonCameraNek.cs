@@ -130,7 +130,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int CameraYSize { get => 0; } //TODO
         public double PixelSizeX { get => 0; } //TODO
         public double PixelSizeY { get => 0; } //TODO
-        public int BitDepth { get => 16; } //TODO: set at 16bits for dcraw
+        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO: set at 16bits for dcraw
 
         public short BinX { get => 1; set { } } //TO RECHECK
         public short BinY { get => 1; set { } } //TO RECHECK
@@ -395,7 +395,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private CameraStates _cameraState;
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
-        private MemoryStream _imageStream;
+
+        private MemoryStream _imageStream = null;
+        private NikonObjectInfoDS _imageInfo = null;
+        private UInt32 sdramHandle = 0xFFFF0001;
         public CameraStates CameraState {
             get {
                 if (Connected) {
@@ -418,8 +421,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
 
                 try {
+                    if (e.eventParams.Length > 0) {
+                        sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
+                    }
+                    _imageInfo = camera.GetObjectInfo(sdramHandle);
+
                     NEKCS.MtpParams param = new();
-                    param.addUint32(e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0]);
+                    param.addUint32(sdramHandle);
                     NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
                     _imageStream = new(result.data);
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
