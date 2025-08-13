@@ -387,7 +387,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                 } catch {
                     lock (_gateCameraState) {
-                        _cameraState = CameraStates.Idle; //Test if it works or switch to error
+                        _cameraState = CameraStates.Idle;
                         if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
                             dl.TrySetCanceled();
                         }
@@ -405,6 +405,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (_cameraState != CameraStates.Idle) {
                     AbortExposure(); //Need to add support for CameraStateBusy
                 }
+
+                camera.DeviceReady(NikonMtpResponseCode.Device_Busy);
 
                 _awaitersCameraState[CameraStates.Exposing] = new();
                 _awaitersCameraState[CameraStates.Download] = new();
@@ -438,14 +440,22 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             using (token.Register(() => AbortExposure())) {
                 if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var tcs)) {
-                    await tcs.Task;
+                    await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Device_Busy));
+                    tcs.TrySetResult(true);
+                    lock (_gateCameraState) {
+                        _cameraState = CameraStates.Download;
+                    }
                 }
             }
         }
 
         public void StopExposure() { throw new NotImplementedException(); }
 
-        public void AbortExposure() {  } //TODO
+        public void AbortExposure() { //TODO
+            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
+                tcs.TrySetCanceled();
+            }
+        }
 
         public async Task<IExposureData> DownloadExposure(CancellationToken token) {
             lock (_gateCameraState) {
@@ -456,7 +466,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
                 await tcs.Task;
-                if (tcs.Task.IsCanceled) return null;
+                if (tcs.Task.IsCanceled) {
+                    lock (_gateCameraState) {
+                        _cameraState = CameraStates.Download;
+                    }
+                }
             }
 
             try {
