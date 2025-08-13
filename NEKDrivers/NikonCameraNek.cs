@@ -554,7 +554,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StartLiveView(CaptureSequence sequence) { camera.StartLiveView(); }
+        public void StartLiveView(CaptureSequence sequence) { 
+            try {
+                this.ExposureTime = sequence.ExposureTime;
+            } catch { }
+            camera.StartLiveView();
+        }
 
         public Task<IExposureData> DownloadLiveView(CancellationToken token) {
             return Task.Run<IExposureData>(() => {
