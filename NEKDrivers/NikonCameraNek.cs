@@ -268,6 +268,27 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
+
+        private bool _isBulb = false;
+        private double _bulbTime = 0;
+
+        public bool CanSetBulb {
+            get {
+                if (Connected) {
+                    if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
+                    try {
+                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                        NikonDevicePropDescDS<UInt32> exp = new();
+                        if (!result.TryGetUInt32(ref exp)) return false;
+                        var exps = exp.EnumFORM.ToList();
+                        return exps.Contains(0xFFFFFFFF);
+                    } catch {
+                        throw;
+                    }
+                }
+                return false;
+            }
+        }
         public IList<double> Exposures {
             get {
                 if (Connected) {
@@ -275,6 +296,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
                         NikonDevicePropDescDS<UInt32> exp = new();
                         if (!result.TryGetUInt32(ref exp)) return new List<double>();
+
+                        _isBulb = (exp.CurrentValue == 0xFFFFFFFF); //Bulb
+
                         var exps = exp.EnumFORM.ToList();
                         exps.Remove(0xFFFFFFFF); //Bulb
                         exps.Remove(0xFFFFFFFD); //Time
@@ -294,7 +318,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return double.NaN;
             }
         }
-        public double ExposureMax { //TODO: set to infinity or large value when in bulb/time
+        public double ExposureMax {
             get {
                 if (Connected) {
                     return Exposures.Max();
@@ -305,24 +329,32 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double ExposureTime {
             get {
                 if (Connected) {
-                    try {
-                        var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                    if (_isBulb) {
+                        return _bulbTime;
+                    }else {
                         UInt32 exp = 0;
-                        return result.TryGetUInt32(ref exp) ? (double)exp / 10000.0 : 0;
-                    } catch {
-                        throw;
+                        camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime).TryGetUInt32(ref exp);
+                        return exp / 10000.0;
                     }
                 }
                 return 0;
             }
             set {
                 if (Connected) {
-                    try {
-                        UInt32 newExp = (UInt32)(Exposures.OrderBy(x => Math.Abs(value - x)).First() * 10000);
-                        this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant(newExp));
-                        RaisePropertyChanged();
-                    } catch {
-                        throw;
+                    UInt32 newExp = (UInt32)(Exposures.OrderBy(x => Math.Abs(value - x)).First());
+
+                    if ((value > 1) && (_requestedLiveview == 0) && (value > ExposureMax || value != newExp) && CanSetBulb) {
+                        this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
+                        _isBulb = true;
+                        _bulbTime = value;
+                    } else {
+                        try {
+                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant(newExp * 10000));
+                            _isBulb = false;
+                            RaisePropertyChanged();
+                        } catch {
+                            throw;
+                        }
                     }
                 }
             }
@@ -448,16 +480,23 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StartExposure(CaptureSequence sequence) { //TODO bulb
+        public void StartExposure(CaptureSequence sequence) {
             lock (_gateCameraState) {
                 if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
 
                 if (_cameraState != CameraStates.Idle) {
-                    AbortExposure(); //Need to add support for CameraStateBusy
+                    AbortExposure();
                 }
 
-                camera.DeviceReady(NikonMtpResponseCode.Device_Busy);
+            }
 
+            if (_isBulb) {
+                camera.DeviceReady(NikonMtpResponseCode.Bulb_Release_Busy);
+            } else {
+                camera.DeviceReady(NikonMtpResponseCode.Device_Busy);
+            }
+
+            lock (_gateCameraState) {
                 _awaitersCameraState[CameraStates.Exposing] = new();
                 _awaitersCameraState[CameraStates.Download] = new();
                 _cameraState = CameraStates.Exposing;
@@ -467,11 +506,33 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 this.ExposureTime = sequence.ExposureTime;
 
                 NEKCS.MtpParams param = new();
-                param.addUint32(0xFFFFFFFF);
-                var result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
+                MtpResponse result;
+                if (_isBulb) {
+                    param.addUint32(0xFFFFFFFF);
+                    param.addUint32(0x0001);
+                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, param);
+                } else {
+                    param.addUint32(0xFFFFFFFF);
+                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
+                }
                 if (result.responseCode != NikonMtpResponseCode.OK) {
                     throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.responseCode);
                 }
+
+                if (_isBulb) {
+                    Task.Run(async () => {
+                        await Task.Delay((int)(sequence.ExposureTime * 1000));
+                        lock (_gateCameraState) {
+                            if (_cameraState == CameraStates.Exposing) {
+                                var p = new MtpParams();
+                                p.addUint32(0);
+                                p.addUint32(0);
+                                camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                            }
+                        }
+                    });
+                }
+
             } catch {
                 _awaitersCameraState[CameraStates.Exposing].TrySetCanceled();
                 _awaitersCameraState[CameraStates.Download].TrySetCanceled();
@@ -490,7 +551,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             using (token.Register(() => AbortExposure())) {
                 if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var tcs)) {
-                    await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Device_Busy));
+                    if (_isBulb) {
+                        await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Bulb_Release_Busy));
+                    } else {
+                        await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Device_Busy));
+                    }
+
                     tcs.TrySetResult(true);
                     lock (_gateCameraState) {
                         _cameraState = CameraStates.Download;
@@ -499,10 +565,31 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StopExposure() { throw new NotImplementedException(); }
+        public void StopExposure() {
+            if (_isBulb) {
+                try {
+                    var p = new MtpParams();
+                    p.addUint32(0);
+                    p.addUint32(0);
+                    camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                } catch { }
+            } else {
+                throw new NotSupportedException("You can't Stop Non Bulb Exposure");
+            }
+        }
 
-        public void AbortExposure() { //TODO
+        public void AbortExposure() {
             if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
+                if (_isBulb) {
+                    try {
+                        var p = new MtpParams();
+                        p.addUint32(0);
+                        p.addUint32(0);
+                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                    } catch {
+                        throw new NotSupportedException("You can't Stop Non Bulb Exposure");
+                    }
+                }
                 tcs.TrySetCanceled();
             }
         }
@@ -540,7 +627,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
 
-        int liveviewHeaderSize = -1;
+        private int _liveviewHeaderSize = -1;
+        private uint _requestedLiveview = 0;
         public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
         public bool LiveViewEnabled {
             get {
@@ -554,11 +642,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        public void StartLiveView(CaptureSequence sequence) { 
+        public void StartLiveView(CaptureSequence sequence) {
+            Interlocked.Increment(ref _requestedLiveview);
             try {
                 this.ExposureTime = sequence.ExposureTime;
-            } catch { }
-            camera.StartLiveView();
+                camera.StartLiveView();
+            } catch { 
+                Interlocked.Decrement(ref _requestedLiveview);
+            }
         }
 
         public Task<IExposureData> DownloadLiveView(CancellationToken token) {
@@ -574,16 +665,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     return null;
                 }
 
-                if (liveviewHeaderSize < 0) {
-                    liveviewHeaderSize = 0;
+                if (_liveviewHeaderSize < 0) {
+                    _liveviewHeaderSize = 0;
                     for (int i = 1; i < response.data.Length; i++) {
                         if (response.data[i] == 0xD8 && response.data[i - 1] == 0xFF) {
-                            liveviewHeaderSize = i - 1;
+                            _liveviewHeaderSize = i - 1;
                         }
                     }
                 }
 
-                var imageStream = new MemoryStream(response.data.Skip(liveviewHeaderSize).ToArray());
+                var imageStream = new MemoryStream(response.data.Skip(_liveviewHeaderSize).ToArray());
                 JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
 
                 FormatConvertedBitmap bitmap = new FormatConvertedBitmap();
@@ -596,7 +687,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }, token);
         }
 
-        public void StopLiveView() { camera.EndLiveView(); }
+        public void StopLiveView() {
+            Interlocked.Decrement(ref _requestedLiveview);
+            camera.EndLiveView();
+        }
 
     }
 }
