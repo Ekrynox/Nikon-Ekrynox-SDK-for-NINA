@@ -3,6 +3,7 @@ using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
+using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.Equipment.Utility;
 using NINA.Image.ImageData;
@@ -22,12 +23,13 @@ using System.Windows.Media.Imaging;
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public class NikonCameraNek : BaseINPC, ICamera {
 
-        public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory) {
+        public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator) {
             this.devicePath = devicePath;
             this.cameraInfo = cameraInfo;
 
             this.profileService = profileService;
             this.exposureDataFactory = exposureDataFactory;
+            this.cameraMediator = cameraMediator;
         }
 
         private string devicePath; // WPD device path
@@ -36,6 +38,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         private readonly IProfileService profileService;
         private readonly IExposureDataFactory exposureDataFactory;
+        private readonly ICameraMediator cameraMediator;
 
 
 
@@ -368,7 +371,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     //this.cameraInfo = this.camera.GetDeviceInfo();
                     //RaiseAllPropertiesChanged();
                 } else {
-                    this.Disconnect();
+                    this.cameraMediator.Disconnect();
                 }
             } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
                 switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
