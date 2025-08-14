@@ -39,7 +39,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 
 
-        // IDevice
         public bool HasSetupDialog { get => false; } // TODO
         public string Id { get => cameraInfo.SerialNumber; }
         public string Name { get => "Nikon " + cameraInfo.Model; }
@@ -120,7 +119,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 
 
-        // ICamera
         public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
         public string SensorName { get => ""; } //TO RECHECK: doesn't seem easly feasible
         public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
@@ -321,6 +319,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double ExposureMax {
             get {
                 if (Connected) {
+                    if (CanSetBulb) {
+                        return double.PositiveInfinity;
+                    }
                     return Exposures.Max();
                 }
                 return double.NaN;
