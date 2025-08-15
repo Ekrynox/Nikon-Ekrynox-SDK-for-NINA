@@ -23,13 +23,14 @@ using System.Windows.Media.Imaging;
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public class NikonCameraNek : BaseINPC, ICamera {
 
-        public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator) {
+        public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
             this.devicePath = devicePath;
             this.cameraInfo = cameraInfo;
 
             this.profileService = profileService;
             this.exposureDataFactory = exposureDataFactory;
             this.cameraMediator = cameraMediator;
+            this.focuserMediator = focuserMediator;
         }
 
         private string devicePath; // WPD device path
@@ -39,6 +40,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private readonly IProfileService profileService;
         private readonly IExposureDataFactory exposureDataFactory;
         private readonly ICameraMediator cameraMediator;
+        private readonly IFocuserMediator focuserMediator;
 
 
 
@@ -109,7 +111,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void SetupDialog() { throw new NotImplementedException(); }
 
-        public IList<string> SupportedActions { get => new List<string>(); } //TODO
+        public IList<string> SupportedActions { get => new List<string>(); } //TOCHECK
 
         public string Action(string actionName, string actionParameters) { throw new NotImplementedException(); }
 
@@ -396,12 +398,26 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
         }
 
-        private bool isCpuLensMounted() {
+        public bool isCpuLensMounted() {
             try {
                 var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
                 byte lensSort = 0;
                 return result.TryGetUInt8(ref lensSort) && lensSort == 1;
             } catch { return false; }
+        }
+        public bool isFocusDrivableLens() {
+            if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) return false;
+            if (!isCpuLensMounted()) return false;
+
+            //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
+            if (!cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) return true;
+            UInt64 lenstype = 0;
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(ref lenstype);
+            if ((lenstype & 0b1) == 0) return true; //Native Z lens
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(ref lenstype); //On mirrorless this property is 64bits
+            if ((lenstype & 0b10000) == 0) return false;
+
+            return true;
         }
         private void updateLensInfo(bool init = false) {
             if (isCpuLensMounted()) {
