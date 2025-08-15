@@ -56,6 +56,9 @@
     <ClCompile Include="Nikon_Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Nikon_Struct_Variant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NEKCS.Wrapper.rc">
