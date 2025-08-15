@@ -80,6 +80,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         _cameraState = CameraStates.Idle;
                     }
 
+                    _bulbTime = 0;
+                    _isBulb = false;
+
+                    _imageInfo = null;
+                    _imageStream = null;
+
+                    _liveviewHeaderSize = -1;
+                    _requestedLiveview = 0;
+                    sdramHandle = 0xFFFF0001;
+
                     updateLensInfo(true);
 
                     return this.camera.isConnected();
@@ -269,8 +279,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
 
-        private bool _isBulb = false;
-        private double _bulbTime = 0;
+        private bool _isBulb;
+        private double _bulbTime;
 
         public bool CanSetBulb {
             get {
@@ -438,9 +448,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
 
-        private MemoryStream _imageStream = null;
-        private NikonObjectInfoDS _imageInfo = null;
-        private UInt32 sdramHandle = 0xFFFF0001;
+        private MemoryStream _imageStream;
+        private NikonObjectInfoDS _imageInfo;
+        private UInt32 sdramHandle;
         public CameraStates CameraState {
             get {
                 if (Connected) {
@@ -637,8 +647,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
 
-        private int _liveviewHeaderSize = -1;
-        private uint _requestedLiveview = 0;
+        private int _liveviewHeaderSize;
+        private uint _requestedLiveview;
         public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
         public bool LiveViewEnabled {
             get {
