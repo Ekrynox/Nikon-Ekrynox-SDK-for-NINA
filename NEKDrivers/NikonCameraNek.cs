@@ -21,7 +21,7 @@ using System.Windows.Media.Imaging;
 
 
 namespace LucasAlias.NINA.NEK.NEKDrivers {
-    public class NikonCameraNek : BaseINPC, ICamera {
+    public partial class NikonCameraNek : BaseINPC, ICamera {
 
         public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
             this.devicePath = devicePath;
@@ -33,9 +33,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             this.focuserMediator = focuserMediator;
         }
 
-        private string devicePath; // WPD device path
-        private NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
+        private readonly string devicePath; // WPD device path
         private NEKCS.NikonCamera camera; // Camera object for operations
+        private NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
 
         private readonly IProfileService profileService;
         private readonly IExposureDataFactory exposureDataFactory;
@@ -95,6 +95,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             if (this.camera != null) {
                 lock(_gateCameraState) {
                     _cameraState = CameraStates.NoState;
+                }
+
+                if (focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
+                    focuserMediator.Disconnect();
                 }
 
                 this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
