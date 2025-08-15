@@ -502,7 +502,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void StartExposure(CaptureSequence sequence) {
             lock (_gateCameraState) {
-                if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
+                if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState || _cameraState == CameraStates.Waiting) return;
 
                 if (_cameraState != CameraStates.Idle) {
                     AbortExposure();
@@ -510,11 +510,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             }
 
-            if (_isBulb) {
-                camera.DeviceReadyWhile(NikonMtpResponseCode.Bulb_Release_Busy);
-            } else {
-                camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy);
-            }
+            camera.DeviceReadyWhile([NikonMtpResponseCode.Device_Busy, NikonMtpResponseCode.Bulb_Release_Busy]);
 
             lock (_gateCameraState) {
                 _awaitersCameraState[CameraStates.Exposing] = new();
