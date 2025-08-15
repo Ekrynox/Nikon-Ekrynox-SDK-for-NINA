@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Markup.Localizer;
 
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek {
@@ -55,7 +56,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return false;
                     }
 
-                    DetectMinStep(token);
+                    _minStepSize = 10;
+                    //DetectMinStep(token);
                     DetectStepsNb(token);
                     if (token.IsCancellationRequested) return false;
 
@@ -95,19 +97,21 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task Move(int position, CancellationToken ct, int waitInMs = 1000) { //Manage Errors and the time limit & need to lick the deadlock (expect to do move less thant the min increment)
                 return Task.Run(() => {
-                    if (position == 0) {
+                    if (position <= 0) {
                         while (true) {
                             var result = MoveBy(_maxStepSize, false, ct).Result;
                             if (ct.IsCancellationRequested) break;
                             if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                         }
+                        return;
                     } 
-                    else if (position == _nbSteps) {
+                    else if (position >= _nbSteps) {
                         while (true) {
                             var result = MoveBy(_maxStepSize, true, ct).Result;
                             if (ct.IsCancellationRequested) break;
                             if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                         }
+                        return;
                     }
 
 
@@ -140,11 +144,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     _ismoving = false;
                     RaisePropertyChanged("IsMoving");
 
-                    if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
+                    if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                        result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
+                    } else if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
                         result = NikonMtpResponseCode.MfDrive_Step_End;
                         _position = toInf ? _nbSteps : 0;
-                    } else if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
-                        result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
                     } else if (response.responseCode == NikonMtpResponseCode.OK && result == NikonMtpResponseCode.OK) {
                         result = NikonMtpResponseCode.OK;
                         _position += toInf ? distance : 0;
@@ -201,7 +205,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public void DetectStepsNb(CancellationToken token) {
                 if (!Connected) return;
-                cameraNek.camera.StartLiveView();
 
                 UInt32 nbSteps0 = 0;
                 UInt32 nbStepsInf = 0;
@@ -211,11 +214,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 while (stepSize >= _minStepSize) {
 
                     //go to Start then to nbStepInf
-                    while (true) {
-                        result = MoveBy(_maxStepSize, false, token).Result;
-                        if (token.IsCancellationRequested) break;
-                        if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
-                    }
+                    Move(0, token).Wait();
                     Move((int)nbStepsInf, token).Wait();
                     if (token.IsCancellationRequested) break;
 
@@ -232,6 +231,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         if (token.IsCancellationRequested) break;
                         if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                     }
+                    Move((int)_nbSteps, token).Wait();
                     Move((int)(_nbSteps - nbSteps0), token).Wait();
                     if (token.IsCancellationRequested) break;
 
@@ -243,10 +243,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     _nbSteps = (nbSteps0 + nbStepsInf) / 2 + stepSize;
+                    if (stepSize <= 1) break;
                     stepSize = stepSize / 2;
                 }
-
-                cameraNek.camera.EndLiveView();
             }
 
 
