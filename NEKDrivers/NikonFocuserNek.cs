@@ -1,4 +1,5 @@
-﻿using NEKCS;
+﻿using Accord.Statistics.Moving;
+using NEKCS;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
@@ -28,6 +29,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             private readonly IProfileService profileService;
             private readonly ICameraMediator cameraMediator;
 
+            private uint _minStepSize = 0;
+            private bool _ismoving = false;
+
 
 
             public bool HasSetupDialog { get => false; }
@@ -47,8 +51,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return false;
                     }
 
-                    cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
+                    _minStepSize = DetectMinStep(token);
 
+                    cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                     return true;
                 });
             } //TODO
@@ -73,11 +78,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 
 
-            public bool IsMoving { get => false; } //TODO
+            public bool IsMoving { get => _ismoving; } //TODO
             public int MaxIncrement { get => 0; } //TODO
             public int MaxStep { get => 0; } //TODO
             public int Position { get => 0; } //TODO
-            public double StepSize { get => 0; } //TODO
+            public double StepSize { get => _minStepSize; } //TODO
             public bool TempCompAvailable { get => false; } //TOCHECK
             public bool TempComp { get => false; set { } } //TOCHECK
             public double Temperature { get => double.NaN; } //TOCHECK
@@ -92,16 +97,50 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
                         case NikonMtpDevicePropCode.LensID:
                         case NikonMtpDevicePropCode.LensSort:
-                            if (cameraNek.isFocusDrivableLens()) {
-                                //Rerun Calibration
-                            } else {
-                                if (cameraNek.focuserMediator.GetDevice() != null) {
-                                    cameraNek.focuserMediator.Disconnect();
-                                }
+                            if (!cameraNek.isFocusDrivableLens()) {
+                                cameraNek.focuserMediator.Disconnect();
                             }
                             break;
                     }
                 }
+            }
+
+            // 1: to 0, 2: to inf, [1 - 32767]
+            public uint DetectMinStep(CancellationToken token) { //TODO: wait for device ready
+                if (!Connected) return 0;
+                cameraNek.camera.StartLiveView();
+
+                uint minStepSize = 100;
+                uint maxStepSize = 32767;
+                uint dir = 1;
+
+                while (minStepSize < maxStepSize) {
+                    uint stepSize = (maxStepSize - minStepSize) / 2 + minStepSize;
+
+                    var parameters = new MtpParams();
+                    parameters.addUint32(dir);
+                    parameters.addUint32(stepSize);
+                    _ismoving = true;
+                    var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, parameters);
+                    var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, token, 500);
+                    _ismoving = false;
+                    if (token.IsCancellationRequested) return minStepSize >= maxStepSize ? minStepSize : 0;
+
+                    dir = dir == (uint)1 ? (uint)2 : (uint)1;
+                    if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
+                        continue;
+                    } else if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                        minStepSize = stepSize;
+                        continue;
+                    } else if (response.responseCode == NikonMtpResponseCode.OK && result == NikonMtpResponseCode.OK) {
+                        maxStepSize = stepSize;
+                        continue;
+                    }
+                    break;
+                }
+
+                cameraNek.camera.EndLiveView();
+                return minStepSize >= maxStepSize ? minStepSize : 0;
             }
         }
     }

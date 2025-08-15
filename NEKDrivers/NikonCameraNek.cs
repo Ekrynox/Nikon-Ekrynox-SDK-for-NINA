@@ -698,7 +698,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void StopLiveView() {
             Interlocked.Decrement(ref _requestedLiveview);
-            camera.EndLiveView();
+            if (Interlocked.Equals(_requestedLiveview, 0)) camera.EndLiveView();
+        }
+        public void StopLiveView(int waitms) {
+            Interlocked.Decrement(ref _requestedLiveview);
+            Task.Run(async () => {
+                await Task.Delay(waitms * 1000);
+                if (Interlocked.Equals(_requestedLiveview, 0)) camera.EndLiveView();
+            });
         }
 
     }
