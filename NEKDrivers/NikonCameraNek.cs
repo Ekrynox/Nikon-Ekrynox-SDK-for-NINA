@@ -165,8 +165,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
-                        byte level = 0;
-                        return result.TryGetUInt8(ref level) ? (int)level : 0;
+                        return result.TryGetUInt8(out var level) ? (int)level : 0;
                     } catch {
                         throw;
                     }
@@ -202,12 +201,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            NikonDevicePropDescDS<UInt32> gain = new();
-                            return result.TryGetUInt32(ref gain) ? gain.GetSet > 0 : false;
+                            return result.TryGetUInt32(out var gain) ? gain.GetSet > 0 : false;
                         } else if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            NikonDevicePropDescDS<UInt16> gain = new();
-                            return result.TryGetUInt16(ref gain) ? gain.GetSet > 0 : false;
+                            return result.TryGetUInt16(out var gain) ? gain.GetSet > 0 : false;
                         }
                         return false;
                     } catch {
@@ -225,12 +222,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            NikonDevicePropDescDS<UInt32> gains = new();
-                            return result.TryGetUInt32(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                            return result.TryGetUInt32(out var gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
                         } else {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            NikonDevicePropDescDS<UInt16> gains = new();
-                            return result.TryGetUInt16(ref gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                            return result.TryGetUInt16(out var gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
                         }
                     } catch {
                         throw;
@@ -245,12 +240,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            UInt32 gain = 0;
-                            return result.TryGetUInt32(ref gain) ? (int)gain : 0;
+                            return result.TryGetUInt32(out var gain) ? (int)gain : 0;
                         } else {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            UInt16 gain = 0;
-                            return result.TryGetUInt16(ref gain) ? (int)gain : 0;
+                            return result.TryGetUInt16(out var gain) ? (int)gain : 0;
                         }
                     } 
                     catch {
@@ -285,8 +278,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        NikonDevicePropDescDS<UInt32> exp = new();
-                        if (!result.TryGetUInt32(ref exp)) return false;
+                        if (!result.TryGetUInt32(out var exp)) return false;
                         var exps = exp.EnumFORM.ToList();
                         return exps.Contains(0xFFFFFFFF);
                     } catch {
@@ -301,8 +293,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        NikonDevicePropDescDS<UInt32> exp = new();
-                        if (!result.TryGetUInt32(ref exp)) return new List<double>();
+                        if (!result.TryGetUInt32(out var exp)) return new List<double>();
 
                         _isBulb = (exp.CurrentValue == 0xFFFFFFFF); //Bulb
 
@@ -342,8 +333,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (_isBulb) {
                         return _bulbTime;
                     }else {
-                        UInt32 exp = 0;
-                        camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime).TryGetUInt32(ref exp);
+                        camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime).TryGetUInt32(out var exp);
                         return exp / 10000.0;
                     }
                 }
@@ -405,8 +395,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool isCpuLensMounted() {
             try {
                 var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
-                byte lensSort = 0;
-                return result.TryGetUInt8(ref lensSort) && lensSort == 1;
+                return result.TryGetUInt8(out var lensSort) && lensSort == 1;
             } catch { return false; }
         }
         public bool isFocusDrivableLens() {
@@ -415,10 +404,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
             if (!cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) return true;
-            UInt64 lenstype = 0;
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(ref lenstype);
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(out var lenstype);
             if ((lenstype & 0b1) == 0) return true; //Native Z lens
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(ref lenstype); //On mirrorless this property is 64bits
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(out lenstype); //On mirrorless this property is 64bits
             if ((lenstype & 0b10000) == 0) return false;
 
             return true;
@@ -427,15 +415,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             if (isCpuLensMounted()) {
                 try {
                     var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
-                    UInt32 flength = 0;
-                    if (result.TryGetUInt32(ref flength)) {
+                    if (result.TryGetUInt32(out var flength)) {
                         this.profileService.ActiveProfile.TelescopeSettings.FocalLength = flength / 100.0;
                     }
                 } catch { }
                 try {
                     var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.Fnumber);
-                    UInt16 fnumber = 0;
-                    if (result.TryGetUInt16(ref fnumber)) {
+                    if (result.TryGetUInt16(out var fnumber)) {
                         this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = fnumber / 100.0;
                     }
                 } catch { }
@@ -515,9 +501,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
             if (_isBulb) {
-                camera.DeviceReady(NikonMtpResponseCode.Bulb_Release_Busy);
+                camera.DeviceReadyWhile(NikonMtpResponseCode.Bulb_Release_Busy);
             } else {
-                camera.DeviceReady(NikonMtpResponseCode.Device_Busy);
+                camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy);
             }
 
             lock (_gateCameraState) {
@@ -565,7 +551,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
                 throw;
             }
-        }
+        } //Bug with cancelation to fix => will stop future exposure with the timer
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
             lock (_gateCameraState) {
                 if (_cameraState > CameraStates.Exposing) {
@@ -576,9 +562,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             using (token.Register(() => AbortExposure())) {
                 if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var tcs)) {
                     if (_isBulb) {
-                        await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Bulb_Release_Busy));
+                        await Task.Run(() => camera.DeviceReadyWhile(NikonMtpResponseCode.Bulb_Release_Busy));
                     } else {
-                        await Task.Run(() => camera.DeviceReady(NikonMtpResponseCode.Device_Busy));
+                        await Task.Run(() => camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy));
                     }
 
                     tcs.TrySetResult(true);
@@ -657,8 +643,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool LiveViewEnabled {
             get {
                 try {
-                    byte lvState = 0;
-                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(ref lvState);
+                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvState);
                     return (lvState == 1);
                 } catch {
                     return false;
