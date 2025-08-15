@@ -1,6 +1,7 @@
 ﻿using Accord.Statistics.Moving;
 using NEKCS;
 using Newtonsoft.Json.Linq;
+using NINA.Core.Enum;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
@@ -103,6 +104,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task Move(int position, CancellationToken ct, int waitInMs = 1000) { //Manage Errors and the time limit & need to lick the deadlock (expect to do move less thant the min increment)
                 return Task.Run(() => {
+                    lock (cameraNek._gateCameraState) {
+                        if (!cameraNek.Connected || cameraNek._cameraState == CameraStates.Error || cameraNek._cameraState == CameraStates.NoState || cameraNek._cameraState == CameraStates.Exposing) {
+                            ct.ThrowIfCancellationRequested();
+                        }
+                    }
+
                     if (position <= 0) {
                         while (true) {
                             var result = MoveBy(_maxStepSize, false, ct).Result;
@@ -131,13 +138,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         if (ct.IsCancellationRequested) return;
                     }
                 });
-            } //Take in account devicestatus before starting
+            }
 
             public void Halt() => throw new NotImplementedException();
 
 
             public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Thow error if out of range & Time limited deviceReady
                 return Task.Run(() => {
+                    lock (cameraNek._gateCameraState) {
+                        if (!cameraNek.Connected || cameraNek._cameraState == CameraStates.Error || cameraNek._cameraState == CameraStates.NoState || cameraNek._cameraState == CameraStates.Exposing) {
+                            ct.ThrowIfCancellationRequested();
+                        }
+                    }
+
                     cameraNek.camera.StartLiveView(true, ct);
 
                     var parameters = new MtpParams();
@@ -165,7 +178,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     cameraNek.StopLiveView(5000);
                     return result;
                 });
-            } //Take in account devicestatus before starting
+            }
 
 
             private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
