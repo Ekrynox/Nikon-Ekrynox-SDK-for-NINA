@@ -31,11 +31,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             private readonly IProfileService profileService;
             private readonly ICameraMediator cameraMediator;
 
-            private UInt32 _minStepSize = 100;
-            private UInt32 _maxStepSize = 32767;
-            private UInt32 _nbSteps = int.MaxValue;
-            private UInt32 _position = 0;
-            private bool _ismoving = false;
+            private UInt32 _minStepSize;
+            private UInt32 _maxStepSize;
+            private UInt32 _nbSteps;
+            private UInt32 _position;
+            private bool _ismoving;
 
 
 
@@ -57,6 +57,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     _minStepSize = 10;
+                    _maxStepSize = 32767;
+                    _nbSteps = int.MaxValue;
+                    _position = 0;
+                    _ismoving = false;
+
+                    DetectMaxStep(token);
                     DetectMinStep(token);
                     DetectStepsNb(token);
                     if (token.IsCancellationRequested) return false;
@@ -64,7 +70,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                     return true;
                 });
-            } //TODO
+            }
 
             public void Disconnect() {
                 if (cameraNek == null || cameraNek.camera == null) return;
@@ -125,7 +131,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         if (ct.IsCancellationRequested) return;
                     }
                 });
-            }
+            } //Take in account devicestatus before starting
 
             public void Halt() => throw new NotImplementedException();
 
@@ -159,7 +165,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     cameraNek.StopLiveView(5000);
                     return result;
                 });
-            }
+            } //Take in account devicestatus before starting
 
 
             private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
@@ -175,12 +181,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
             }
 
-            // 1: to 0, 2: to inf, [1 - 32767]
-            public void DetectMinStep(CancellationToken token) { //TODO: wait for device ready
-                if (!Connected) return;
-                cameraNek.camera.StartLiveView();
 
-                UInt32 maxStepSize = (UInt32)_maxStepSize;
+            public void DetectMinStep(CancellationToken token) {
+                if (!Connected) return;
+                UInt32 maxStepSize = _maxStepSize;
                 bool toInf = true;
 
                 while (_minStepSize < maxStepSize) {
@@ -199,8 +203,35 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     break;
                 }
+            }
 
-                cameraNek.camera.EndLiveView();
+            public void DetectMaxStep(CancellationToken token) {
+                if (!Connected) return;
+                uint stepSize = _maxStepSize;
+                UInt32 minStepSize = _minStepSize;
+                bool toInf = true;
+                while (minStepSize < _maxStepSize) {
+                    Move(!toInf ? (int)_nbSteps : 0, token).Wait();
+                    if (token.IsCancellationRequested) return;
+                    var result = MoveBy(stepSize, toInf, token);
+                    if (token.IsCancellationRequested) return;
+
+                    toInf = !toInf;
+                    if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
+                        _maxStepSize = stepSize;
+                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        continue;
+                    } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                        minStepSize = stepSize;
+                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        continue;
+                    } else if (result.Result == NikonMtpResponseCode.OK) {
+                        minStepSize = stepSize;
+                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        continue;
+                    }
+                    break;
+                }
             }
 
             public void DetectStepsNb(CancellationToken token) {
