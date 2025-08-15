@@ -1,6 +1,8 @@
 ﻿using NEKCS;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
+using NINA.Equipment.Interfaces.Mediator;
+using NINA.Profile.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +14,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek {
         public class NikonFocuserNek : BaseINPC, IFocuser {
 
-            public NikonFocuserNek(NikonCameraNek cameraNek) {
-                this.cameraNek = cameraNek;
+            public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator) {
+                this.profileService = profileService;
+                this.cameraMediator = cameraMediator;
+
+                if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
+                    cameraNek = cam;
+                }
             }
 
-            private readonly NikonCameraNek cameraNek;
+            private NikonCameraNek cameraNek = null;
+
+            private readonly IProfileService profileService;
+            private readonly ICameraMediator cameraMediator;
 
 
 
@@ -25,7 +35,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public string Name { get => cameraNek.Name; }
             public string DisplayName { get => cameraNek.Name + " Lens (NEK Experimental)"; }
             public string Category { get => "Nikon"; }
-            public bool Connected { get => cameraNek.Connected; } //TODO
+            public bool Connected { get => (cameraNek != null) && (cameraNek.camera != null) && cameraNek.Connected; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
             public string DriverInfo { get => "Nikon Ekrynox SDK"; }
             public string DriverVersion { get => cameraNek.DriverVersion; }
@@ -33,6 +43,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<bool> Connect(CancellationToken token) {
                 return Task.Run(() => {
+                    if (!cameraNek.Connected) {
+                        return false;
+                    }
+
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
 
                     return true;
@@ -40,6 +54,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             } //TODO
 
             public void Disconnect() {
+                if (cameraNek == null || cameraNek.camera == null) return;
+
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
             }
 

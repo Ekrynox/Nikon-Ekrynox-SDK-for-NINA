@@ -34,7 +34,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             if (cameraMediator.GetDevice().Connected) {
                 if (cameraMediator.GetDevice() is NikonCameraNek cam) {
                     if (cam.isFocusDrivableLens()) {
-                        devices.Add(new NikonCameraNek.NikonFocuserNek(cam));
+                        devices.Add(new NikonCameraNek.NikonFocuserNek(profileService, cameraMediator));
                     }
                 }
             }
