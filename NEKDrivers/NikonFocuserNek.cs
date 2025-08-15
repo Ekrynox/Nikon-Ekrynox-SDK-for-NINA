@@ -56,7 +56,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return false;
                     }
 
-                    _minStepSize = 10;
+                    _minStepSize = 25;
                     _maxStepSize = 32767;
                     _nbSteps = int.MaxValue;
                     _position = 0;
