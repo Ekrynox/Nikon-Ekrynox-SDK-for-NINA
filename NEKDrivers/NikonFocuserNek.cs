@@ -57,7 +57,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     _minStepSize = 10;
-                    //DetectMinStep(token);
+                    DetectMinStep(token);
                     DetectStepsNb(token);
                     if (token.IsCancellationRequested) return false;
 
