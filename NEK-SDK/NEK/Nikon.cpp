@@ -397,18 +397,45 @@ uint32_t NikonCamera::DeviceReady() {
 	mtp::MtpParams params;
 	return SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
 }
-uint32_t NikonCamera::DeviceReady(uint32_t whileResponseCode, size_t sleepTimems) {
+uint32_t NikonCamera::DeviceReadyWhile(uint32_t whileResponseCode, std::stop_token stopToken, size_t sleepTimems) {
 	mtp::MtpParams params;
-	uint32_t responseCode;
-	do {
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	while ((responseCode == whileResponseCode) && !stopToken.stop_requested()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
 		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
-	} while (responseCode == whileResponseCode);
+	}
+	return responseCode;
+}
+uint32_t NikonCamera::DeviceReadyWhile(std::vector<uint32_t> whileResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
+	mtp::MtpParams params;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	while ((std::find(whileResponseCodes.begin(), whileResponseCodes.end(), responseCode) != whileResponseCodes.end()) && !stopToken.stop_requested()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	}
+	return responseCode;
+}
+uint32_t NikonCamera::DeviceReadyWhileNot(uint32_t whileNotResponseCode, std::stop_token stopToken, size_t sleepTimems) {
+	mtp::MtpParams params;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	while ((responseCode != whileNotResponseCode) && !stopToken.stop_requested()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	}
+	return responseCode;
+}
+uint32_t NikonCamera::DeviceReadyWhileNot(std::vector<uint32_t> whileNotResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
+	mtp::MtpParams params;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	while ((std::find(whileNotResponseCodes.begin(), whileNotResponseCodes.end(), responseCode) == whileNotResponseCodes.end()) && !stopToken.stop_requested()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	}
 	return responseCode;
 }
 
 
-uint32_t NikonCamera::StartLiveView(bool wait, size_t sleepTimems) {
+uint32_t NikonCamera::StartLiveView(bool wait, std::stop_token stopToken, size_t sleepTimems) {
 	auto lvstate = GetDevicePropValue(NikonMtpDevicePropCode::RemoteLiveViewStatus);
 	if (std::get<uint8_t>(lvstate) == 1) {
 		return NikonMtpResponseCode::OK; //Liveview already On
@@ -421,7 +448,7 @@ uint32_t NikonCamera::StartLiveView(bool wait, size_t sleepTimems) {
 	}
 
 	if (!wait) return response.responseCode;
-	return DeviceReady(NikonMtpResponseCode::Device_Busy, sleepTimems);
+	return DeviceReadyWhile(NikonMtpResponseCode::Device_Busy, stopToken, sleepTimems);
 }
 void NikonCamera::EndLiveView() {
 	auto lvstate = GetDevicePropValue(NikonMtpDevicePropCode::RemoteLiveViewStatus);
