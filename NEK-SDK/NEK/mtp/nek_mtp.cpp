@@ -753,7 +753,7 @@ MtpDeviceInfoDS MtpDevice::GetDeviceInfo() {
 	MtpResponse response = SendCommandAndRead(MtpOperationCode::GetDeviceInfo, params);
 
 	if (response.responseCode != MtpResponseCode::OK) {
-		throw new MtpException(MtpOperationCode::GetDeviceInfo, response.responseCode);
+		throw MtpException(MtpOperationCode::GetDeviceInfo, response.responseCode);
 	}
 
 	MtpDeviceInfoDS deviceInfo;
@@ -843,7 +843,7 @@ MtpObjectInfoDS MtpDevice::GetObjectInfo(uint32_t handle) {
 	MtpResponse response = SendCommandAndRead(MtpOperationCode::GetObjectInfo, params);
 
 	if (response.responseCode != MtpResponseCode::OK) {
-		throw new MtpException(MtpOperationCode::GetDeviceInfo, response.responseCode);
+		throw MtpException(MtpOperationCode::GetDeviceInfo, response.responseCode);
 	}
 
 	MtpObjectInfoDS objectInfo;
@@ -912,7 +912,7 @@ MtpDevicePropDescDS MtpDevice::GetDevicePropDesc(uint16_t devicePropCode) {
 	MtpResponse response = SendCommandAndRead(MtpOperationCode::GetDevicePropDesc, params);
 
 	if (response.responseCode != MtpResponseCode::OK) {
-		throw new MtpException(MtpOperationCode::GetDevicePropDesc, response.responseCode);
+		throw MtpException(MtpOperationCode::GetDevicePropDesc, response.responseCode);
 	}
 
 	MtpDevicePropDescDS result = GetDevicePropDesc_(response);
@@ -1351,7 +1351,7 @@ MtpDatatypeVariant MtpDevice::GetDevicePropValue(uint16_t devicePropCode) {
 	MtpResponse response = SendCommandAndRead(MtpOperationCode::GetDevicePropValue, params);
 
 	if (response.responseCode != MtpResponseCode::OK) {
-		throw new MtpException(MtpOperationCode::GetDevicePropValue, response.responseCode);
+		throw MtpException(MtpOperationCode::GetDevicePropValue, response.responseCode);
 	}
 
 	return GetDevicePropValue_(response, dataType);
@@ -1501,7 +1501,7 @@ void MtpDevice::SetDevicePropValue(uint16_t devicePropCode, MtpDatatypeVariant d
 	MtpResponse response = SendCommandAndWrite(MtpOperationCode::SetDevicePropValue, params, rawdata);
 
 	if (response.responseCode != MtpResponseCode::OK) {
-		throw new MtpException(MtpOperationCode::SetDevicePropValue, response.responseCode);
+		throw MtpException(MtpOperationCode::SetDevicePropValue, response.responseCode);
 	}
 
 	return;
