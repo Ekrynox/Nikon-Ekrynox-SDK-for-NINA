@@ -488,7 +488,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     this.cameraInfo = this.camera.GetDeviceInfo();
                     RaiseAllPropertiesChanged();
                 } else {
-                    Notification.ShowError("Nikon NEK: The camera have been bruttaly disconnected!");
+                    Notification.ShowError("Nikon NEK: The camera have been brutally disconnected!");
                     this.cameraMediator.Disconnect();
                 }
             } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
