@@ -2,6 +2,7 @@
 using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility;
+using NINA.Core.Utility.Notification;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
@@ -364,11 +365,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInt32(out var exp)) return false;
-                        var exps = exp.EnumFORM.ToList();
-                        return exps.Contains(0xFFFFFFFF);
-                    } catch {
-                        throw;
+                        if (!result.TryGetUInt32(out var exp)) {
+                            Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
+                            return false;
+                        }
+                        return exp.EnumFORM.ToList().Contains(0xFFFFFFFF);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "CanSetBulb", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "CanSetBulb", sourceFile);
                     }
                 }
                 return false;
@@ -379,7 +384,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInt32(out var exp)) return new List<double>();
+                        if (!result.TryGetUInt32(out var exp)) {
+                            Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "Exposures", sourceFile);
+                            return new List<double>();
+                        }
 
                         _isBulb = (exp.CurrentValue == 0xFFFFFFFF); //Bulb
 
@@ -387,8 +395,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         exps.Remove(0xFFFFFFFF); //Bulb
                         exps.Remove(0xFFFFFFFD); //Time
                         return exps.Select(x => x / 10000.0).ToList();
-                    } catch {
-                        throw;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "Exposures", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "Exposures", sourceFile);
                     }
                 }
                 return new List<double>();
@@ -416,11 +426,21 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double ExposureTime {
             get {
                 if (Connected) {
-                    if (_isBulb) {
-                        return _bulbTime;
-                    }else {
-                        camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime).TryGetUInt32(out var exp);
-                        return exp / 10000.0;
+                    if (this._isBulb) {
+                        return this._bulbTime;
+                    } else {
+                        try {
+                            var result = this.camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
+                            if (!result.TryGetUInt32(out var exp)) {
+                                Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
+                                return 0;
+                            }
+                            return exp / 10000.0;
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
+                        }
                     }
                 }
                 return 0;
@@ -429,16 +449,34 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     double newExp = Exposures.OrderBy(x => Math.Abs(value - x)).First();
 
-                    if ((value > 1.0) && (value > ExposureMax || value != newExp) && CanSetBulb) {
-                        this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
-                        _isBulb = true;
-                        _bulbTime = value;
+                    if ((value > 1.0) && (value != newExp) && CanSetBulb) {
+                        try {
+                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
+                            this._isBulb = true;
+                            this._bulbTime = value;
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            throw;
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            Notification.ShowError("Nikon NEK: Bulb could not be set!\nAre you in M mode?");
+                            throw;
+                        }
                     } else {
                         try {
                             this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
-                            _isBulb = false;
+                            this._isBulb = false;
                             RaisePropertyChanged();
-                        } catch {
+
+                            if ((value > newExp) && (value > 1)) {
+                                Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?");
+                            }
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            throw;
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
                             throw;
                         }
                     }
@@ -453,6 +491,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     this.cameraInfo = this.camera.GetDeviceInfo();
                     RaiseAllPropertiesChanged();
                 } else {
+                    Notification.ShowError("Nikon NEK: The camera have been bruttaly disconnected!");
                     this.cameraMediator.Disconnect();
                 }
             } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
