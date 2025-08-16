@@ -2,6 +2,7 @@
 
 ## 0.2.1.0
 - Fix breaking bug on exposure setting
+- Exposure time revert back after capture
 
 
 ## 0.2.0.0
