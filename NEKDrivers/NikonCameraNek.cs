@@ -65,7 +65,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public Task<bool> Connect(CancellationToken token) { //TODO: Add error management
             return Task.Run(() => {
                 try {
-                    this.camera = new NEKCS.NikonCamera(devicePath, 1);
+                    this.camera = new NEKCS.NikonCamera(devicePath, 2);
                     if (!this.camera.isConnected()) {
                         return false;
                     }
