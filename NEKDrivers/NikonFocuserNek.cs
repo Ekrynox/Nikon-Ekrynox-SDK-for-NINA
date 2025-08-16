@@ -149,6 +149,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
+                    Interlocked.Increment(ref cameraNek._requestedLiveview);
                     cameraNek.camera.StartLiveView(true, ct);
 
                     var parameters = new MtpParams();
