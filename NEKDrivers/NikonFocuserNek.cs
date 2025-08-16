@@ -3,6 +3,7 @@ using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
 using NINA.Core.Utility;
+using NINA.Core.Utility.Notification;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Profile.Interfaces;
@@ -79,6 +80,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (cameraNek == null || cameraNek.camera == null) return;
 
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                cameraNek = null;
             }
 
             public void SetupDialog() => throw new NotImplementedException();
@@ -185,7 +187,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
                         case NikonMtpDevicePropCode.LensID:
                         case NikonMtpDevicePropCode.LensSort:
-                            if (!cameraNek.isFocusDrivableLens()) {
+                            if (cameraNek != null && !cameraNek.isFocusDrivableLens()) {
+                                Notification.ShowError("Nikon NEK: The lens have been unmounted!");
                                 cameraNek.focuserMediator.Disconnect();
                             }
                             break;
