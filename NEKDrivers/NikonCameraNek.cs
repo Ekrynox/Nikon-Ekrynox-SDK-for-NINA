@@ -66,57 +66,87 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             return Task.Run(() => {
                 try {
                     this.camera = new NEKCS.NikonCamera(devicePath, 2);
-                    if (!this.camera.isConnected()) {
-                        return false;
-                    }
-
-                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams()); //Try to purge the Camera SDRAM to correctly receive handle 
-                    this.cameraInfo = this.camera.GetDeviceInfo();
-
-                    this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
-                    this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
-
-                    lock (_gateCameraState) {
-                        _cameraState = CameraStates.Idle;
-                    }
-
-                    _bulbTime = 0;
-                    _isBulb = false;
-
-                    _imageInfo = null;
-                    _imageStream = null;
-
-                    _liveviewHeaderSize = -1;
-                    _requestedLiveview = 0;
-                    sdramHandle = 0xFFFF0001;
-
-                    updateLensInfo(true);
-
-                    return this.camera.isConnected();
-                } catch (Exception ex) {
-                    // Handle connection errors
-                    Console.WriteLine($"Error connecting to Nikon camera: {ex.Message}");
+                } catch (MtpDeviceException e) {
+                    Logger.Error("Error while connecting to the Camera", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    return false;
                 }
-                return false;
+
+                if (!this.camera.isConnected()) {
+                    this.camera.Dispose();
+                    this.camera = null;
+                    return false;
+                }
+
+                try {
+                    //Try to purge the Camera SDRAM to correctly receive handle at the first capture
+                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams());
+                } catch (MtpDeviceException e) {
+                    Logger.Error("Error while purging SDRAM", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    this.camera.Dispose();
+                    this.camera = null;
+                    return false;
+                } catch (MtpException e) {
+                    Logger.Error("Error while purging SDRAM", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    this.camera.Dispose();
+                    this.camera = null;
+                    return false;
+                }
+
+                try {
+                    //Get device info: Operation, Properties, Events, ... supported + Name, model number, serial, ...
+                    this.cameraInfo = this.camera.GetDeviceInfo();
+                } catch (MtpDeviceException e) {
+                    Logger.Error("Error while requesting Device Info", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    this.camera.Dispose();
+                    this.camera = null;
+                    return false;
+                } catch (MtpException e) {
+                    Logger.Error("Error while requesting Device Info", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    this.camera.Dispose();
+                    this.camera = null;
+                    return false;
+                }
+
+                this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
+                this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
+
+                lock (_gateCameraState) {
+                    this._cameraState = CameraStates.Idle;
+                }
+
+                this._bulbTime = 0;
+                this._isBulb = false;
+
+                this._imageInfo = null;
+                this._imageStream = null;
+
+                this._liveviewHeaderSize = -1;
+                this._requestedLiveview = 0;
+                this.sdramHandle = 0xFFFF0001;
+
+                updateLensInfo(true);
+
+                return this.camera.isConnected();
             }, token);
         }
 
         public void Disconnect() {
             if (this.camera != null) {
                 lock(_gateCameraState) {
-                    _cameraState = CameraStates.NoState;
+                    this._cameraState = CameraStates.NoState;
                 }
 
-                if (focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
-                    focuserMediator.Disconnect();
+                if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
+                    this.focuserMediator.Disconnect();
+                }
+                if (this.camera != null) {
+                    this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                    this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+                    this.camera.Dispose();
+                    this.camera = null;
                 }
 
-                this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
-                this.camera.Dispose();
-                this.camera = null;
-
-                foreach (var i in _awaitersCameraState) {
+                foreach (var i in this._awaitersCameraState) {
                     i.Value.SetCanceled();
                 }
                 RaisePropertyChanged("Connected");
