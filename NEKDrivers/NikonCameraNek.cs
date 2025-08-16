@@ -147,7 +147,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int CameraYSize { get => 0; } //TODO
         public double PixelSizeX { get => 0; } //TODO
         public double PixelSizeY { get => 0; } //TODO
-        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO: set at 16bits for dcraw
+        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO:
 
         public short BinX { get => 1; set { } } //TO RECHECK
         public short BinY { get => 1; set { } } //TO RECHECK
@@ -374,8 +374,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
             if (e.eventCode == NikonMtpEventCode.DeviceInfoChanged) {
                 if (Connected) {
-                    //this.cameraInfo = this.camera.GetDeviceInfo();
-                    //RaiseAllPropertiesChanged();
+                    this.cameraInfo = this.camera.GetDeviceInfo();
+                    RaiseAllPropertiesChanged();
                 } else {
                     this.cameraMediator.Disconnect();
                 }
@@ -447,6 +447,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private CameraStates _cameraState;
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
+        private CancellationTokenSource bulbToken;
 
         private MemoryStream _imageStream;
         private NikonObjectInfoDS _imageInfo;
@@ -536,8 +537,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
 
                 if (_isBulb) {
+                    bulbToken = new CancellationTokenSource();
                     Task.Run(async () => {
-                        await Task.Delay((int)(sequence.ExposureTime * 1000));
+                        await Task.Delay((int)(sequence.ExposureTime * 1000), bulbToken.Token);
+                        if (bulbToken.IsCancellationRequested) return;
                         lock (_gateCameraState) {
                             if (_cameraState == CameraStates.Exposing) {
                                 var p = new MtpParams();
@@ -546,7 +549,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                                 camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
                             }
                         }
-                    });
+                    }, bulbToken.Token);
                 }
 
             } catch {
@@ -557,7 +560,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
                 throw;
             }
-        } //Bug with cancelation to fix => will stop future exposure with the timer
+        }
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
             lock (_gateCameraState) {
                 if (_cameraState > CameraStates.Exposing) {
@@ -582,29 +585,30 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StopExposure() {
-            if (_isBulb) {
-                try {
-                    var p = new MtpParams();
-                    p.addUint32(0);
-                    p.addUint32(0);
-                    camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                } catch { }
-            } else {
-                throw new NotSupportedException("You can't Stop Non Bulb Exposure");
+            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
+                if (_isBulb) {
+                    bulbToken.Cancel();
+                    try {
+                        var p = new MtpParams();
+                        p.addUint32(0);
+                        p.addUint32(0);
+                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                    } catch { }
+                }
+                tcs.TrySetCanceled();
             }
         }
 
         public void AbortExposure() {
             if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
                 if (_isBulb) {
+                    bulbToken.Cancel();
                     try {
                         var p = new MtpParams();
                         p.addUint32(0);
                         p.addUint32(0);
                         camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                    } catch {
-                        throw new NotSupportedException("You can't Stop Non Bulb Exposure");
-                    }
+                    } catch { }
                 }
                 tcs.TrySetCanceled();
             }
