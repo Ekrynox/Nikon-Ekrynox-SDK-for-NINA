@@ -22,6 +22,7 @@ using System.Windows.Media.Imaging;
 
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek : BaseINPC, ICamera {
+        public const string sourceFile = @"NEKDrivers\NikonCameraNEK.cs";
 
         public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
             this.devicePath = devicePath;
@@ -62,12 +63,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public string DriverVersion { get => cameraInfo.DeviceVersion; }
 
 
-        public Task<bool> Connect(CancellationToken token) { //TODO: Add error management
+        public Task<bool> Connect(CancellationToken token) {
             return Task.Run(() => {
                 try {
                     this.camera = new NEKCS.NikonCamera(devicePath, 2);
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while connecting to the Camera", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    Logger.Error("Error while connecting to the Camera: " + this.Name, e, "Connect", sourceFile);
                     return false;
                 }
 
@@ -81,12 +82,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                     this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams());
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while purging SDRAM", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
                     this.camera.Dispose();
                     this.camera = null;
                     return false;
                 } catch (MtpException e) {
-                    Logger.Error("Error while purging SDRAM", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
                     this.camera.Dispose();
                     this.camera = null;
                     return false;
@@ -96,12 +97,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     //Get device info: Operation, Properties, Events, ... supported + Name, model number, serial, ...
                     this.cameraInfo = this.camera.GetDeviceInfo();
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while requesting Device Info", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    Logger.Error("Error while requesting Device Info: " + this.Name, e, sourceFile);
                     this.camera.Dispose();
                     this.camera = null;
                     return false;
                 } catch (MtpException e) {
-                    Logger.Error("Error while requesting Device Info", e, "Connect", "NEKDrivers\\NikonCameraNek.cs", 0);
+                    Logger.Error("Error while requesting Device Info: " + this.Name, e, sourceFile);
                     this.camera.Dispose();
                     this.camera = null;
                     return false;
@@ -199,16 +200,27 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int OffsetMin { get; }
         public int OffsetMax { get; }
 
-        public bool HasBattery { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.BatteryLevel); }
+        public bool HasBattery { get => Connected && this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.BatteryLevel); }
         public int BatteryLevel {
             get {
                 if (Connected) {
+                    MtpDatatypeVariant result;
                     try {
-                        var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
-                        return result.TryGetUInt8(out var level) ? (int)level : 0;
-                    } catch {
-                        throw;
+                        result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "BatteryLevel", sourceFile);
+                        return -1;
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "BatteryLevel", sourceFile);
+                        return -1;
                     }
+
+                    if (!result.TryGetUInt8(out var level)) {
+                        Logger.Error("Wrong Datatype UInt8 on " + this.Name, "BatteryLevel", sourceFile);
+                        return -1;
+                    }
+
+                    return level;
                 }
                 return -1;
             }
