@@ -156,13 +156,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                         }
                     } else {
-                        while ((Math.Abs(position - _position) >= _minStepSize) && !ct.IsCancellationRequested) {
+                        while (position != _position && !ct.IsCancellationRequested) {
                             int steps = position - (int)_position;
                             bool toInf = steps > 0;
                             steps = Math.Abs(steps);
                             steps = Math.Min(steps, (int)_maxStepSize);
+
+                            if (steps < _minStepSize) {
+                                steps = (int)_minStepSize * 2;
+                                toInf = _nbSteps - steps > _position;
+                            }
+
                             var result = MoveBy((uint)steps, toInf, ct).Result;
-                            if (result != NikonMtpResponseCode.OK) break;
+                            if ((result != NikonMtpResponseCode.OK)) break;
                             if (ct.IsCancellationRequested) break;
                         }
                     }

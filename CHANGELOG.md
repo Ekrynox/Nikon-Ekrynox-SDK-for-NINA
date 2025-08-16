@@ -1,5 +1,11 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.0.0
+- Fix some Bugs
+- Logging & Error handling
+- Information Notifications
+
+
 ## 0.2.1.0
 - Fix breaking bug on exposure setting
 - Exposure time revert back after capture
