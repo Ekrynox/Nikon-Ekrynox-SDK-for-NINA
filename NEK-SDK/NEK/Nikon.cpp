@@ -251,7 +251,7 @@ mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
 		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, params);
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorPropCodes, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::GetVendorPropCodes, response.responseCode);
 		}
 
 		uint32_t len = *(uint32_t*)response.data.data();
@@ -274,7 +274,7 @@ mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
 		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
 		}
 
 		uint32_t len = *(uint32_t*)response.data.data();
@@ -296,7 +296,7 @@ mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
 		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
 		}
 
 		len = *(uint32_t*)response.data.data();
@@ -330,7 +330,7 @@ mtp::MtpDevicePropDescDS NikonCamera::GetDevicePropDesc(uint32_t devicePropCode)
 		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropDescEx, params);
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::GetDevicePropDescEx, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropDescEx, response.responseCode);
 		}
 
 		mtp::MtpDevicePropDescDS result = GetDevicePropDesc_(response);
@@ -362,7 +362,7 @@ mtp::MtpDatatypeVariant NikonCamera::GetDevicePropValue(uint32_t devicePropCode)
 		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropValueEx, params);
 
 		if (response.responseCode != mtp::MtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::GetDevicePropValueEx, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropValueEx, response.responseCode);
 		}
 
 		return GetDevicePropValue_(response, dataType);
@@ -382,7 +382,7 @@ void NikonCamera::SetDevicePropValue(uint32_t devicePropCode, mtp::MtpDatatypeVa
 		mtp::MtpResponse response = SendCommandAndWrite(NikonMtpOperationCode::SetDevicePropValueEx, params, rawdata);
 
 		if (response.responseCode != mtp::MtpResponseCode::OK) {
-			throw new mtp::MtpException(NikonMtpOperationCode::SetDevicePropValueEx, response.responseCode);
+			throw mtp::MtpException(NikonMtpOperationCode::SetDevicePropValueEx, response.responseCode);
 		}
 
 		return;
@@ -444,7 +444,7 @@ uint32_t NikonCamera::StartLiveView(bool wait, std::stop_token stopToken, size_t
 	mtp::MtpParams params = mtp::MtpParams();
 	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::StartLiveView, params);
 	if (response.responseCode != NikonMtpResponseCode::OK) {
-		throw new mtp::MtpException(NikonMtpOperationCode::StartLiveView, response.responseCode);
+		throw mtp::MtpException(NikonMtpOperationCode::StartLiveView, response.responseCode);
 	}
 
 	if (!wait) return response.responseCode;
@@ -459,6 +459,6 @@ void NikonCamera::EndLiveView() {
 	mtp::MtpParams params = mtp::MtpParams();
 	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::EndLiveView, params);
 	if (response.responseCode != NikonMtpResponseCode::OK) {
-		throw new mtp::MtpException(NikonMtpOperationCode::EndLiveView, response.responseCode);
+		throw mtp::MtpException(NikonMtpOperationCode::EndLiveView, response.responseCode);
 	}
 }
