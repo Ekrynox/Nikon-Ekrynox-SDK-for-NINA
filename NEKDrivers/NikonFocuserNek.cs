@@ -145,7 +145,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public void Halt() => throw new NotImplementedException();
 
 
-            public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Thow error if out of range & Time limited deviceReady
+            public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
                     lock (cameraNek._gateCameraState) {
                         if (!cameraNek.Connected || cameraNek._cameraState == CameraStates.Idle) {
