@@ -111,6 +111,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             ct.ThrowIfCancellationRequested();
                         }
 
+                        cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
                         cameraNek._cameraState = CameraStates.Waiting;
                     }
 
@@ -139,6 +140,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
+                    if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.SetResult(true);
                 });
             }
 
@@ -147,14 +149,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
-                    lock (cameraNek._gateCameraState) {
-                        if (!cameraNek.Connected || cameraNek._cameraState == CameraStates.Idle) {
-                            ct.ThrowIfCancellationRequested();
-                        }
-
-                        cameraNek._cameraState = CameraStates.Waiting;
-                    }
-
                     cameraNek.camera.StartLiveView(true, ct);
 
                     var parameters = new MtpParams();
@@ -178,8 +172,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         _position -= toInf ? 0 : distance;
                     }
                     RaisePropertyChanged("Position");
-
-                    lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
 
                     cameraNek.StopLiveView(5000);
                     return result;
