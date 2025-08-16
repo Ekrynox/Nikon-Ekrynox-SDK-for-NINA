@@ -18,6 +18,7 @@ using System.Windows.Markup.Localizer;
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek {
         public class NikonFocuserNek : BaseINPC, IFocuser {
+            public const string sourceFile = @"NEKDrivers\NikonFocuserNEK.cs";
 
             public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator) {
                 this.profileService = profileService;
@@ -33,6 +34,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             private readonly IProfileService profileService;
             private readonly ICameraMediator cameraMediator;
 
+            private bool _isConnected = false;
+
             private UInt32 _minStepSize;
             private UInt32 _maxStepSize;
             private UInt32 _nbSteps;
@@ -46,7 +49,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public string Name { get => cameraNek.Name; }
             public string DisplayName { get => cameraNek.Name + " Lens (NEK Experimental)"; }
             public string Category { get => "Nikon"; }
-            public bool Connected { get => (cameraNek != null) && (cameraNek.camera != null) && cameraNek.Connected; }
+            public bool Connected { get => _isConnected && cameraNek.Connected; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
             public string DriverInfo { get => "Nikon Ekrynox SDK"; }
             public string DriverVersion { get => cameraNek.DriverVersion; }
@@ -58,6 +61,27 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return false;
                     }
 
+                    try {
+                        var result = cameraNek.camera.GetDevicePropValue(NikonMtpDevicePropCode.FocusMode);
+                        if (result.TryGetUInt16(out var focus)) {
+                            if (focus == 0x0001) {
+                                Logger.Info("The camera is in Manual Focus.", "Connect", sourceFile);
+                                Notification.ShowError("The lens focuser cannot work in MF mode. Please switch to AF (recommended: AF-S).");
+                                return false;
+                            } else {
+                                Logger.Error("Wrong Datatype UInt16 for FocusMode on " + this.Name, "Connect", sourceFile);
+                            }
+                        }
+                    } catch (MtpDeviceException e) {
+                        Logger.Error("Error while checking Focus mode: " + this.Name, e, "Connect", sourceFile);
+                        return false;
+                    } catch (MtpException e) {
+                        Logger.Error("Error while checking Focus mode: " + this.Name, e, "Connect", sourceFile);
+                        return false;
+                    }
+
+                    _isConnected = true;
+
                     _minStepSize = 25;
                     _maxStepSize = 32767;
                     _nbSteps = int.MaxValue;
@@ -67,7 +91,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     DetectMaxStep(token);
                     DetectMinStep(token);
                     DetectStepsNb(token);
-                    if (token.IsCancellationRequested) return false;
+                    if (token.IsCancellationRequested) {
+                        _isConnected = false;
+                        return false;
+                    }
 
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
 
@@ -77,10 +104,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
             public void Disconnect() {
+                _isConnected = false;
                 if (cameraNek == null || cameraNek.camera == null) return;
-
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                cameraNek = null;
             }
 
             public void SetupDialog() => throw new NotImplementedException();
@@ -173,6 +199,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         result = NikonMtpResponseCode.OK;
                         _position += toInf ? distance : 0;
                         _position -= toInf ? 0 : distance;
+                    } else {
+                        var e = new MtpException(NikonMtpOperationCode.MfDrive, response.responseCode);
+                        Logger.Error(e, "MoveBy", sourceFile);
+                        throw e;
                     }
                     RaisePropertyChanged("Position");
 
