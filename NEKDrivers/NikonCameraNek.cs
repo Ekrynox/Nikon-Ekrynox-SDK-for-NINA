@@ -351,15 +351,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
             set {
                 if (Connected) {
-                    UInt32 newExp = (UInt32)(Exposures.OrderBy(x => Math.Abs(value - x)).First());
+                    double newExp = Exposures.OrderBy(x => Math.Abs(value - x)).First();
 
-                    if ((value > 1) && (_requestedLiveview == 0) && (value > ExposureMax || value != newExp) && CanSetBulb) {
+                    if ((value > 1.0) && (value > ExposureMax || value != newExp) && CanSetBulb) {
                         this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                         _isBulb = true;
                         _bulbTime = value;
                     } else {
                         try {
-                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant(newExp * 10000));
+                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             _isBulb = false;
                             RaisePropertyChanged();
                         } catch {
@@ -448,6 +448,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
         private CancellationTokenSource bulbToken;
+        private double _oldExposureTime;
 
         private MemoryStream _imageStream;
         private NikonObjectInfoDS _imageInfo;
@@ -482,6 +483,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     param.addUint32(sdramHandle);
                     NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
                     _imageStream = new(result.data);
+                    try {
+                        this.ExposureTime = _oldExposureTime;
+                    } catch { }
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
                         dl.SetResult(true);
                     }
@@ -516,6 +520,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 _cameraState = CameraStates.Exposing;
             }
 
+            _oldExposureTime = this.ExposureTime;
             try {
                 this.ExposureTime = sequence.ExposureTime;
             } catch { }
@@ -639,7 +644,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public void StartLiveView(CaptureSequence sequence) {
             Interlocked.Increment(ref _requestedLiveview);
             try {
-                this.ExposureTime = sequence.ExposureTime;
                 camera.StartLiveView();
             } catch { 
                 Interlocked.Decrement(ref _requestedLiveview);
