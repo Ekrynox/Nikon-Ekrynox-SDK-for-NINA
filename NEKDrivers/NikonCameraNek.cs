@@ -1,4 +1,6 @@
-﻿using NEKCS;
+﻿using Google.Protobuf.WellKnownTypes;
+using NEKCS;
+using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility;
@@ -347,9 +349,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         }
                         RaisePropertyChanged();
                     } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "Gain -> Setter", sourceFile);
+                        Logger.Error(this.Name, e, "Gain -> Setter: " + value, sourceFile);
                     } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "Gain -> Setter", sourceFile);
+                        Logger.Error(this.Name, e, "Gain -> Setter: " + value, sourceFile);
                     }
                 }
             }
@@ -454,12 +456,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             this._isBulb = true;
                             this._bulbTime = value;
+                            RaisePropertyChanged();
                         } catch (MtpDeviceException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
                         } catch (MtpException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
-                            Notification.ShowError("Nikon NEK: Bulb could not be set!\nAre you in M mode?");
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
                         }
                     } else {
@@ -467,16 +469,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             this._isBulb = false;
                             RaisePropertyChanged();
-
-                            if ((value > newExp) && (value > 1)) {
-                                Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?");
-                            }
                         } catch (MtpDeviceException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
                         } catch (MtpException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Setter", sourceFile);
-                            Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
+                            Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
                         }
                     }
@@ -620,25 +617,34 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StartExposure(CaptureSequence sequence) {
-            if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
+            if (!Connected || this._cameraState == CameraStates.Error || this._cameraState == CameraStates.NoState) return;
 
-            if (_cameraState == CameraStates.Waiting && _awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.Task.Wait();
+            if (this._cameraState == CameraStates.Waiting && this._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.Task.Wait();
 
-            if (_cameraState != CameraStates.Idle) AbortExposure();
+            if (this._cameraState != CameraStates.Idle) AbortExposure();
 
-            if (_cameraState == CameraStates.Exposing && _awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) etcs.Task.Wait();
-            if (_cameraState == CameraStates.Download && _awaitersCameraState.TryGetValue(CameraStates.Download, out var dtcs)) dtcs.Task.Wait();
+            if (this._cameraState == CameraStates.Exposing && this._awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) etcs.Task.Wait();
+            if (this._cameraState == CameraStates.Download && this._awaitersCameraState.TryGetValue(CameraStates.Download, out var dtcs)) dtcs.Task.Wait();
 
             lock (_gateCameraState) {
-                _awaitersCameraState[CameraStates.Exposing] = new();
-                _awaitersCameraState[CameraStates.Download] = new();
-                _cameraState = CameraStates.Exposing;
+                this._awaitersCameraState[CameraStates.Exposing] = new();
+                this._awaitersCameraState[CameraStates.Download] = new();
+                this._cameraState = CameraStates.Exposing;
             }
 
-            _oldExposureTime = this.ExposureTime;
+            this._oldExposureTime = this.ExposureTime;
             try {
                 this.ExposureTime = sequence.ExposureTime;
-            } catch { }
+                if (!this.CanSetBulb && (this.ExposureTime != this._oldExposureTime) && (this.ExposureTime > 1)) {
+                    Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?");
+                }
+            } catch (MtpException) {
+                if (this._isBulb) {
+                    Notification.ShowError("Nikon NEK: Bulb could not be set!\nAre you in M mode?");
+                } else {
+                    Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
+                }
+            }
 
             try {
                 NEKCS.MtpParams param = new();
