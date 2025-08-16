@@ -836,7 +836,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 NEKCS.MtpParams parameters = new();
                 NEKCS.MtpResponse response;
                 try {
-                    response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
+                    if (cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImageEx)) {
+                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImageEx, parameters);
+                    } else {
+                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
+                    }
                     if (response.responseCode != NikonMtpResponseCode.OK) {
                         return null;
                     }
