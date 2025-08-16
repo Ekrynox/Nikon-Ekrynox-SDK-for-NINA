@@ -467,10 +467,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             if (e.eventCode == NikonMtpEventCode.ObjectAddedInSdram) {
                 lock (_gateCameraState) {
                     _cameraState = CameraStates.Download;
-
-                    if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var exp)) {
-                        exp.TrySetResult(true);
-                    }
+                }
+                if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var exp)) {
+                    exp.TrySetResult(true);
                 }
 
                 try {
@@ -484,17 +483,17 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
                     _imageStream = new(result.data);
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
-                        dl.TrySetResult(true);
+                        dl.SetResult(true);
                     }
                 } catch {
-                    lock (_gateCameraState) {
-                        _cameraState = CameraStates.Idle;
-                        if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
-                            dl.TrySetCanceled();
-                        }
-                        _cameraState = CameraStates.Download;
+                    if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
+                        dl.TrySetCanceled();
                     }
                     throw;
+                } finally {
+                    lock (_gateCameraState) {
+                        _cameraState = CameraStates.Idle;
+                    }
                 }
             } else if (e.eventCode == NikonMtpEventCode.LiveViewStateChanged) {
                 RaisePropertyChanged("LiveViewEnabled");
@@ -502,16 +501,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StartExposure(CaptureSequence sequence) {
-            lock (_gateCameraState) {
-                if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState || _cameraState == CameraStates.Waiting) return;
+            if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
 
-                if (_cameraState != CameraStates.Idle) {
-                    AbortExposure();
-                }
+            if (_cameraState == CameraStates.Waiting && _awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.Task.Wait();
 
-            }
+            if (_cameraState != CameraStates.Idle) AbortExposure();
 
-            camera.DeviceReadyWhile([NikonMtpResponseCode.Device_Busy, NikonMtpResponseCode.Bulb_Release_Busy]);
+            if (_cameraState == CameraStates.Exposing && _awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) etcs.Task.Wait();
+            if (_cameraState == CameraStates.Download && _awaitersCameraState.TryGetValue(CameraStates.Download, out var dtcs)) dtcs.Task.Wait();
 
             lock (_gateCameraState) {
                 _awaitersCameraState[CameraStates.Exposing] = new();
@@ -521,7 +518,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             try {
                 this.ExposureTime = sequence.ExposureTime;
+            } catch { }
 
+            try {
                 NEKCS.MtpParams param = new();
                 MtpResponse result;
                 if (_isBulb) {
@@ -535,23 +534,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (result.responseCode != NikonMtpResponseCode.OK) {
                     throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.responseCode);
                 }
-
-                if (_isBulb) {
-                    bulbToken = new CancellationTokenSource();
-                    Task.Run(async () => {
-                        await Task.Delay((int)(sequence.ExposureTime * 1000), bulbToken.Token);
-                        if (bulbToken.IsCancellationRequested) return;
-                        lock (_gateCameraState) {
-                            if (_cameraState == CameraStates.Exposing) {
-                                var p = new MtpParams();
-                                p.addUint32(0);
-                                p.addUint32(0);
-                                camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                            }
-                        }
-                    }, bulbToken.Token);
-                }
-
             } catch {
                 _awaitersCameraState[CameraStates.Exposing].TrySetCanceled();
                 _awaitersCameraState[CameraStates.Download].TrySetCanceled();
@@ -560,26 +542,31 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
                 throw;
             }
+
+            if (_isBulb) {
+                bulbToken = new CancellationTokenSource();
+                Task.Run(async () => {
+                    await Task.Delay((int)(sequence.ExposureTime * 1000), bulbToken.Token);
+                    if (bulbToken.IsCancellationRequested) return;
+                    lock (_gateCameraState) {
+                        if (_cameraState == CameraStates.Exposing) {
+                            var p = new MtpParams();
+                            p.addUint32(0);
+                            p.addUint32(0);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                        }
+                    }
+                }, bulbToken.Token);
+            }
         }
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
             lock (_gateCameraState) {
-                if (_cameraState > CameraStates.Exposing) {
-                    return;
-                }
+                if (_cameraState != CameraStates.Exposing && _cameraState != CameraStates.Idle) return;
             }
 
             using (token.Register(() => AbortExposure())) {
-                if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var tcs)) {
-                    if (_isBulb) {
-                        await Task.Run(() => camera.DeviceReadyWhile(NikonMtpResponseCode.Bulb_Release_Busy));
-                    } else {
-                        await Task.Run(() => camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy));
-                    }
-
-                    tcs.TrySetResult(true);
-                    lock (_gateCameraState) {
-                        _cameraState = CameraStates.Download;
-                    }
+                if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) {
+                    await etcs.Task;
                 }
             }
         }
@@ -595,7 +582,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
                     } catch { }
                 }
-                tcs.TrySetCanceled();
             }
         }
 
@@ -610,40 +596,29 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
                     } catch { }
                 }
-                tcs.TrySetCanceled();
             }
         }
 
         public async Task<IExposureData> DownloadExposure(CancellationToken token) {
-            lock (_gateCameraState) {
-                if (_cameraState < CameraStates.Exposing) {
-                    return null;
-                }
-            }
-
             if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
                 await tcs.Task;
-                if (tcs.Task.IsCanceled) {
-                    lock (_gateCameraState) {
-                        _cameraState = CameraStates.Download;
-                    }
-                }
+                if (tcs.Task.IsCanceled) return null;
+            }
+
+            if (_imageStream == null) {
+                return null;
             }
 
             try {
                 var rawImageData = _imageStream.ToArray();
                 var metaData = new ImageMetaData();
                 metaData.FromCamera(this);
-                return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef", bitDepth: this.BitDepth, metaData: metaData);
-            } finally {
                 if (_imageStream != null) {
                     _imageStream.Dispose();
                     _imageStream = null;
                 }
-                lock (_gateCameraState) {
-                    _cameraState = CameraStates.Idle;
-                }
-            }
+                return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef", bitDepth: this.BitDepth, metaData: metaData);
+            } catch { throw; }
         }
 
 
