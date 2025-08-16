@@ -515,42 +515,87 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public bool isCpuLensMounted() {
-            try {
-                var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
-                return result.TryGetUInt8(out var lensSort) && lensSort == 1;
-            } catch { return false; }
+            if (Connected) {
+                try {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
+                    if (!result.TryGetUInt8(out var exp)) {
+                        Logger.Error("Wrong Datatype Uint8 for LensSort on " + this.Name, "isCpuLensMounted", sourceFile);
+                        return false;
+                    }
+                    return result.TryGetUInt8(out var lensSort) && lensSort == 1;
+                } catch (MtpDeviceException e) {
+                    Logger.Error(this.Name, e, "isCpuLensMounted", sourceFile);
+                } catch (MtpException e) {
+                    Logger.Error(this.Name, e, "isCpuLensMounted", sourceFile);
+                }
+            }
+            return false;
         }
         public bool isFocusDrivableLens() {
-            if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) return false;
-            if (!isCpuLensMounted()) return false;
+            if (Connected) {
+                if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) return false;
+                if (!isCpuLensMounted()) return false;
 
-            //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
-            if (!cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) return true;
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(out var lenstype);
-            if ((lenstype & 0b1) == 0) return true; //Native Z lens
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(out lenstype); //On mirrorless this property is 64bits
-            if ((lenstype & 0b10000) == 0) return false;
+                try {
+                    //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
+                    if (!cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) return true; //Not Mirroless Z
 
-            return true;
+                    if (!camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(out var lenstype)) {
+                        Logger.Error("Wrong Datatype UInt64 (mirrorless) for LensTypeML on " + this.Name, "isCpuLensMounted", sourceFile);
+                        return false;
+                    }
+                    if ((lenstype & 0b1) == 0) return true; //Native Z lens
+
+                    if (!camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(out lenstype)) { //On mirrorless this property is 64bits
+                        Logger.Error("Wrong Datatype UInt64 (mirrorless) for LensTypeF on " + this.Name, "isCpuLensMounted", sourceFile);
+                        return false;
+                    }
+                    if ((lenstype & 0b10000) != 0) return true; //AF-S Lens with mount adaptor
+
+                    return true;
+                } catch (MtpDeviceException e) {
+                    Logger.Error(this.Name, e, "isFocusDrivableLens", sourceFile);
+                } catch (MtpException e) {
+                    Logger.Error(this.Name, e, "isFocusDrivableLens", sourceFile);
+                }
+            }
+            return false;
         }
         private void updateLensInfo(bool init = false) {
-            if (isCpuLensMounted()) {
-                try {
-                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
-                    if (result.TryGetUInt32(out var flength)) {
-                        this.profileService.ActiveProfile.TelescopeSettings.FocalLength = flength / 100.0;
+            if (Connected) {
+                if (isCpuLensMounted()) {
+                    try {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.FocalLength)) {
+                            var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
+                            if (result.TryGetUInt32(out var flength)) {
+                                this.profileService.ActiveProfile.TelescopeSettings.FocalLength = flength / 100.0;
+                            } else {
+                                Logger.Error("Wrong Datatype UInt32 for FocalLength on " + this.Name, "updateLensInfo", sourceFile);
+                            }
+                        }
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
                     }
-                } catch { }
-                try {
-                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.Fnumber);
-                    if (result.TryGetUInt16(out var fnumber)) {
-                        this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = fnumber / 100.0;
+
+                    try {
+                        var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.Fnumber);
+                        if (result.TryGetUInt16(out var fnumber)) {
+                            this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = fnumber / 100.0;
+                        } else {
+                            Logger.Error("Wrong Datatype UInt16 for Fnumber on " + this.Name, "updateLensInfo", sourceFile);
+                        }
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
                     }
-                } catch { }
-            } else if (!init) { //Lens disconnected
-                this.profileService.ActiveProfile.TelescopeSettings.Name = "";
-                this.profileService.ActiveProfile.TelescopeSettings.FocalLength = double.NaN;
-                this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = double.NaN;
+                } else if (!init) { //Lens disconnected
+                    this.profileService.ActiveProfile.TelescopeSettings.Name = "";
+                    this.profileService.ActiveProfile.TelescopeSettings.FocalLength = double.NaN;
+                    this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = double.NaN;
+                }
             }
         }
 
@@ -595,21 +640,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     param.addUint32(sdramHandle);
                     NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
                     _imageStream = new(result.data);
+
                     try {
                         this.ExposureTime = _oldExposureTime;
                     } catch { }
+
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
                         dl.SetResult(true);
                     }
-                } catch {
-                    if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
-                        dl.TrySetCanceled();
-                    }
-                    throw;
+                } catch (Exception ex) {
+                    Logger.Error(this.Name, ex, "camStateEvent", sourceFile);
+                    if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) dl.TrySetCanceled();
                 } finally {
-                    lock (_gateCameraState) {
-                        _cameraState = CameraStates.Idle;
-                    }
+                    lock (_gateCameraState) _cameraState = CameraStates.Idle;
                 }
             } else if (e.eventCode == NikonMtpEventCode.LiveViewStateChanged) {
                 RaisePropertyChanged("LiveViewEnabled");
