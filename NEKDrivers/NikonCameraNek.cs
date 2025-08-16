@@ -204,9 +204,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public int BatteryLevel {
             get {
                 if (Connected) {
-                    MtpDatatypeVariant result;
                     try {
-                        result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
+                        var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
+                        if (!result.TryGetUInt8(out var level)) {
+                            Logger.Error("Wrong Datatype UInt8 on " + this.Name, "BatteryLevel", sourceFile);
+                            return -1;
+                        }
+                        return level;
                     } catch (MtpDeviceException e) {
                         Logger.Error(this.Name, e, "BatteryLevel", sourceFile);
                         return -1;
@@ -214,13 +218,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         Logger.Error(this.Name, e, "BatteryLevel", sourceFile);
                         return -1;
                     }
-
-                    if (!result.TryGetUInt8(out var level)) {
-                        Logger.Error("Wrong Datatype UInt8 on " + this.Name, "BatteryLevel", sourceFile);
-                        return -1;
-                    }
-
-                    return level;
                 }
                 return -1;
             }
@@ -246,21 +243,33 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public short ReadoutModeForSnapImages { get => 0; set { } } //TO CHECK
         public short ReadoutModeForNormalImages { get => 0; set { } } //TO CHECK
 
-        public bool CanGetGain { get => this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
+        public bool CanGetGain { get => Connected && this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
         public bool CanSetGain {
             get {
                 if (Connected) {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            return result.TryGetUInt32(out var gain) ? gain.GetSet > 0 : false;
+                            if (!result.TryGetUInt32(out var gain)) {
+                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "CanSetGain", sourceFile);
+                                return false;
+                            }
+                            return gain.GetSet > 0;
                         } else if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            return result.TryGetUInt16(out var gain) ? gain.GetSet > 0 : false;
+                            if (result.TryGetUInt16(out var gain)) {
+                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "CanSetGain", sourceFile);
+                                return false;
+                            }
+                            return gain.GetSet > 0;
                         }
                         return false;
-                    } catch {
-                        throw;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "CanSetGain", sourceFile);
+                        return false;
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "CanSetGain", sourceFile);
+                        return false;
                     }
                 }
                 return false;
@@ -274,13 +283,25 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            return result.TryGetUInt32(out var gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                            if (!result.TryGetUInt32(out var gains)) {
+                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
+                                return new List<int>();
+                            }
+                            return gains.EnumFORM.Select(x => (int)x).ToList();
                         } else {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            return result.TryGetUInt16(out var gains) ? gains.EnumFORM.Select(x => (int)x).ToList() : new List<int>();
+                            if (!result.TryGetUInt16(out var gains)) {
+                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "Gains", sourceFile);
+                                return new List<int>();
+                            }
+                            return gains.EnumFORM.Select(x => (int)x).ToList();
                         }
-                    } catch {
-                        throw;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "Gains", sourceFile);
+                        return new List<int>();
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "Gains", sourceFile);
+                        return new List<int>();
                     }
                 }
                 return new List<int>();
@@ -292,14 +313,25 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            return result.TryGetUInt32(out var gain) ? (int)gain : 0;
+                            if (!result.TryGetUInt32(out var gain)) {
+                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "Gain -> Getter", sourceFile);
+                                return -1;
+                            }
+                            return (int)gain;
                         } else {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            return result.TryGetUInt16(out var gain) ? (int)gain : 0;
+                            if (!result.TryGetUInt16(out var gain)) {
+                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "Gain -> Getter", sourceFile);
+                                return -1;
+                            }
+                            return (int)gain;
                         }
-                    } 
-                    catch {
-                        throw;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "Gain -> Getter", sourceFile);
+                        return -1;
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "Gain -> Getter", sourceFile);
+                        return -1;
                     }
                 }
                 return -1;
@@ -313,8 +345,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             this.camera.SetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex, new MtpDatatypeVariant((UInt16)value));
                         }
                         RaisePropertyChanged();
-                    } catch {
-                        throw;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "Gain -> Setter", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "Gain -> Setter", sourceFile);
                     }
                 }
             }
