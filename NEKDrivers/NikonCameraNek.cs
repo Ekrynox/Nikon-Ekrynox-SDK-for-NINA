@@ -144,9 +144,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
                     this.focuserMediator.Disconnect();
                 }
+
                 if (this.camera != null) {
                     this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
                     this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+
+                    this._requestedLiveview = 0;
+                    this.StopLiveView();
+                    this.AbortExposure();
+
                     this.camera.Dispose();
                     this.camera = null;
                 }
