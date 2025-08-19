@@ -755,36 +755,40 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StopExposure() {
-            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
-                if (_isBulb) {
-                    bulbToken.Cancel();
-                    try {
-                        var p = new MtpParams();
-                        p.addUint32(0);
-                        p.addUint32(0);
-                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "StopExposure", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "StopExposure", sourceFile);
+            if (_isBulb) {
+                lock (_gateCameraState) {
+                    if (_cameraState == CameraStates.Exposing) {
+                        bulbToken.Cancel();
+                        try {
+                            var p = new MtpParams();
+                            p.addUint32(0);
+                            p.addUint32(0);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "StopExposure", sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "StopExposure", sourceFile);
+                        }
                     }
                 }
-            }
+            } 
         }
 
         public void AbortExposure() {
-            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
-                if (_isBulb) {
-                    bulbToken.Cancel();
-                    try {
-                        var p = new MtpParams();
-                        p.addUint32(0);
-                        p.addUint32(0);
-                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "AbortExposure", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+            if (_isBulb) {
+                lock (_gateCameraState) {
+                    if (_cameraState == CameraStates.Exposing) {
+                        bulbToken.Cancel();
+                        try {
+                            var p = new MtpParams();
+                            p.addUint32(0);
+                            p.addUint32(0);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+                        }
                     }
                 }
             }
