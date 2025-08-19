@@ -127,6 +127,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                 this._liveviewHeaderSize = -1;
                 this._requestedLiveview = 0;
+                this._liveviewEnabled = false;
                 this.sdramHandle = 0xFFFF0001;
 
                 updateLensInfo(true);
@@ -144,9 +145,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
                     this.focuserMediator.Disconnect();
                 }
+
                 if (this.camera != null) {
                     this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
                     this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+
+                    this._requestedLiveview = 0;
+                    this._liveviewEnabled = false;
+                    this.StopLiveView();
+                    this.AbortExposure();
+
                     this.camera.Dispose();
                     this.camera = null;
                 }
@@ -452,7 +460,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     double newExp = Exposures.OrderBy(x => Math.Abs(value - x)).First();
 
-                    if ((value > 1.0) && (value != newExp) && CanSetBulb) {
+                    if ((value > 1.0) && CanSetBulb) {
                         try {
                             this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             this._isBulb = true;
@@ -749,36 +757,40 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StopExposure() {
-            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
-                if (_isBulb) {
-                    bulbToken.Cancel();
-                    try {
-                        var p = new MtpParams();
-                        p.addUint32(0);
-                        p.addUint32(0);
-                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "StopExposure", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "StopExposure", sourceFile);
+            if (_isBulb) {
+                lock (_gateCameraState) {
+                    if (_cameraState == CameraStates.Exposing) {
+                        bulbToken.Cancel();
+                        try {
+                            var p = new MtpParams();
+                            p.addUint32(0);
+                            p.addUint32(0);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "StopExposure", sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "StopExposure", sourceFile);
+                        }
                     }
                 }
-            }
+            } 
         }
 
         public void AbortExposure() {
-            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
-                if (_isBulb) {
-                    bulbToken.Cancel();
-                    try {
-                        var p = new MtpParams();
-                        p.addUint32(0);
-                        p.addUint32(0);
-                        camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "AbortExposure", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+            if (_isBulb) {
+                lock (_gateCameraState) {
+                    if (_cameraState == CameraStates.Exposing) {
+                        bulbToken.Cancel();
+                        try {
+                            var p = new MtpParams();
+                            p.addUint32(0);
+                            p.addUint32(0);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                        } catch (MtpDeviceException e) {
+                            Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error(this.Name, e, "AbortExposure", sourceFile);
+                        }
                     }
                 }
             }
@@ -809,6 +821,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         private int _liveviewHeaderSize;
         private uint _requestedLiveview;
+        private bool _liveviewEnabled = false;
         public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
         public bool LiveViewEnabled {
             get {
@@ -822,12 +835,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StartLiveView(CaptureSequence sequence) {
-            Interlocked.Increment(ref _requestedLiveview);
+            this._liveviewEnabled = true;
             try {
                 camera.StartLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StartLiveView", sourceFile);
-                Interlocked.Decrement(ref _requestedLiveview);
+                this._liveviewEnabled = false;
             }
         }
 
@@ -859,7 +872,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
 
                 var imageStream = new MemoryStream(response.data.Skip(_liveviewHeaderSize).ToArray());
-                JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
+                JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
 
                 FormatConvertedBitmap bitmap = new FormatConvertedBitmap();
                 bitmap.BeginInit();
@@ -873,18 +886,18 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void StopLiveView() {
             try {
-                Interlocked.Decrement(ref _requestedLiveview);
-                if (Interlocked.Equals(_requestedLiveview, 0)) camera.EndLiveView();
+                this._liveviewEnabled = false;
+                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
             }
         }
         public void StopLiveView(int waitms) {
             try {
-                Interlocked.Decrement(ref _requestedLiveview);
+                Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
                     await Task.Delay(waitms * 1000);
-                    if (Interlocked.Equals(_requestedLiveview, 0)) camera.EndLiveView();
+                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
                 });
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
