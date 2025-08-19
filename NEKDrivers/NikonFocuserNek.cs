@@ -134,9 +134,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task Move(int position, CancellationToken ct, int waitInMs = 1000) { //Manage Errors and the time limit & need to lick the deadlock (expect to do move less thant the min increment)
                 return Task.Run(() => {
+                    if (!Connected) {
+                        Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
+                        Notification.ShowError("Camera or Focuser is disconnected in NINA!");
+                        return;
+                    }
+
                     lock (cameraNek._gateCameraState) {
-                        if (!cameraNek.Connected || cameraNek._cameraState != CameraStates.Idle) {
-                            ct.ThrowIfCancellationRequested();
+                        if (cameraNek._cameraState != CameraStates.Idle) {
+                            return;
                         }
 
                         cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
@@ -183,6 +189,12 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
+                    if (!Connected) {
+                        Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
+                        Notification.ShowError("Camera or Focuser is disconnected in NINA!");
+                        return NikonMtpResponseCode.General_Error;
+                    }
+
                     Interlocked.Increment(ref cameraNek._requestedLiveview);
                     cameraNek.camera.StartLiveView(true, ct);
 
