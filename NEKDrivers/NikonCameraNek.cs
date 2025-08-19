@@ -865,7 +865,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
 
                 var imageStream = new MemoryStream(response.data.Skip(_liveviewHeaderSize).ToArray());
-                JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad);
+                JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
 
                 FormatConvertedBitmap bitmap = new FormatConvertedBitmap();
                 bitmap.BeginInit();
