@@ -1,5 +1,11 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.1.0
+- Fix liveview being too dark
+- Refactor liveview state counter & ensure liveview end at disconnect
+- Ensure focuser null state at disconnect
+
+
 ## 0.3.0.0
 - Fix some Bugs
 - Logging & Error handling
