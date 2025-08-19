@@ -458,7 +458,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     double newExp = Exposures.OrderBy(x => Math.Abs(value - x)).First();
 
-                    if ((value > 1.0) && (value != newExp) && CanSetBulb) {
+                    if ((value > 1.0) && CanSetBulb) {
                         try {
                             this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             this._isBulb = true;
