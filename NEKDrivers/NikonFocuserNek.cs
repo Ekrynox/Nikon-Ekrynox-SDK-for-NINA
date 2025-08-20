@@ -23,10 +23,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator) {
                 this.profileService = profileService;
                 this.cameraMediator = cameraMediator;
-
-                if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
-                    cameraNek = cam;
-                }
             }
 
             private NikonCameraNek cameraNek = null;
@@ -45,19 +41,23 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
 
             public bool HasSetupDialog { get => false; }
-            public string Id { get => cameraNek.Id + "LF"; }
-            public string Name { get => cameraNek.Name; }
-            public string DisplayName { get => cameraNek.Name + " Lens (NEK Experimental)"; }
+            public string Id { get => "NEKLF"; }
+            public string Name { get => cameraNek != null ? cameraNek.Name + "Lens" : "NEK Lens Focuser"; }
+            public string DisplayName { get => "Nikon Lens Focuser (NEK Experimental)"; }
             public string Category { get => "Nikon"; }
-            public bool Connected { get => _isConnected && cameraNek.Connected; }
+            public bool Connected { get => _isConnected && cameraNek != null && cameraNek.Connected; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
             public string DriverInfo { get => "Nikon Ekrynox SDK"; }
-            public string DriverVersion { get => cameraNek.DriverVersion; }
+            public string DriverVersion { get => cameraNek != null ? cameraNek.DriverVersion : ""; }
 
 
             public Task<bool> Connect(CancellationToken token) {
                 return Task.Run(() => {
-                    if (!cameraNek.Connected) {
+                    if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
+                        cameraNek = cam;
+                    } else {
+                        Logger.Error("No camera are connectd with NEK inside NINA!", "Connect", sourceFile);
+                        Notification.ShowError("No camera are connectd with NEK inside NINA!");
                         return false;
                     }
 
