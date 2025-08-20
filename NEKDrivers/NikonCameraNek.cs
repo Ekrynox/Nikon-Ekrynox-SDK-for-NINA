@@ -688,7 +688,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             try {
                 this.ExposureTime = sequence.ExposureTime;
                 if (!this.CanSetBulb && (this.ExposureTime != this._oldExposureTime) && (this.ExposureTime > 1)) {
-                    Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?");
+                    Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?", TimeSpan.FromSeconds(10));
                 }
             } catch (MtpException) {
                 if (this._isBulb) {
