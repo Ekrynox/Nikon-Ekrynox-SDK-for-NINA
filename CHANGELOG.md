@@ -1,5 +1,9 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.2.0
+- Focuser doesn't need to refresh the list after being disconnected
+
+
 ## 0.3.1.0
 - Fix liveview being too dark
 - Refactor liveview state counter & ensure liveview end at disconnect

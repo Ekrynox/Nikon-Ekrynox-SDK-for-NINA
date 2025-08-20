@@ -137,7 +137,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return Task.Run(() => {
                     if (!Connected) {
                         Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
-                        Notification.ShowError("Camera or Focuser is disconnected in NINA!");
+                        Notification.ShowError("Nikon NEK: Camera or Focuser is disconnected in NINA!");
                         return;
                     }
 
@@ -192,7 +192,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return Task.Run(() => {
                     if (!Connected) {
                         Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
-                        Notification.ShowError("Camera or Focuser is disconnected in NINA!");
+                        Notification.ShowError("Nikon NEK: Camera or Focuser is disconnected in NINA!");
                         return NikonMtpResponseCode.General_Error;
                     }
 
@@ -240,6 +240,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                                 Notification.ShowError("Nikon NEK: The lens have been unmounted!");
                                 cameraNek.focuserMediator.Disconnect();
                             }
+                            break;
+                        case NikonMtpDevicePropCode.FocalLength:
+                            Notification.ShowWarning("Nikon NEK: The Focal Length or Aperture have changed. We recommended to rerun calibration (disconnect then reconnect the focuser).", TimeSpan.FromSeconds(10));
                             break;
                     }
                 }
