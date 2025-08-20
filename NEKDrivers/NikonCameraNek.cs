@@ -418,7 +418,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double ExposureMin {
             get {
                 if (Connected) {
-                    return Exposures.Min();
+                    var exps = Exposures;
+                    return exps.Count > 0 ? exps.Min() : double.NaN;
                 }
                 return double.NaN;
             }
@@ -429,7 +430,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (CanSetBulb) {
                         return double.PositiveInfinity;
                     }
-                    return Exposures.Max();
+                    var exps = Exposures;
+                    return exps.Count > 0 ? exps.Max() : double.NaN;
                 }
                 return double.NaN;
             }
