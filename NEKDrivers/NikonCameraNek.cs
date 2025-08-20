@@ -262,18 +262,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            if (!result.TryGetUInt32(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "CanSetGain", sourceFile);
-                                return false;
-                            }
-                            return gain.GetSet > 0;
+                            return result.GetSet > 0;
                         } else if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            if (result.TryGetUInt16(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "CanSetGain", sourceFile);
-                                return false;
-                            }
-                            return gain.GetSet > 0;
+                            return result.GetSet > 0;
                         }
                         return false;
                     } catch (MtpDeviceException e) {
