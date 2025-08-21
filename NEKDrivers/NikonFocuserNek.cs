@@ -292,10 +292,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public void DetectMaxStep(CancellationToken token) {
                 if (!Connected) return;
-                uint stepSize = _maxStepSize;
+                UInt32 stepSize = _maxStepSize;
                 UInt32 minStepSize = _minStepSize;
                 bool toInf = true;
-                while (minStepSize < _maxStepSize) {
+                while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token).Wait();
                     if (token.IsCancellationRequested) return;
                     var result = MoveBy(stepSize, toInf, token);
