@@ -344,11 +344,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     //go to Inf then to Inf - nbSteps0
-                    while (true) {
-                        result = MoveBy(_maxStepSize, true, token).Result;
-                        if (token.IsCancellationRequested) break;
-                        if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
-                    }
                     Move((int)_nbSteps, token).Wait();
                     Move((int)(_nbSteps - nbSteps0), token).Wait();
                     if (token.IsCancellationRequested) break;
