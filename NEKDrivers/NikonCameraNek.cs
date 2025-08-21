@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.WellKnownTypes;
+﻿using ASCOM.Tools;
+using Google.Protobuf.WellKnownTypes;
 using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
@@ -823,7 +824,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool LiveViewEnabled {
             get {
                 try {
-                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvState);
+                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInteger(out var lvState);
                     return (lvState == 1);
                 } catch {
                     return false;
@@ -884,7 +885,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public void StopLiveView() {
             try {
                 this._liveviewEnabled = false;
-                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
+                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
             }
@@ -894,7 +895,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
                     await Task.Delay(waitms * 1000);
-                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
+                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
                 });
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
