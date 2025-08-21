@@ -84,7 +84,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     _isConnected = true;
 
-                    _minStepSize = 25;
+                    _minStepSize = 100;
                     _maxStepSize = 32767;
                     _nbSteps = int.MaxValue;
                     _position = 0;
@@ -92,18 +92,21 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     Logger.Info("Start detecting the max step.", "Connect", sourceFile);
                     DetectMaxStep(token);
+                    Logger.Info("Detected max step: " + this._maxStepSize, "Connect", sourceFile);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
                         return false;
                     }
                     Logger.Info("Start detecting the min step.", "Connect", sourceFile);
                     DetectMinStep(token);
+                    Logger.Info("Detected max step: " + this._minStepSize, "Connect", sourceFile);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
                         return false;
                     }
                     Logger.Info("Start detecting the number of steps.", "Connect", sourceFile);
                     DetectStepsNb(token);
+                    Logger.Info("Detected number of steps: " + this._nbSteps, "Connect", sourceFile);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
                         return false;
