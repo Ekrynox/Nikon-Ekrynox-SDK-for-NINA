@@ -160,7 +160,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 }
 
                 foreach (var i in this._awaitersCameraState) {
-                    i.Value.SetCanceled();
+                    if (i.Value != null) i.Value.TrySetCanceled();
                 }
                 RaisePropertyChanged("Connected");
             }
