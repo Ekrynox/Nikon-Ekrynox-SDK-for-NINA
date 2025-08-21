@@ -53,6 +53,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<bool> Connect(CancellationToken token) {
                 return Task.Run(() => {
+                    Logger.Info("Start connecting to the Lens Focuser for the Camera: " + this.Name, "Connect", sourceFile);
+
                     if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
                         cameraNek = cam;
                     } else {
@@ -63,14 +65,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     try {
                         var result = cameraNek.camera.GetDevicePropValue(NikonMtpDevicePropCode.FocusMode);
-                        if (result.TryGetUInt16(out var focus)) {
+                        if (result.TryGetUInteger(out var focus)) {
                             if (focus == 0x0001) {
                                 Logger.Info("The camera is in Manual Focus.", "Connect", sourceFile);
                                 Notification.ShowError("The lens focuser cannot work in MF mode. Please switch to AF (recommended: AF-S).");
                                 return false;
-                            } else {
-                                Logger.Error("Wrong Datatype UInt16 for FocusMode on " + this.Name, "Connect", sourceFile);
                             }
+                        } else {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for FocusMode on " + this.Name, "Connect", sourceFile);
                         }
                     } catch (MtpDeviceException e) {
                         Logger.Error("Error while checking Focus mode: " + this.Name, e, "Connect", sourceFile);
@@ -82,15 +84,29 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     _isConnected = true;
 
-                    _minStepSize = 25;
+                    _minStepSize = 32;
                     _maxStepSize = 32767;
                     _nbSteps = int.MaxValue;
                     _position = 0;
                     _ismoving = false;
 
+                    Logger.Info("Start detecting the max step.", "Connect", sourceFile);
                     DetectMaxStep(token);
+                    Logger.Info("Detected max step: " + this._maxStepSize, "Connect", sourceFile);
+                    if (token.IsCancellationRequested) {
+                        _isConnected = false;
+                        return false;
+                    }
+                    Logger.Info("Start detecting the min step.", "Connect", sourceFile);
                     DetectMinStep(token);
+                    Logger.Info("Detected min step: " + this._minStepSize, "Connect", sourceFile);
+                    if (token.IsCancellationRequested) {
+                        _isConnected = false;
+                        return false;
+                    }
+                    Logger.Info("Start detecting the number of steps.", "Connect", sourceFile);
                     DetectStepsNb(token);
+                    Logger.Info("Detected number of steps: " + this._nbSteps, "Connect", sourceFile);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
                         return false;
@@ -98,12 +114,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
 
+                    Logger.Info("Going to Infinity.", "Connect", sourceFile);
                     Move((int)_nbSteps, token).Wait(); //Go to Inf
                     return true;
                 });
             }
 
             public void Disconnect() {
+                Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
@@ -251,11 +269,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public void DetectMinStep(CancellationToken token) {
                 if (!Connected) return;
+                UInt32 stepSize = _minStepSize;
                 UInt32 maxStepSize = _maxStepSize;
                 bool toInf = true;
 
-                while (_minStepSize < maxStepSize) {
-                    uint stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
+                while ((_minStepSize < maxStepSize) && (maxStepSize != stepSize)) {
                     var result = MoveBy(stepSize, toInf, token);
 
                     toInf = !toInf;
@@ -263,9 +281,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         _minStepSize = stepSize;
+                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.OK) {
                         maxStepSize = stepSize;
+                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
                         continue;
                     }
                     break;
@@ -274,10 +294,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public void DetectMaxStep(CancellationToken token) {
                 if (!Connected) return;
-                uint stepSize = _maxStepSize;
+                UInt32 stepSize = _maxStepSize;
                 UInt32 minStepSize = _minStepSize;
                 bool toInf = true;
-                while (minStepSize < _maxStepSize) {
+                while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token).Wait();
                     if (token.IsCancellationRequested) return;
                     var result = MoveBy(stepSize, toInf, token);
@@ -324,11 +344,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     //go to Inf then to Inf - nbSteps0
-                    while (true) {
-                        result = MoveBy(_maxStepSize, true, token).Result;
-                        if (token.IsCancellationRequested) break;
-                        if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
-                    }
                     Move((int)_nbSteps, token).Wait();
                     Move((int)(_nbSteps - nbSteps0), token).Wait();
                     if (token.IsCancellationRequested) break;

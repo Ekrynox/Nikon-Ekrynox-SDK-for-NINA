@@ -77,10 +77,18 @@
     <ClCompile Include="mtp\nek_mtp_utils.cpp">
       <Filter>Source Files\mtp</Filter>
     </ClCompile>
+    <ClCompile Include="mtp\nek_mtp_struct.cpp">
+      <Filter>Source Files\mtp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NEK.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

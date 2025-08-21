@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.WellKnownTypes;
+﻿using ASCOM.Tools;
+using Google.Protobuf.WellKnownTypes;
 using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
@@ -69,6 +70,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public Task<bool> Connect(CancellationToken token) {
             return Task.Run(() => {
+                Logger.Info("Start connecting to the Camera: " + this.Name, "Connect", sourceFile);
+
                 try {
                     this.camera = new NEKCS.NikonCamera(devicePath, 2);
                 } catch (MtpDeviceException e) {
@@ -137,33 +140,32 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void Disconnect() {
-            if (this.camera != null) {
-                lock(_gateCameraState) {
-                    this._cameraState = CameraStates.NoState;
-                }
-
-                if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
-                    this.focuserMediator.Disconnect();
-                }
-
-                if (this.camera != null) {
-                    this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                    this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
-
-                    this._requestedLiveview = 0;
-                    this._liveviewEnabled = false;
-                    this.StopLiveView();
-                    this.AbortExposure();
-
-                    this.camera.Dispose();
-                    this.camera = null;
-                }
-
-                foreach (var i in this._awaitersCameraState) {
-                    i.Value.SetCanceled();
-                }
-                RaisePropertyChanged("Connected");
+            Logger.Info("Start diconnecting from the Camera: " + this.Name, "Disconnect", sourceFile);
+            lock (_gateCameraState) {
+                this._cameraState = CameraStates.NoState;
             }
+
+            if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
+                this.focuserMediator.Disconnect();
+            }
+
+            if (this.camera != null) {
+                this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+
+                this._requestedLiveview = 0;
+                this._liveviewEnabled = false;
+                this.StopLiveView();
+                this.AbortExposure();
+
+                this.camera.Dispose();
+                this.camera = null;
+            }
+
+            foreach (var i in this._awaitersCameraState) {
+                if (i.Value != null) i.Value.TrySetCanceled();
+            }
+            RaisePropertyChanged("Connected");
         }
 
         public void SetupDialog() { throw new NotImplementedException(); }
@@ -218,11 +220,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.BatteryLevel);
-                        if (!result.TryGetUInt8(out var level)) {
-                            Logger.Error("Wrong Datatype UInt8 on " + this.Name, "BatteryLevel", sourceFile);
+                        if (!result.TryGetUInteger(out var level)) {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "BatteryLevel", sourceFile);
                             return -1;
                         }
-                        return level;
+                        return (int)level;
                     } catch (MtpDeviceException e) {
                         Logger.Error(this.Name, e, "BatteryLevel", sourceFile);
                         return -1;
@@ -262,18 +264,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            if (!result.TryGetUInt32(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "CanSetGain", sourceFile);
-                                return false;
-                            }
-                            return gain.GetSet > 0;
+                            return result.GetSet > 0;
                         } else if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            if (result.TryGetUInt16(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "CanSetGain", sourceFile);
-                                return false;
-                            }
-                            return gain.GetSet > 0;
+                            return result.GetSet > 0;
                         }
                         return false;
                     } catch (MtpDeviceException e) {
@@ -295,15 +289,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            if (!result.TryGetUInt32(out var gains)) {
-                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
+                            if (!result.TryGetUInteger(out var gains)) {
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
                                 return new List<int>();
                             }
                             return gains.EnumFORM.Select(x => (int)x).ToList();
                         } else {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            if (!result.TryGetUInt16(out var gains)) {
-                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "Gains", sourceFile);
+                            if (!result.TryGetUInteger(out var gains)) {
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndex on " + this.Name, "Gains", sourceFile);
                                 return new List<int>();
                             }
                             return gains.EnumFORM.Select(x => (int)x).ToList();
@@ -325,15 +319,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            if (!result.TryGetUInt32(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt32 for ExposureIndexEx on " + this.Name, "Gain -> Getter", sourceFile);
+                            if (!result.TryGetUInteger(out var gain)) {
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndexEx on " + this.Name, "Gain -> Getter", sourceFile);
                                 return -1;
                             }
                             return (int)gain;
                         } else {
                             var result = this.camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            if (!result.TryGetUInt16(out var gain)) {
-                                Logger.Error("Wrong Datatype UInt16 for ExposureIndex on " + this.Name, "Gain -> Getter", sourceFile);
+                            if (!result.TryGetUInteger(out var gain)) {
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndex on " + this.Name, "Gain -> Getter", sourceFile);
                                 return -1;
                             }
                             return (int)gain;
@@ -352,9 +346,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
-                            this.camera.SetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx, new MtpDatatypeVariant((UInt32)value));
+                            this.camera.SetDevicePropValueTypesafe(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx, new MtpDatatypeVariant((UInt32)value));
                         } else {
-                            this.camera.SetDevicePropValue(NEKCS.NikonMtpDevicePropCode.ExposureIndex, new MtpDatatypeVariant((UInt16)value));
+                            this.camera.SetDevicePropValueTypesafe(NEKCS.NikonMtpDevicePropCode.ExposureIndex, new MtpDatatypeVariant((UInt16)value));
                         }
                         RaisePropertyChanged();
                     } catch (MtpDeviceException e) {
@@ -376,8 +370,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInt32(out var exp)) {
-                            Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
+                        if (!result.TryGetUInteger(out var exp)) {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
                             return false;
                         }
                         return exp.EnumFORM.ToList().Contains(0xFFFFFFFF);
@@ -395,8 +389,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (Connected) {
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInt32(out var exp)) {
-                            Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "Exposures", sourceFile);
+                        if (!result.TryGetUInteger(out var exp)) {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "Exposures", sourceFile);
                             return new List<double>();
                         }
 
@@ -418,7 +412,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public double ExposureMin {
             get {
                 if (Connected) {
-                    return Exposures.Min();
+                    var exps = Exposures;
+                    return exps.Count > 0 ? exps.Min() : double.NaN;
                 }
                 return double.NaN;
             }
@@ -429,7 +424,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (CanSetBulb) {
                         return double.PositiveInfinity;
                     }
-                    return Exposures.Max();
+                    var exps = Exposures;
+                    return exps.Count > 0 ? exps.Max() : double.NaN;
                 }
                 return double.NaN;
             }
@@ -442,8 +438,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     } else {
                         try {
                             var result = this.camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
-                            if (!result.TryGetUInt32(out var exp)) {
-                                Logger.Error("Wrong Datatype UInt32 for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
+                            if (!result.TryGetUInteger(out var exp)) {
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
                                 return 0;
                             }
                             return exp / 10000.0;
@@ -462,7 +458,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     if ((value > 1.0) && CanSetBulb) {
                         try {
-                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
+                            this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             this._isBulb = true;
                             this._bulbTime = value;
                             RaisePropertyChanged();
@@ -475,7 +471,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         }
                     } else {
                         try {
-                            this.camera.SetDevicePropValue(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
+                            this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             this._isBulb = false;
                             RaisePropertyChanged();
                         } catch (MtpDeviceException e) {
@@ -527,11 +523,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             if (Connected) {
                 try {
                     var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensSort);
-                    if (!result.TryGetUInt8(out var exp)) {
-                        Logger.Error("Wrong Datatype Uint8 for LensSort on " + this.Name, "isCpuLensMounted", sourceFile);
+                    if (!result.TryGetUInteger(out var lensSort)) {
+                        Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for LensSort on " + this.Name, "isCpuLensMounted", sourceFile);
                         return false;
                     }
-                    return result.TryGetUInt8(out var lensSort) && lensSort == 1;
+                    return lensSort == 1;
                 } catch (MtpDeviceException e) {
                     Logger.Error(this.Name, e, "isCpuLensMounted", sourceFile);
                 } catch (MtpException e) {
@@ -549,14 +545,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
                     if (!cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) return true; //Not Mirroless Z
 
-                    if (!camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML).TryGetUInt64(out var lenstype)) {
-                        Logger.Error("Wrong Datatype UInt64 (mirrorless) for LensTypeML on " + this.Name, "isCpuLensMounted", sourceFile);
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML);
+                    if (!result.TryGetUInteger(out var lenstype)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensTypeML on " + this.Name, "isCpuLensMounted", sourceFile);
                         return false;
                     }
                     if ((lenstype & 0b1) == 0) return true; //Native Z lens
 
-                    if (!camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF).TryGetUInt64(out lenstype)) { //On mirrorless this property is 64bits
-                        Logger.Error("Wrong Datatype UInt64 (mirrorless) for LensTypeF on " + this.Name, "isCpuLensMounted", sourceFile);
+                    result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF);
+                    if (!result.TryGetUInteger(out lenstype)) { //On mirrorless this property is 64bits
+                        Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for LensTypeF on " + this.Name, "isCpuLensMounted", sourceFile);
                         return false;
                     }
                     if ((lenstype & 0b10000) != 0) return true; //AF-S Lens with mount adaptor
@@ -576,10 +574,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.FocalLength)) {
                             var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
-                            if (result.TryGetUInt32(out var flength)) {
+                            if (result.TryGetUInteger(out var flength)) {
                                 this.profileService.ActiveProfile.TelescopeSettings.FocalLength = flength / 100.0;
                             } else {
-                                Logger.Error("Wrong Datatype UInt32 for FocalLength on " + this.Name, "updateLensInfo", sourceFile);
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for FocalLength on " + this.Name, "updateLensInfo", sourceFile);
                             }
                         }
                     } catch (MtpDeviceException e) {
@@ -590,10 +588,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     try {
                         var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.Fnumber);
-                        if (result.TryGetUInt16(out var fnumber)) {
+                        if (result.TryGetUInteger(out var fnumber)) {
                             this.profileService.ActiveProfile.TelescopeSettings.FocalRatio = fnumber / 100.0;
                         } else {
-                            Logger.Error("Wrong Datatype UInt16 for Fnumber on " + this.Name, "updateLensInfo", sourceFile);
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for Fnumber on " + this.Name, "updateLensInfo", sourceFile);
                         }
                     } catch (MtpDeviceException e) {
                         Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
@@ -643,6 +641,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (e.eventParams.Length > 0) {
                         sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
                     }
+
+                    //Stop the Liveview started to prevent AF (needed for the D7100, ...)
+                    try {
+                        StopLiveView();
+                    } catch { }
+
+                    //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
 
                     NEKCS.MtpParams param = new();
@@ -697,6 +702,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
                 }
             }
+
+            //Start the Liveview started to prevent AF (needed for the D7100, ...)
+            try {
+                this.camera.StartLiveView();
+            } catch { }
 
             try {
                 NEKCS.MtpParams param = new();
@@ -826,7 +836,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool LiveViewEnabled {
             get {
                 try {
-                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvState);
+                    camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInteger(out var lvState);
                     return (lvState == 1);
                 } catch {
                     return false;
@@ -887,7 +897,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public void StopLiveView() {
             try {
                 this._liveviewEnabled = false;
-                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
+                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
             }
@@ -897,7 +907,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
                     await Task.Delay(waitms * 1000);
-                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, 0)) camera.EndLiveView();
+                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
                 });
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);

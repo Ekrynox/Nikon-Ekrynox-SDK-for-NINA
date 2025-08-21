@@ -100,11 +100,15 @@
     <ClCompile Include="mtp\nek_mtp.cpp" />
     <ClCompile Include="mtp\nek_mtp_except.cpp" />
     <ClCompile Include="mtp\nek_mtp_utils.cpp" />
+    <ClCompile Include="mtp\nek_mtp_struct.cpp" />
     <ClCompile Include="nikon.cpp" />
     <ClCompile Include="utils\nek_threading.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NEK.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
