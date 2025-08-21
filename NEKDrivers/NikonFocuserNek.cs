@@ -84,7 +84,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     _isConnected = true;
 
-                    _minStepSize = 100;
+                    _minStepSize = 32;
                     _maxStepSize = 32767;
                     _nbSteps = int.MaxValue;
                     _position = 0;
@@ -99,7 +99,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     Logger.Info("Start detecting the min step.", "Connect", sourceFile);
                     DetectMinStep(token);
-                    Logger.Info("Detected max step: " + this._minStepSize, "Connect", sourceFile);
+                    Logger.Info("Detected min step: " + this._minStepSize, "Connect", sourceFile);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
                         return false;
@@ -269,11 +269,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public void DetectMinStep(CancellationToken token) {
                 if (!Connected) return;
+                UInt32 stepSize = _minStepSize;
                 UInt32 maxStepSize = _maxStepSize;
                 bool toInf = true;
 
-                while (_minStepSize < maxStepSize) {
-                    uint stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
+                while ((_minStepSize < maxStepSize) && (maxStepSize != stepSize)) {
                     var result = MoveBy(stepSize, toInf, token);
 
                     toInf = !toInf;
@@ -281,9 +281,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         _minStepSize = stepSize;
+                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.OK) {
                         maxStepSize = stepSize;
+                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
                         continue;
                     }
                     break;
