@@ -83,6 +83,13 @@ namespace NEKCS {
 
 		MtpDatatypeVariant(const nek::mtp::MtpDatatypeVariant& data);
 
+		NikonMtpDatatypeCode GetType() { return m_type; };
+
+		System::Boolean TryGetInteger([Out] System::Int64% data);
+		System::Boolean TryGetUInteger([Out] System::UInt64% data);
+		System::Boolean TryGetArrayInteger([Out] array<System::Int64>^% data);
+		System::Boolean TryGetArrayUInteger([Out] array<System::UInt64>^% data);
+
 		System::Boolean TryGetInt8([Out] System::SByte% data) { return TryGet(data); };
 		System::Boolean TryGetUInt8([Out] System::Byte% data) { return TryGet(data); };
 		System::Boolean TryGetInt16([Out] System::Int16% data) { return TryGet(data); };
@@ -140,9 +147,14 @@ namespace NEKCS {
 		NikonDevicePropDescDS() {};
 	};
 	public ref struct NikonDevicePropDescDS_Variant : NikonDevicePropDescDS<MtpDatatypeVariant^> {
-		NikonDevicePropDescDS_Variant(const nek::mtp::MtpDevicePropDescDS& desc);
+		NikonDevicePropDescDS_Variant(const nek::mtp::MtpDevicePropDescDSV& desc);
 
 		template<typename T> System::Boolean TryGet([Out] NikonDevicePropDescDS<T>^% desc);
+
+		System::Boolean TryGetInteger([Out] NikonDevicePropDescDS<System::Int64>^% desc);
+		System::Boolean TryGetUInteger([Out] NikonDevicePropDescDS<System::UInt64>^% desc);
+		System::Boolean TryGetArrayInteger([Out] NikonDevicePropDescDS<array<System::Int64>^>^% desc);
+		System::Boolean TryGetArrayUInteger([Out] NikonDevicePropDescDS<array<System::UInt64>^>^% desc);
 
 		System::Boolean TryGetInt8([Out] NikonDevicePropDescDS<System::SByte>^% desc) { return TryGet(desc); };
 		System::Boolean TryGetUInt8([Out] NikonDevicePropDescDS<System::Byte>^% desc) { return TryGet(desc); };
