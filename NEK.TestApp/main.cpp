@@ -12,7 +12,7 @@ static nek::NikonCamera *camera;
 
 uint32_t handle = 0xFFFF0001;
 
-void eventFunc (nek::mtp::MtpEvent event) {
+static void eventFunc (nek::mtp::MtpEvent event) {
 	cout << "event: " << std::hex << event.eventCode << " [ ";
 	for (uint32_t p : event.eventParams) {
 		cout << std::hex << p << " ";
@@ -66,15 +66,23 @@ int main() {
 	}
 
 	auto propdesc = camera->GetDevicePropDesc(nek::NikonMtpDevicePropCode::ExposureIndex);
+	nek::mtp::MtpDevicePropDescDS<uint16_t> desc;
+	auto descok = propdesc.TryGet(desc);
 
-	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)1600);
+	camera->SetDevicePropValueTypesafe(nek::NikonMtpDevicePropCode::ExposureIndex, (uint64_t)1600);
 	auto propvalue1 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
 	auto propvalue2 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
-	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)400);
+	camera->SetDevicePropValueTypesafe(nek::NikonMtpDevicePropCode::ExposureIndex, (uint64_t)400);
 	auto propvalue3 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
+
+	auto a = camera->GetDevicePropDesc(nek::NikonMtpDevicePropCode::TimeCodeOrigin);
+	nek::mtp::MtpDevicePropDescDS<std::vector<uint64_t>> b;
+	auto c = a.TryGetArrayUInteger(b);
+
+	camera->SetDevicePropValueTypesafe(nek::NikonMtpDevicePropCode::TimeCodeOrigin, std::vector<uint8_t>{2, 0, 0, 0, 0} );
 
 	int wait = 1;
 	while (true) {

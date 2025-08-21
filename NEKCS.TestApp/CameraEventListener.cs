@@ -26,7 +26,6 @@ namespace NEKCS.TestApp
             camera = new NEKCS.NikonCamera(devicePath, 2);
             camera.OnMtpEvent += new NEKCS.MtpEventHandler(newCamEvent);
 
-
             _cameraShootingForm = new CameraShootingForm(camera);
             _cameraShootingForm.Show();
         }
@@ -42,6 +41,7 @@ namespace NEKCS.TestApp
                     if (ecode == NEKCS.NikonMtpEventCode.DevicePropChanged)
                     {
                         this.EventList.Text += " -> " + Enum.GetName(typeof(NEKCS.NikonMtpDevicePropCode), item);
+                        //var desc = this.camera.GetDevicePropDesc((NEKCS.NikonMtpDevicePropCode)item);
                     }
                     else
                     {

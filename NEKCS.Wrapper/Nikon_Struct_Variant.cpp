@@ -119,6 +119,113 @@ template<> System::Boolean MtpDatatypeVariant::TryGet([Out] System::String^% dat
 }
 
 
+System::Boolean MtpDatatypeVariant::TryGetInteger([Out] System::Int64% data) {
+	if (m_type == GetCodeFromType(System::SByte::typeid)) {
+		data = static_cast<System::SByte>(m_value);
+		return true;
+	} 
+	else if (m_type == GetCodeFromType(System::Int16::typeid)) {
+		data = static_cast<System::Int16>(m_value);
+		return true;
+	}
+	else if (m_type == GetCodeFromType(System::Int32::typeid)) {
+		data = static_cast<System::Int32>(m_value);
+		return true;
+	}
+	else if (m_type == GetCodeFromType(System::Int64::typeid)) {
+		data = static_cast<System::Int64>(m_value);
+		return true;
+	}
+
+	data = 0;
+	return false;
+}
+System::Boolean MtpDatatypeVariant::TryGetUInteger([Out] System::UInt64% data) {
+	if (m_type == GetCodeFromType(System::Byte::typeid)) {
+		data = static_cast<System::Byte>(m_value);
+		return true;
+	}
+	else if (m_type == GetCodeFromType(System::UInt16::typeid)) {
+		data = static_cast<System::UInt16>(m_value);
+		return true;
+	}
+	else if (m_type == GetCodeFromType(System::UInt32::typeid)) {
+		data = static_cast<System::UInt32>(m_value);
+		return true;
+	}
+	else if (m_type == GetCodeFromType(System::UInt64::typeid)) {
+		data = static_cast<System::UInt64>(m_value);
+		return true;
+	}
+
+	data = 0;
+	return false;
+}
+System::Boolean MtpDatatypeVariant::TryGetArrayInteger([Out] array<System::Int64>^% data) {
+	if (m_type == GetCodeFromType(array<System::SByte>::typeid)) {
+		auto v = static_cast<array<System::SByte>^>(m_value);
+		data = gcnew array<System::Int64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::Int64>(v[i]);
+		}
+		return true;
+	} else if (m_type == GetCodeFromType(array<System::Int16>::typeid)) {
+		auto v = static_cast<array<System::Int16>^>(m_value);
+		data = gcnew array<System::Int64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::Int64>(v[i]);
+		}
+		return true;
+	} else if (m_type == GetCodeFromType(array<System::Int32>::typeid)) {
+		auto v = static_cast<array<System::Int32>^>(m_value);
+		data = gcnew array<System::Int64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::Int64>(v[i]);
+		}
+		return true;
+	} else if (m_type == GetCodeFromType(array<System::Int64>::typeid)) {
+		data = static_cast<array<System::Int64>^>(m_value);
+		return true;
+	}
+
+	data = gcnew array<System::Int64>(0);
+	return false;
+}
+System::Boolean MtpDatatypeVariant::TryGetArrayUInteger([Out] array<System::UInt64>^% data) {
+	if (m_type == GetCodeFromType(array<System::Byte>::typeid)) {
+		auto v = static_cast<array<System::Byte>^>(m_value);
+		data = gcnew array<System::UInt64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::UInt64>(v[i]);
+		}
+		return true;
+	}
+	else if (m_type == GetCodeFromType(array<System::UInt16>::typeid)) {
+		auto v = static_cast<array<System::UInt16>^>(m_value);
+		data = gcnew array<System::UInt64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::UInt64>(v[i]);
+		}
+		return true;
+	}
+	else if (m_type == GetCodeFromType(array<System::UInt32>::typeid)) {
+		auto v = static_cast<array<System::UInt32>^>(m_value);
+		data = gcnew array<System::UInt64>(v->Length);
+		for (int i = 0; i < v->Length; ++i) {
+			data[i] = static_cast<System::UInt64>(v[i]);
+		}
+		return true;
+	}
+	else if (m_type == GetCodeFromType(array<System::UInt64>::typeid)) {
+		data = static_cast<array<System::UInt64>^>(m_value);
+		return true;
+	}
+
+	data = gcnew array<System::UInt64>(0);
+	return false;
+}
+
+
 MtpDatatypeVariant::MtpDatatypeVariant(const nek::mtp::MtpDatatypeVariant& data) {
 	m_type = NikonMtpDatatypeCode::Undefined;
 	m_value = nullptr;
