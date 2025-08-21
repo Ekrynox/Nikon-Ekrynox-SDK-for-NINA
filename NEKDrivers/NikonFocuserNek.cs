@@ -53,6 +53,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public Task<bool> Connect(CancellationToken token) {
                 return Task.Run(() => {
+                    Logger.Info("Start connecting to the Lens Focuser for the Camera: " + this.Name, "Connect", sourceFile);
+
                     if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
                         cameraNek = cam;
                     } else {
@@ -88,8 +90,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     _position = 0;
                     _ismoving = false;
 
+                    Logger.Info("Start detecting the max step.", "Connect", sourceFile);
                     DetectMaxStep(token);
+                    Logger.Info("Start detecting the min step.", "Connect", sourceFile);
                     DetectMinStep(token);
+                    Logger.Info("Start detecting the number of steps.", "Connect", sourceFile);
                     DetectStepsNb(token);
                     if (token.IsCancellationRequested) {
                         _isConnected = false;
@@ -98,12 +103,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
 
+                    Logger.Info("Going to Infinity.", "Connect", sourceFile);
                     Move((int)_nbSteps, token).Wait(); //Go to Inf
                     return true;
                 });
             }
 
             public void Disconnect() {
+                Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);

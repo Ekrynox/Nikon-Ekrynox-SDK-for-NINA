@@ -69,6 +69,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public Task<bool> Connect(CancellationToken token) {
             return Task.Run(() => {
+                Logger.Info("Start connecting to the Camera: " + this.Name, "Connect", sourceFile);
+
                 try {
                     this.camera = new NEKCS.NikonCamera(devicePath, 2);
                 } catch (MtpDeviceException e) {
@@ -137,33 +139,32 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void Disconnect() {
-            if (this.camera != null) {
-                lock(_gateCameraState) {
-                    this._cameraState = CameraStates.NoState;
-                }
-
-                if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
-                    this.focuserMediator.Disconnect();
-                }
-
-                if (this.camera != null) {
-                    this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                    this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
-
-                    this._requestedLiveview = 0;
-                    this._liveviewEnabled = false;
-                    this.StopLiveView();
-                    this.AbortExposure();
-
-                    this.camera.Dispose();
-                    this.camera = null;
-                }
-
-                foreach (var i in this._awaitersCameraState) {
-                    if (i.Value != null) i.Value.TrySetCanceled();
-                }
-                RaisePropertyChanged("Connected");
+            Logger.Info("Start diconnecting from the Camera: " + this.Name, "Disconnect", sourceFile);
+            lock (_gateCameraState) {
+                this._cameraState = CameraStates.NoState;
             }
+
+            if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
+                this.focuserMediator.Disconnect();
+            }
+
+            if (this.camera != null) {
+                this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+
+                this._requestedLiveview = 0;
+                this._liveviewEnabled = false;
+                this.StopLiveView();
+                this.AbortExposure();
+
+                this.camera.Dispose();
+                this.camera = null;
+            }
+
+            foreach (var i in this._awaitersCameraState) {
+                if (i.Value != null) i.Value.TrySetCanceled();
+            }
+            RaisePropertyChanged("Connected");
         }
 
         public void SetupDialog() { throw new NotImplementedException(); }
