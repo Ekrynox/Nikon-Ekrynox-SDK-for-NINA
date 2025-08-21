@@ -92,8 +92,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     Logger.Info("Start detecting the max step.", "Connect", sourceFile);
                     DetectMaxStep(token);
+                    if (token.IsCancellationRequested) {
+                        _isConnected = false;
+                        return false;
+                    }
                     Logger.Info("Start detecting the min step.", "Connect", sourceFile);
                     DetectMinStep(token);
+                    if (token.IsCancellationRequested) {
+                        _isConnected = false;
+                        return false;
+                    }
                     Logger.Info("Start detecting the number of steps.", "Connect", sourceFile);
                     DetectStepsNb(token);
                     if (token.IsCancellationRequested) {
