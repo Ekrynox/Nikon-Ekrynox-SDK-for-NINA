@@ -641,6 +641,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (e.eventParams.Length > 0) {
                         sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
                     }
+
+                    //Stop the Liveview started to prevent AF (needed for the D7100, ...)
+                    try {
+                        StopLiveView();
+                    } catch { }
+
+                    //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
 
                     NEKCS.MtpParams param = new();
@@ -695,6 +702,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
                 }
             }
+
+            //Start the Liveview started to prevent AF (needed for the D7100, ...)
+            try {
+                this.camera.StartLiveView();
+            } catch { }
 
             try {
                 NEKCS.MtpParams param = new();
