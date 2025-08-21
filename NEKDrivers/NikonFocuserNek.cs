@@ -63,14 +63,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     try {
                         var result = cameraNek.camera.GetDevicePropValue(NikonMtpDevicePropCode.FocusMode);
-                        if (result.TryGetUInt16(out var focus)) {
+                        if (result.TryGetUInteger(out var focus)) {
                             if (focus == 0x0001) {
                                 Logger.Info("The camera is in Manual Focus.", "Connect", sourceFile);
                                 Notification.ShowError("The lens focuser cannot work in MF mode. Please switch to AF (recommended: AF-S).");
                                 return false;
-                            } else {
-                                Logger.Error("Wrong Datatype UInt16 for FocusMode on " + this.Name, "Connect", sourceFile);
                             }
+                        } else {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for FocusMode on " + this.Name, "Connect", sourceFile);
                         }
                     } catch (MtpDeviceException e) {
                         Logger.Error("Error while checking Focus mode: " + this.Name, e, "Connect", sourceFile);
