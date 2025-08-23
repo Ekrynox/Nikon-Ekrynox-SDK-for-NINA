@@ -281,8 +281,18 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return false;
             }
         }
-        public int GainMax { get; }
-        public int GainMin { get; }
+        public int GainMax {
+            get {
+                var gains = Gains;
+                return gains.Count > 0 ? gains.Max() : 0;
+            }
+        }
+        public int GainMin {
+            get {
+                var gains = Gains;
+                return gains.Count > 0 ? gains.Min() : 0;
+            }
+        }
         public IList<int> Gains {
             get {
                 if (Connected) {
@@ -411,23 +421,17 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
         public double ExposureMin {
             get {
-                if (Connected) {
-                    var exps = Exposures;
-                    return exps.Count > 0 ? exps.Min() : double.NaN;
-                }
-                return double.NaN;
+                var exps = Exposures;
+                return exps.Count > 0 ? exps.Min() : double.NaN;
             }
         }
         public double ExposureMax {
             get {
-                if (Connected) {
-                    if (CanSetBulb) {
-                        return double.PositiveInfinity;
-                    }
-                    var exps = Exposures;
-                    return exps.Count > 0 ? exps.Max() : double.NaN;
+                if (CanSetBulb) {
+                    return double.PositiveInfinity;
                 }
-                return double.NaN;
+                var exps = Exposures;
+                return exps.Count > 0 ? exps.Max() : double.NaN;
             }
         }
         public double ExposureTime {
