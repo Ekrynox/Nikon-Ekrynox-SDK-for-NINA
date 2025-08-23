@@ -1,5 +1,9 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.4.0
+- Fix Gains selection in sequencer
+
+
 ## 0.3.3.0
 - Fix Loop due to int converion of division in Focuser calibration
 - Start Liveview to prevent AF when taking pictures
