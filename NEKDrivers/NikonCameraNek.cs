@@ -300,14 +300,14 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
                             if (!result.TryGetUInteger(out var gains)) {
-                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
                                 return new List<int>();
                             }
                             return gains.EnumFORM.Select(x => (int)x).ToList();
                         } else {
                             var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
                             if (!result.TryGetUInteger(out var gains)) {
-                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureIndex on " + this.Name, "Gains", sourceFile);
+                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndex on " + this.Name, "Gains", sourceFile);
                                 return new List<int>();
                             }
                             return gains.EnumFORM.Select(x => (int)x).ToList();
@@ -381,7 +381,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
                         if (!result.TryGetUInteger(out var exp)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
                             return false;
                         }
                         return exp.EnumFORM.ToList().Contains(0xFFFFFFFF);
@@ -400,7 +400,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     try {
                         var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
                         if (!result.TryGetUInteger(out var exp)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "Exposures", sourceFile);
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureTime on " + this.Name, "Exposures", sourceFile);
                             return new List<double>();
                         }
 
