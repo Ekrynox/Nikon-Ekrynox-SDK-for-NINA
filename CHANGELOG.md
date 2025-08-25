@@ -1,5 +1,10 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.5.0
+- Potential Fix for misaligned data fetching in GetDevicePropDescEx
+- Fix error in type error message for propdesc
+
+
 ## 0.3.4.0
 - Fix Gains selection in sequencer
 
