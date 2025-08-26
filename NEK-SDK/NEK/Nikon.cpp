@@ -13,19 +13,20 @@ using namespace nek;
 
 std::map<std::wstring, mtp::MtpDeviceInfoDS> NikonCamera::listNikonCameras(bool onlyOn) {
 	mtp::MtpManager* deviceManager = &nek::mtp::MtpManager::Instance();
-	auto cameras = deviceManager->listMtpDevices();
+	auto wpdDevices = deviceManager->listMtpDevicesPath();
 	std::map<std::wstring, mtp::MtpDeviceInfoDS> nikonCameras;
 
-	for (auto &camera : cameras) {
+	for (auto & wpdDevice : wpdDevices) {
 		//Check if Nikon
-		std::wstring id(camera.first);
+		std::wstring id(wpdDevice);
 		std::transform(id.begin(), id.end(), id.begin(), ::towlower);
 		if (id.find(L"vid_04b0") != std::wstring::npos) {
+			auto deviceInfo = NikonCamera(wpdDevice).GetDeviceInfo();
 			if (onlyOn == false) {
-				nikonCameras.insert(camera);
+				nikonCameras.insert(std::pair(wpdDevice, deviceInfo));
 			}
-			else if (std::find(camera.second.OperationsSupported.begin(), camera.second.OperationsSupported.end(), NikonMtpOperationCode::InitiateCaptureRecInSdram) != camera.second.OperationsSupported.end()) {
-				nikonCameras.insert(camera);
+			else if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::InitiateCaptureRecInSdram) != deviceInfo.OperationsSupported.end()) {
+				nikonCameras.insert(std::pair(wpdDevice, deviceInfo));
 			}
 		}
 	}
@@ -242,8 +243,8 @@ void NikonCamera::startThreads() {
 
 
 
-mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
-	auto deviceInfo = mtp::MtpDevice::GetDeviceInfo();
+NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
+	NikonDeviceInfoDS deviceInfo = mtp::MtpDevice::GetDeviceInfo();
 
 	//Additional VendorCodes
 	if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::GetVendorPropCodes) != deviceInfo.OperationsSupported.end()) {
@@ -256,10 +257,10 @@ mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
 
 		uint32_t len = *(uint32_t*)response.data.data();
 		size_t offset = sizeof(uint32_t);
-		uint16_t code;
+		uint32_t code;
 
 		for (uint32_t i = 0; i < len; i++) {
-			code = *(uint16_t*)(response.data.data() + offset);
+			code = static_cast<uint32_t>(*(uint16_t*)(response.data.data() + offset));
 			offset += sizeof(uint16_t);
 
 			if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
