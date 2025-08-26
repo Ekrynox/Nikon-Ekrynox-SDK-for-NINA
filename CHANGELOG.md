@@ -1,7 +1,8 @@
 ﻿# Nikon Ekrynox SDK
 
 ## 0.3.6.0
-- update to new version of NEK that fix Operation codes & Property codes that weren't stored as 32bits, and acquire device info only on Nikon devices
+- Fix Operation codes & Property codes that weren't stored as 32bits
+- Acquire device info only on Nikon devices
 
 
 ## 0.3.5.0
