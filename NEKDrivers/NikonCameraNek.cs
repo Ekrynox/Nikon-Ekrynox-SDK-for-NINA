@@ -647,9 +647,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     //Stop the Liveview started to prevent AF (needed for the D7100, ...)
-                    try {
-                        StopLiveView();
-                    } catch { }
+                    StopLiveViewBackground();
 
                     //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
@@ -708,9 +706,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
             //Start the Liveview started to prevent AF (needed for the D7100, ...)
-            try {
-                this.camera.StartLiveView();
-            } catch { }
+            StartLiveViewBackground();
 
             try {
                 NEKCS.MtpParams param = new();
@@ -849,12 +845,20 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         }
 
         public void StartLiveView(CaptureSequence sequence) {
-            this._liveviewEnabled = true;
             try {
                 camera.StartLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StartLiveView", sourceFile);
                 this._liveviewEnabled = false;
+            }
+        }
+        public void StartLiveViewBackground() {
+            try {
+                Interlocked.Increment(ref this._requestedLiveview);
+                camera.StartLiveView();
+            } catch (Exception e) {
+                Logger.Error(this.Name, e, "StartLiveView", sourceFile);
+                Interlocked.Decrement(ref this._requestedLiveview);
             }
         }
 
@@ -906,7 +910,16 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
             }
         }
-        public void StopLiveView(int waitms) {
+        public void StopLiveViewBackground() {
+            try {
+                Interlocked.Decrement(ref this._requestedLiveview);
+                this._liveviewEnabled = false;
+                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
+            } catch (Exception e) {
+                Logger.Error(this.Name, e, "StopLiveView", sourceFile);
+            }
+        }
+        public void StopLiveViewBackground(int waitms) {
             try {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
