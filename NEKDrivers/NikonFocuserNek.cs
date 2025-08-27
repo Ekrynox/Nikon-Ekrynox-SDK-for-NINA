@@ -188,8 +188,22 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             steps = Math.Min(steps, (int)_maxStepSize);
 
                             if (steps < _minStepSize) {
-                                steps = (int)_minStepSize * 2;
-                                toInf = _position + steps <= _nbSteps;
+                                if (toInf) {
+                                    if (_position >= _minStepSize) {
+                                        steps = (int)_minStepSize;
+                                        toInf = false;
+                                    } else {
+                                        steps += (int)_minStepSize;
+                                    }
+                                }
+                                else {
+                                    if (_position + _minStepSize <= _nbSteps) {
+                                        steps = (int)_minStepSize;
+                                        toInf = true;
+                                    } else {
+                                        steps += (int)_minStepSize;
+                                    }
+                                }
                             }
 
                             var result = MoveBy((uint)steps, toInf, ct).Result;
@@ -330,8 +344,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 while (stepSize >= 1) {
 
                     //go to Start then to nbStepInf
+                    Move(0, token).Wait();
+
                     while (nbStepsInf < _nbSteps) {
-                        Move(0, token).Wait();
                         Move((int)nbStepsInf + (int)stepSize, token).Wait();
                         if (_position >= _nbSteps) break;
                         nbStepsInf += stepSize;
@@ -339,9 +354,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
 
                     //go to Inf then to Inf - nbSteps0
+                    Move((int)_nbSteps, token).Wait();
 
                     while (nbSteps0 < _nbSteps) {
-                        Move((int)_nbSteps, token).Wait();
                         Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token).Wait();
                         if (_position <= 0) break;
                         nbSteps0 += stepSize;
