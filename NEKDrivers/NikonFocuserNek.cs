@@ -326,7 +326,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 UInt32 nbSteps0 = 0;
                 UInt32 nbStepsInf = 0;
                 UInt32 stepSize = _maxStepSize;
-                NikonMtpResponseCode result;
 
                 while (stepSize >= 1) {
 
