@@ -212,8 +212,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return NikonMtpResponseCode.General_Error;
                     }
 
-                    Interlocked.Increment(ref cameraNek._requestedLiveview);
-                    cameraNek.camera.StartLiveView(true, ct);
+                    cameraNek.StartLiveViewBackground();
 
                     var parameters = new MtpParams();
                     parameters.addUint32((UInt32)(toInf ? 2 : 1));
@@ -241,7 +240,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     RaisePropertyChanged("Position");
 
-                    cameraNek.StopLiveView(5000);
+                    cameraNek.StopLiveViewBackground(5000);
                     return result;
                 });
             }
