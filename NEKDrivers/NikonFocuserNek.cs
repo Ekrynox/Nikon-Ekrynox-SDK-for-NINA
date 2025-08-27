@@ -45,7 +45,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public string Name { get => cameraNek != null ? cameraNek.Name + " Lens" : "NEK Lens Focuser"; }
             public string DisplayName { get => "Nikon Lens Focuser (NEK Experimental)"; }
             public string Category { get => "Nikon"; }
-            public bool Connected { get => _isConnected && cameraNek != null && cameraNek.Connected; }
+            public bool Connected { get => _isConnected && cameraNek != null; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
             public string DriverInfo { get => "Nikon Ekrynox SDK"; }
             public string DriverVersion { get => cameraNek != null ? cameraNek.DriverVersion : ""; }
