@@ -279,11 +279,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         _minStepSize = stepSize;
-                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
+                        stepSize = (UInt32)Math.Floor((maxStepSize + _minStepSize) / 2.0);
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.OK) {
                         maxStepSize = stepSize;
-                        stepSize = (maxStepSize - _minStepSize) / 2 + _minStepSize;
+                        stepSize = (UInt32)Math.Floor((maxStepSize + _minStepSize) / 2.0);
                         continue;
                     }
                     break;
@@ -304,15 +304,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     toInf = !toInf;
                     if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
                         _maxStepSize = stepSize;
-                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         minStepSize = stepSize;
-                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
                     } else if (result.Result == NikonMtpResponseCode.OK) {
                         minStepSize = stepSize;
-                        stepSize = (_maxStepSize - minStepSize) / 2 + minStepSize;
+                        stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
                     }
                     break;
