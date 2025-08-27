@@ -1,5 +1,9 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.3.7.0
+- Some fixes & optimizations on the focuser
+
+
 ## 0.3.6.0
 - Fix Operation codes & Property codes that weren't stored as 32bits
 - Acquire device info only on Nikon devices
