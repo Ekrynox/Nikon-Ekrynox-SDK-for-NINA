@@ -25,7 +25,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 this.cameraMediator = cameraMediator;
             }
 
-            private NikonCameraNek cameraNek = null;
+            private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
 
             private readonly IProfileService profileService;
             private readonly ICameraMediator cameraMediator;
@@ -42,7 +42,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
             public bool HasSetupDialog { get => false; }
             public string Id { get => "NEKLF"; }
-            public string Name { get => cameraNek != null ? cameraNek.Name + "Lens" : "NEK Lens Focuser"; }
+            public string Name { get => cameraNek != null ? cameraNek.Name + " Lens" : "NEK Lens Focuser"; }
             public string DisplayName { get => "Nikon Lens Focuser (NEK Experimental)"; }
             public string Category { get => "Nikon"; }
             public bool Connected { get => _isConnected && cameraNek != null && cameraNek.Connected; }
@@ -55,9 +55,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 return Task.Run(() => {
                     Logger.Info("Start connecting to the Lens Focuser for the Camera: " + this.Name, "Connect", sourceFile);
 
-                    if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected) {
-                        cameraNek = cam;
-                    } else {
+                    if (cameraNek == null) {
                         Logger.Error("No camera are connectd with NEK inside NINA!", "Connect", sourceFile);
                         Notification.ShowError("No camera are connectd with NEK inside NINA!");
                         return false;
@@ -121,11 +119,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
             public void Disconnect() {
+                if (!_isConnected) return;
                 Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                cameraNek = null;
             }
 
             public void SetupDialog() => throw new NotImplementedException();
