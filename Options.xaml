@@ -1,17 +1,18 @@
 ﻿<ResourceDictionary
     x:Class="LucasAlias.NINA.NEK.Options"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary">
     <DataTemplate x:Key="Nikon Ekrynox SDK_Options">
         <StackPanel Orientation="Vertical">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Number of additional Threads" />
-                <TextBox MinWidth="50" Text="{Binding NbAdditionalThreads}" />
+                <ninactrl:IntStepperControl MinValue="0" MaxValue="256" StepSize="1" Value="{Binding NbAdditionalThreads}"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Update Telescope Info if CPU Lens is mounted" />
-                <TextBox MinWidth="50" Text="{Binding UpdateLensInfo}" />
+                <CheckBox IsChecked="{Binding UpdateLensInfo}" />
             </StackPanel>
         </StackPanel>
     </DataTemplate>
