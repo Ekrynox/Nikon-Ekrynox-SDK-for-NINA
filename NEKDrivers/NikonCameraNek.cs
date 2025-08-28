@@ -1,6 +1,4 @@
-﻿using ASCOM.Tools;
-using Google.Protobuf.WellKnownTypes;
-using NEKCS;
+﻿using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
@@ -21,7 +19,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.TextFormatting;
 
 
 
@@ -73,7 +70,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 Logger.Info("Start connecting to the Camera: " + this.Name, "Connect", sourceFile);
 
                 try {
-                    this.camera = new NEKCS.NikonCamera(devicePath, 2);
+                    this.camera = new NEKCS.NikonCamera(devicePath, NEKMediator.Plugin.NbAdditionalThreads);
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while connecting to the Camera: " + this.Name, e, "Connect", sourceFile);
                     return false;
@@ -573,7 +570,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             return false;
         }
         private void updateLensInfo(bool init = false) {
-            if (Connected) {
+            if (Connected && NEKMediator.Plugin.UpdateLensInfo) {
                 if (isCpuLensMounted()) {
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.FocalLength)) {
