@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace LucasAlias.NINA.NikonEkrynoxSdk {
+namespace LucasAlias.NINA.NEK {
     [Export(typeof(ResourceDictionary))]
     partial class Options : ResourceDictionary {
 
