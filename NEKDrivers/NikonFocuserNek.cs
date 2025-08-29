@@ -150,7 +150,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public bool TempComp { get => false; set { } } //TOCHECK
             public double Temperature { get => double.NaN; } //TOCHECK
 
-            public Task Move(int position, CancellationToken ct, int waitInMs = 1000) { //Manage Errors and the time limit
+            public Task Move(int position, CancellationToken ct, int waitInMs = 1000) => Move(position, ct, waitInMs, true);
+            private Task Move(int position, CancellationToken ct, int waitInMs, bool needInit) { //Manage Errors and the time limit
                 return Task.Run(() => {
                     if (!Connected) {
                         Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
@@ -158,26 +159,19 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return;
                     }
 
-                    lock (cameraNek._gateCameraState) {
-                        if (cameraNek._cameraState != CameraStates.Idle) {
-                            return;
-                        }
-
-                        cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
-                        cameraNek._cameraState = CameraStates.Waiting;
-                    }
+                    if (needInit) InitFocusingProcess();
 
                     if (position <= 0) {
                         _position = _nbSteps;
                         while (true) {
-                            var result = MoveBy(_maxStepSize, false, ct).Result;
+                            var result = MoveBy(_maxStepSize, false, ct, false).Result;
                             if (ct.IsCancellationRequested) break;
                             if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                         }
                     } else if (position >= (int)_nbSteps) {
                         _position = 0;
                         while (true) {
-                            var result = MoveBy(_maxStepSize, true, ct).Result;
+                            var result = MoveBy(_maxStepSize, true, ct, false).Result;
                             if (ct.IsCancellationRequested) break;
                             if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
                         }
@@ -207,21 +201,45 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                                 }
                             }
 
-                            var result = MoveBy((uint)steps, toInf, ct).Result;
+                            var result = MoveBy((uint)steps, toInf, ct, false).Result;
                             if ((result != NikonMtpResponseCode.OK)) break;
                             if (ct.IsCancellationRequested) break;
                         }
                     }
 
-                    lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
-                    if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.SetResult(true);
+                    if (needInit) StopFocusingProcess();
                 });
             }
 
             public void Halt() => throw new NotImplementedException();
 
 
-            public Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) { //Time limited deviceReady for when stucked
+            private void InitFocusingProcess() {
+                if (cameraNek == null) return;
+                lock (cameraNek._gateCameraState) {
+                    if (cameraNek._cameraState != CameraStates.Idle) {
+                        return;
+                    }
+
+                    cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
+                    cameraNek._cameraState = CameraStates.Waiting;
+                }
+                cameraNek.StartLiveViewBackground();
+                _ismoving = true;
+                RaisePropertyChanged("IsMoving");
+            }
+
+            private void StopFocusingProcess() {
+                if (cameraNek == null) return;
+                _ismoving = false;
+                RaisePropertyChanged("IsMoving");
+                cameraNek.StopLiveViewBackground(5000);
+                lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
+                if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.SetResult(true);
+            }
+
+            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => MoveBy(distance, toInf, ct);
+            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
                     if (!Connected) {
                         Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
@@ -229,17 +247,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         return NikonMtpResponseCode.General_Error;
                     }
 
-                    cameraNek.StartLiveViewBackground();
+                    if (needInit) InitFocusingProcess();
 
                     var parameters = new MtpParams();
                     parameters.addUint32((UInt32)(toInf ? 2 : 1));
                     parameters.addUint32(distance);
-                    _ismoving = true;
-                    RaisePropertyChanged("IsMoving");
                     var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, parameters);
                     var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 100);
-                    _ismoving = false;
-                    RaisePropertyChanged("IsMoving");
 
                     if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
@@ -253,11 +267,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     } else {
                         var e = new MtpException(NikonMtpOperationCode.MfDrive, response.responseCode);
                         Logger.Error(e, "MoveBy", sourceFile);
+                        StopFocusingProcess();
                         throw e;
                     }
                     RaisePropertyChanged("Position");
 
-                    cameraNek.StopLiveViewBackground(5000);
+                    if (needInit) StopFocusingProcess();
+
                     return result;
                 });
             }
@@ -287,8 +303,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 UInt32 maxStepSize = _maxStepSize;
                 bool toInf = true;
 
+                InitFocusingProcess();
+
                 while ((_minStepSize < maxStepSize) && (maxStepSize != stepSize)) {
-                    var result = MoveBy(stepSize, toInf, token);
+                    var result = MoveBy(stepSize, toInf, token, false);
 
                     toInf = !toInf;
                     if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
@@ -304,6 +322,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     break;
                 }
+
+                StopFocusingProcess();
             }
 
             public void DetectMaxStep(CancellationToken token) {
@@ -311,10 +331,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 UInt32 stepSize = _maxStepSize;
                 UInt32 minStepSize = _minStepSize;
                 bool toInf = true;
+
+                InitFocusingProcess();
+
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
-                    Move(!toInf ? (int)_nbSteps : 0, token).Wait();
+                    Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait();
                     if (token.IsCancellationRequested) return;
-                    var result = MoveBy(stepSize, toInf, token);
+                    var result = MoveBy(stepSize, toInf, token, false);
                     if (token.IsCancellationRequested) return;
 
                     toInf = !toInf;
@@ -333,32 +356,35 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     }
                     break;
                 }
+
+                StopFocusingProcess();
             }
 
             public void DetectStepsNb(CancellationToken token) {
                 if (!Connected) return;
-
                 UInt32 nbSteps0 = 0;
                 UInt32 nbStepsInf = 0;
                 UInt32 stepSize = _maxStepSize;
 
+                InitFocusingProcess();
+
                 while (stepSize >= 1) {
 
                     //go to Start then to nbStepInf
-                    Move(0, token).Wait();
+                    Move(0, token, 1000, false).Wait();
 
                     while (nbStepsInf < _nbSteps) {
-                        Move((int)nbStepsInf + (int)stepSize, token).Wait();
+                        Move((int)nbStepsInf + (int)stepSize, token, 1000, false).Wait();
                         if (_position >= _nbSteps) break;
                         nbStepsInf += stepSize;
                         if (token.IsCancellationRequested) return;
                     }
 
                     //go to Inf then to Inf - nbSteps0
-                    Move((int)_nbSteps, token).Wait();
+                    Move((int)_nbSteps, token, 1000, false).Wait();
 
                     while (nbSteps0 < _nbSteps) {
-                        Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token).Wait();
+                        Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token, 1000, false).Wait();
                         if (_position <= 0) break;
                         nbSteps0 += stepSize;
                         if (token.IsCancellationRequested) return;
@@ -370,6 +396,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     _nbSteps += stepSize;
                     stepSize = (UInt32)Math.Floor(stepSize / 2.0);
                 }
+
+                StopFocusingProcess();
             }
 
 
