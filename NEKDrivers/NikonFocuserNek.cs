@@ -122,6 +122,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (!_isConnected) return;
                 Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
+                RaisePropertyChanged("Connected");
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
             }
