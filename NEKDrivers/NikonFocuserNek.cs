@@ -299,6 +299,32 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
 
+            public void Calibrate(CancellationToken token) {
+                _minStepSize = 32;
+                _maxStepSize = 32767;
+                _nbSteps = int.MaxValue;
+                _position = 0;
+
+                Logger.Info("Start detecting the max step.", "Calibrate", sourceFile);
+                DetectMaxStep(token);
+                Logger.Info("Detected max step: " + this._maxStepSize, "Calibrate", sourceFile);
+                if (token.IsCancellationRequested) {
+                    return;
+                }
+                Logger.Info("Start detecting the min step.", "Calibrate", sourceFile);
+                DetectMinStep(token);
+                Logger.Info("Detected min step: " + this._minStepSize, "Calibrate", sourceFile);
+                if (token.IsCancellationRequested) {
+                    return;
+                }
+                Logger.Info("Start detecting the number of steps.", "Calibrate", sourceFile);
+                DetectStepsNb(token);
+                Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
+                if (token.IsCancellationRequested) {
+                    return;
+                }
+            }
+
             public void DetectMinStep(CancellationToken token) {
                 if (!Connected) return;
                 UInt32 stepSize = _minStepSize;
