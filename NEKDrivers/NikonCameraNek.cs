@@ -832,6 +832,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
         public bool LiveViewEnabled {
             get {
+                if (!this._liveviewEnabled) return false;
                 try {
                     camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInteger(out var lvState);
                     return (lvState == 1);
@@ -843,11 +844,13 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
         public void StartLiveView(CaptureSequence sequence) {
             try {
+                this._liveviewEnabled = true;
                 camera.StartLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StartLiveView", sourceFile);
                 this._liveviewEnabled = false;
             }
+            RaisePropertyChanged(nameof(LiveViewEnabled));
         }
         public void StartLiveViewBackground() {
             try {
@@ -902,7 +905,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public void StopLiveView() {
             try {
                 this._liveviewEnabled = false;
-                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
+                RaisePropertyChanged(nameof(LiveViewEnabled));
+                if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) {
+                    camera.EndLiveView();
+                }
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
             }
@@ -910,7 +916,6 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public void StopLiveViewBackground() {
             try {
                 Interlocked.Decrement(ref this._requestedLiveview);
-                this._liveviewEnabled = false;
                 if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);
@@ -920,7 +925,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             try {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
-                    await Task.Delay(waitms * 1000);
+                    await Task.Delay(waitms);
                     if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
                 });
             } catch (Exception e) {
