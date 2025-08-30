@@ -54,9 +54,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
         public string Category { get => "Nikon"; }
         public bool Connected {
             get {
-                if (camera == null) {
-                    return false;
-                }
+                if (camera == null) return false;
                 return camera.isConnected();
             }
         }
