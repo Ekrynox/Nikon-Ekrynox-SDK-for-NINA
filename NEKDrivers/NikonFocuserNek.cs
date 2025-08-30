@@ -122,7 +122,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 if (!_isConnected) return;
                 Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
-                RaisePropertyChanged("Connected");
+                RaiseAllPropertiesChanged();
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
             }
@@ -223,19 +223,21 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
                     cameraNek._cameraState = CameraStates.Waiting;
+                    cameraNek.RaisePropertyChanged(nameof(cameraNek.CameraState));
                 }
                 cameraNek.StartLiveViewBackground();
                 _ismoving = true;
-                RaisePropertyChanged("IsMoving");
+                RaisePropertyChanged(nameof(IsMoving));
             }
 
             private void StopFocusingProcess() {
                 if (cameraNek == null) return;
                 _ismoving = false;
-                RaisePropertyChanged("IsMoving");
+                RaisePropertyChanged(nameof(IsMoving));
                 cameraNek.StopLiveViewBackground(5000);
                 lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
                 if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
+                cameraNek.RaisePropertyChanged(nameof(cameraNek.CameraState));
             }
 
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => MoveBy(distance, toInf, ct);
@@ -267,10 +269,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     } else {
                         var e = new MtpException(NikonMtpOperationCode.MfDrive, response.responseCode);
                         Logger.Error(e, "MoveBy", sourceFile);
-                        StopFocusingProcess();
+                        if (needInit) StopFocusingProcess();
                         throw e;
                     }
-                    RaisePropertyChanged("Position");
+                    RaisePropertyChanged(nameof(Position));
 
                     if (needInit) StopFocusingProcess();
 
