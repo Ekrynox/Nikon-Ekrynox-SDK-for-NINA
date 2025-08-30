@@ -162,7 +162,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             foreach (var i in this._awaitersCameraState) {
                 if (i.Value != null) i.Value.TrySetCanceled();
             }
-            RaisePropertyChanged("Connected");
+            RaiseAllPropertiesChanged();
         }
 
         public void SetupDialog() { throw new NotImplementedException(); }
@@ -357,7 +357,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         } else {
                             this.camera.SetDevicePropValueTypesafe(NEKCS.NikonMtpDevicePropCode.ExposureIndex, new MtpDatatypeVariant((UInt16)value));
                         }
-                        RaisePropertyChanged();
+                        RaisePropertyChanged(nameof(Gain));
                     } catch (MtpDeviceException e) {
                         Logger.Error(this.Name, e, "Gain -> Setter: " + value, sourceFile);
                     } catch (MtpException e) {
@@ -462,7 +462,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                             this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             this._isBulb = true;
                             this._bulbTime = value;
-                            RaisePropertyChanged();
+                            RaisePropertyChanged(nameof(ExposureTime));
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
@@ -474,7 +474,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                         try {
                             this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             this._isBulb = false;
-                            RaisePropertyChanged();
+                            RaisePropertyChanged(nameof(ExposureTime));
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
                             throw;
@@ -500,15 +500,15 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
                 switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
                     case NikonMtpDevicePropCode.BatteryLevel:
-                        RaisePropertyChanged("BatteryLevel");
+                        RaisePropertyChanged(nameof(BatteryLevel));
                         break;
                     case NikonMtpDevicePropCode.ExposureIndexEx:
                     case NikonMtpDevicePropCode.ExposureIndex:
-                        RaisePropertyChanged("Gain");
+                        RaisePropertyChanged(nameof(Gain));
                         break;
                     case NikonMtpDevicePropCode.ExposureTime:
-                        RaisePropertyChanged("ExposureMin");
-                        RaisePropertyChanged("ExposureMax");
+                        RaisePropertyChanged(nameof(ExposureMin));
+                        RaisePropertyChanged(nameof(ExposureMax));
                         break;
                     case NikonMtpDevicePropCode.LensID:
                     case NikonMtpDevicePropCode.LensSort:
@@ -638,6 +638,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     exp.TrySetResult(true);
                 }
 
+                RaisePropertyChanged(nameof(CameraState));
+
                 try {
                     if (e.eventParams.Length > 0) {
                         sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
@@ -666,9 +668,8 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) dl.TrySetCanceled();
                 } finally {
                     lock (_gateCameraState) _cameraState = CameraStates.Idle;
+                    RaisePropertyChanged(nameof(CameraState));
                 }
-            } else if (e.eventCode == NikonMtpEventCode.LiveViewStateChanged) {
-                RaisePropertyChanged("LiveViewEnabled");
             }
         }
 
@@ -712,9 +713,11 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     param.addUint32(0xFFFFFFFF);
                     param.addUint32(0x0001);
                     result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, param);
+                    RaisePropertyChanged(nameof(CameraState));
                 } else {
                     param.addUint32(0xFFFFFFFF);
                     result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
+                    RaisePropertyChanged(nameof(CameraState));
                 }
                 if (result.responseCode != NikonMtpResponseCode.OK) {
                     throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.responseCode);
