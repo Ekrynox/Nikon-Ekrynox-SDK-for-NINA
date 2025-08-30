@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Markup.Localizer;
 
-namespace LucasAlias.NINA.NEK.NEKDrivers {
+namespace LucasAlias.NINA.NEK.Drivers {
     public partial class NikonCameraNek {
         public class NikonFocuserNek : BaseINPC, IFocuser {
             public const string sourceFile = @"NEKDrivers\NikonFocuserNEK.cs";
