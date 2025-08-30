@@ -355,6 +355,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                 while ((_minStepSize < maxStepSize) && (maxStepSize != stepSize)) {
                     var result = MoveBy(stepSize, toInf, token, false);
+                    if (token.IsCancellationRequested) break;
 
                     toInf = !toInf;
                     if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
@@ -384,9 +385,9 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait(CancellationToken.None);
-                    if (token.IsCancellationRequested) return;
+                    if (token.IsCancellationRequested) break;
                     var result = MoveBy(stepSize, toInf, token, false);
-                    if (token.IsCancellationRequested) return;
+                    if (token.IsCancellationRequested) break;
 
                     toInf = !toInf;
                     if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
@@ -420,23 +421,27 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
 
                     //go to Start then to nbStepInf
                     Move(0, token, 1000, false).Wait(CancellationToken.None);
+                    if (token.IsCancellationRequested) break;
 
                     while (nbStepsInf < _nbSteps) {
                         Move((int)nbStepsInf + (int)stepSize, token, 1000, false).Wait(CancellationToken.None);
                         if (_position >= _nbSteps) break;
                         nbStepsInf += stepSize;
-                        if (token.IsCancellationRequested) return;
+                        if (token.IsCancellationRequested) break;
                     }
+                    if (token.IsCancellationRequested) break;
 
                     //go to Inf then to Inf - nbSteps0
                     Move((int)_nbSteps, token, 1000, false).Wait(CancellationToken.None);
+                    if (token.IsCancellationRequested) break;
 
                     while (nbSteps0 < _nbSteps) {
                         Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token, 1000, false).Wait(CancellationToken.None);
                         if (_position <= 0) break;
                         nbSteps0 += stepSize;
-                        if (token.IsCancellationRequested) return;
+                        if (token.IsCancellationRequested) break;
                     }
+                    if (token.IsCancellationRequested) break;
 
                     _nbSteps = Math.Min(nbSteps0, nbStepsInf);
                     nbSteps0 = _nbSteps;
