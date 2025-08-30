@@ -1,4 +1,6 @@
 ﻿using Accord.Statistics.Moving;
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+using AsyncRelayCommand = CommunityToolkit.Mvvm.Input.AsyncRelayCommand;
 using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
@@ -13,8 +15,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Markup.Localizer;
-using static LucasAlias.NINA.NEK.NEKDrivers.NikonCameraNek;
 
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek {
@@ -24,6 +26,18 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator) {
                 this.profileService = profileService;
                 this.cameraMediator = cameraMediator;
+
+                StartCalibration = new AsyncRelayCommand(async () => {
+                    if (!this.Connected) return;
+                    this._CalibrationToken = new CancellationTokenSource();
+                    await Task.Run(() => this.Calibrate(this._CalibrationToken.Token));
+                    if (this._CalibrationToken.IsCancellationRequested) {
+                        Logger.Info("Calibration have been canceled.", "Calibrate", sourceFile);
+                        Notification.ShowWarning("NekFocuser: Calibration have been canceled.\nThe Focuser will certainly behave wrongly!", TimeSpan.FromSeconds(5));
+                        return;
+                    }
+                });
+                CancelCalibration = new RelayCommand(() => this._CalibrationToken?.Cancel());
             }
 
             private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
@@ -300,6 +314,10 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             }
 
 
+            private CancellationTokenSource _CalibrationToken;
+            public ICommand StartCalibration { get; }
+            public ICommand CancelCalibration { get; }
+
             public void Calibrate(CancellationToken token) {
                 _minStepSize = 32;
                 _maxStepSize = 32767;
@@ -325,6 +343,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                     return;
                 }
             }
+
 
             public void DetectMinStep(CancellationToken token) {
                 if (!Connected) return;
