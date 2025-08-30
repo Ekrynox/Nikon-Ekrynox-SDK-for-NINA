@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Markup.Localizer;
+using static LucasAlias.NINA.NEK.NEKDrivers.NikonCameraNek;
 
 namespace LucasAlias.NINA.NEK.NEKDrivers {
     public partial class NikonCameraNek {
@@ -150,7 +151,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
             public bool TempComp { get => false; set { } } //TOCHECK
             public double Temperature { get => double.NaN; } //TOCHECK
 
-            public Task Move(int position, CancellationToken ct, int waitInMs = 1000) => Move(position, ct, waitInMs, true);
+            public Task Move(int position, CancellationToken ct, int waitInMs = 1000) => this.Move(position, ct, waitInMs, true);
             private Task Move(int position, CancellationToken ct, int waitInMs, bool needInit) { //Manage Errors and the time limit
                 return Task.Run(() => {
                     if (!Connected) {
@@ -240,7 +241,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 cameraNek.RaisePropertyChanged(nameof(cameraNek.CameraState));
             }
 
-            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => MoveBy(distance, toInf, ct);
+            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => this.MoveBy(distance, toInf, ct);
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
                     if (!Connected) {
@@ -363,7 +364,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 InitFocusingProcess();
 
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
-                    Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait();
+                    Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait(CancellationToken.None);
                     if (token.IsCancellationRequested) return;
                     var result = MoveBy(stepSize, toInf, token, false);
                     if (token.IsCancellationRequested) return;
@@ -399,20 +400,20 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 while (stepSize >= 1) {
 
                     //go to Start then to nbStepInf
-                    Move(0, token, 1000, false).Wait();
+                    Move(0, token, 1000, false).Wait(CancellationToken.None);
 
                     while (nbStepsInf < _nbSteps) {
-                        Move((int)nbStepsInf + (int)stepSize, token, 1000, false).Wait();
+                        Move((int)nbStepsInf + (int)stepSize, token, 1000, false).Wait(CancellationToken.None);
                         if (_position >= _nbSteps) break;
                         nbStepsInf += stepSize;
                         if (token.IsCancellationRequested) return;
                     }
 
                     //go to Inf then to Inf - nbSteps0
-                    Move((int)_nbSteps, token, 1000, false).Wait();
+                    Move((int)_nbSteps, token, 1000, false).Wait(CancellationToken.None);
 
                     while (nbSteps0 < _nbSteps) {
-                        Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token, 1000, false).Wait();
+                        Move((int)_nbSteps - (int)nbSteps0 - (int)stepSize, token, 1000, false).Wait(CancellationToken.None);
                         if (_position <= 0) break;
                         nbSteps0 += stepSize;
                         if (token.IsCancellationRequested) return;
