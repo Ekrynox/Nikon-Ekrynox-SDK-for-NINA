@@ -22,7 +22,7 @@ using System.Windows.Media.Imaging;
 
 
 
-namespace LucasAlias.NINA.NEK.NEKDrivers {
+namespace LucasAlias.NINA.NEK.Drivers {
     public partial class NikonCameraNek : BaseINPC, ICamera {
         public const string sourceFile = @"NEKDrivers\NikonCameraNEK.cs";
 
