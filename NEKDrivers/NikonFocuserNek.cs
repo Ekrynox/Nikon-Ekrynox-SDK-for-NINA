@@ -235,7 +235,7 @@ namespace LucasAlias.NINA.NEK.NEKDrivers {
                 RaisePropertyChanged("IsMoving");
                 cameraNek.StopLiveViewBackground(5000);
                 lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
-                if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.SetResult(true);
+                if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
             }
 
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => MoveBy(distance, toInf, ct);
