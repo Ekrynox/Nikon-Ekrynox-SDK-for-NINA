@@ -37,6 +37,8 @@ namespace LucasAlias.NINA.NEK {
             profileService.ProfileChanged += ProfileService_ProfileChanged;
 
             NEKMediator.RegisterPlugin(this);
+
+            NEKMediator.InitDatabase();
         }
 
         public override Task Teardown() {
