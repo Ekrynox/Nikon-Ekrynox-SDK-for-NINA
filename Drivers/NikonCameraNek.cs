@@ -1,4 +1,5 @@
-﻿using NEKCS;
+﻿using Accord.Imaging;
+using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
 using NINA.Core.Model.Equipment;
@@ -35,6 +36,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             //Default Values
             if (this.cameraSpec.Name == "") this.cameraSpec.Name = this.cameraInfo.Model;
             if (this.cameraSpec.Sensor.BitDepth == -1) this.cameraSpec.Sensor.BitDepth = 16;
+            if (this.cameraSpec.Sensor.Bayer == "") this.cameraSpec.Sensor.Bayer = "RGGB";
 
             this.profileService = profileService;
             this.exposureDataFactory = exposureDataFactory;
@@ -187,14 +189,47 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
         public string SensorName { get => this.cameraSpec.Sensor.Name; } //TO RECHECK: doesn't seem easly feasible
-        public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
+        public SensorType SensorType {
+            get {
+                switch (this.cameraSpec.Sensor.Bayer) {
+                    case "Monochrome":
+                        return SensorType.Monochrome;
+                    case "Color":
+                        return SensorType.Color;
+                    case "RGGB":
+                        return SensorType.RGGB;
+                    case "CMYG":
+                        return SensorType.CMYG;
+                    case "CMYG2":
+                        return SensorType.CMYG2;
+                    case "LRGB":
+                        return SensorType.LRGB;
+                    case "BGGR":
+                        return SensorType.BGGR;
+                    case "GBRG":
+                        return SensorType.GBRG;
+                    case "GRBG":
+                        return SensorType.GRBG;
+                    case "GRGB":
+                        return SensorType.GRGB;
+                    case "GBGR":
+                        return SensorType.GBGR;
+                    case "RGBG":
+                        return SensorType.RGBG;
+                    case "BGRG":
+                        return SensorType.BGRG;
+                    default:
+                        return SensorType.Monochrome;
+                }
+            }
+        }
         public short BayerOffsetX { get => 0; } //TO RECHECK
         public short BayerOffsetY { get => 0; } //TO RECHECK
-        public int CameraXSize { get => this.cameraSpec.Sensor.ResX; } //TODO
-        public int CameraYSize { get => this.cameraSpec.Sensor.ResY; } //TODO
+        public int CameraXSize { get => this.cameraSpec.Sensor.ResX; }
+        public int CameraYSize { get => this.cameraSpec.Sensor.ResY; }
         public double PixelSizeX { get => this.cameraSpec.Sensor.PixelSizeX; }
         public double PixelSizeY { get => this.cameraSpec.Sensor.PixelSizeY; }
-        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO:
+        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO
 
         public short BinX { get => 1; set { } } //TO RECHECK
         public short BinY { get => 1; set { } } //TO RECHECK
