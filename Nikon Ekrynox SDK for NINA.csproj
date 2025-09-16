@@ -20,6 +20,14 @@
     <Page Remove="x64\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Database\NikonCameraList.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Database\NikonCameraList.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="NINA.Plugin" Version="3.2.0.2001-beta" />
   </ItemGroup>
   <ItemGroup>

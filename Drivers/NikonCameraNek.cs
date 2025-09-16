@@ -30,6 +30,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
             this.devicePath = devicePath;
             this.cameraInfo = cameraInfo;
 
+            if (NEKMediator.CameraList.ContainsKey(this.cameraInfo.Model)) this.cameraSpec = NEKMediator.CameraList[this.cameraInfo.Model];
+            else this.cameraSpec = new Database.NikonCameraSpec();
+            //Default Values
+            if (this.cameraSpec.Name == "") this.cameraSpec.Name = this.cameraInfo.Model;
+            if (this.cameraSpec.Sensor.BitDepth == -1) this.cameraSpec.Sensor.BitDepth = 16;
+
             this.profileService = profileService;
             this.exposureDataFactory = exposureDataFactory;
             this.cameraMediator = cameraMediator;
@@ -39,6 +45,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         private readonly string devicePath; // WPD device path
         private NEKCS.NikonCamera camera; // Camera object for operations
         private NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
+        private Database.NikonCameraSpec cameraSpec;
 
         private readonly IProfileService profileService;
         private readonly IExposureDataFactory exposureDataFactory;
@@ -49,8 +56,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public bool HasSetupDialog { get => false; } // TODO
         public string Id { get => cameraInfo.SerialNumber; }
-        public string Name { get => "Nikon " + cameraInfo.Model; }
-        public string DisplayName { get => "Nikon " + cameraInfo.Model + " (NEK Experimental)"; }
+        public string Name { get => "Nikon " + this.cameraSpec.Name; }
+        public string DisplayName { get => "Nikon " + this.cameraSpec.Name + " (NEK Experimental)"; }
         public string Category { get => "Nikon"; }
         public bool Connected {
             get {
@@ -179,14 +186,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
         public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
-        public string SensorName { get => ""; } //TO RECHECK: doesn't seem easly feasible
+        public string SensorName { get => this.cameraSpec.Sensor.Name; } //TO RECHECK: doesn't seem easly feasible
         public SensorType SensorType { get => SensorType.RGGB; } //TO RECHECK: certainly that
         public short BayerOffsetX { get => 0; } //TO RECHECK
         public short BayerOffsetY { get => 0; } //TO RECHECK
-        public int CameraXSize { get => 0; } //TODO
-        public int CameraYSize { get => 0; } //TODO
-        public double PixelSizeX { get => 0; } //TODO
-        public double PixelSizeY { get => 0; } //TODO
+        public int CameraXSize { get => this.cameraSpec.Sensor.ResX; } //TODO
+        public int CameraYSize { get => this.cameraSpec.Sensor.ResY; } //TODO
+        public double PixelSizeX { get => this.cameraSpec.Sensor.PixelSizeX; }
+        public double PixelSizeY { get => this.cameraSpec.Sensor.PixelSizeY; }
         public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO:
 
         public short BinX { get => 1; set { } } //TO RECHECK
