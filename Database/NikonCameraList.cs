@@ -18,6 +18,7 @@ namespace LucasAlias.NINA.NEK.Database {
         public class NikonSensorSpec {
             public string Name { get; set; } = "";
             public string Type { get; set; } = "";
+            public string Bayer { get; set; } = "";
             public int BitDepth { get; set; } = -1;
             public int ResX { get; set; } = -1;
             public int ResY { get; set; } = -1;
