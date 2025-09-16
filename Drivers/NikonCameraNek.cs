@@ -229,7 +229,35 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public int CameraYSize { get => this.cameraSpec.Sensor.ResY; }
         public double PixelSizeX { get => this.cameraSpec.Sensor.PixelSizeX; }
         public double PixelSizeY { get => this.cameraSpec.Sensor.PixelSizeY; }
-        public int BitDepth { get => (int)this.profileService.ActiveProfile.CameraSettings.BitDepth; } //TODO
+        public int BitDepth {
+            get {
+                //RawCompressionBitMode
+                if (this.cameraInfo.DevicePropertiesSupported.Contains((NikonMtpDevicePropCode)0xD149)) {
+                    try {
+                        var result = this.camera.GetDevicePropValue((NikonMtpDevicePropCode)0xD149);
+                        if (!result.TryGetUInteger(out var bitDepth)) {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "BitDepth", sourceFile);
+                            return this.cameraSpec.Sensor.BitDepth;
+                        }
+                        switch (bitDepth) {
+                            case 0:
+                                return 12;
+                            case 1:
+                                return 14;
+                            default:
+                                return (int)bitDepth;
+                        }
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "BitDepth", sourceFile);
+                        return this.cameraSpec.Sensor.BitDepth;
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "BitDepth", sourceFile);
+                        return this.cameraSpec.Sensor.BitDepth;
+                    }
+                }
+                return this.cameraSpec.Sensor.BitDepth;
+            }
+        }
 
         public short BinX { get => 1; set { } } //TO RECHECK
         public short BinY { get => 1; set { } } //TO RECHECK
@@ -864,7 +892,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _imageStream.Dispose();
                     _imageStream = null;
                 }
-                return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef", bitDepth: this.BitDepth, metaData: metaData);
+                return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef", 
+                    bitDepth: profileService.ActiveProfile.CameraSettings.RawConverter == RawConverterEnum.FREEIMAGE ? this.BitDepth : (int)profileService.ActiveProfile.CameraSettings.BitDepth, 
+                    metaData: metaData);
             } catch { throw; }
         }
 
