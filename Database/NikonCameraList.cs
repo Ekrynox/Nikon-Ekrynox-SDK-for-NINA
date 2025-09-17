@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LucasAlias.NINA.NEK.Database {
@@ -13,7 +15,8 @@ namespace LucasAlias.NINA.NEK.Database {
         public int Year { get; set; } = -1;
         public string Processor { get; set; } = "";
         public NikonSensorSpec Sensor { get; set; } = new NikonSensorSpec();
-        public List<Dictionary<string, CropSubSamplingClass>> CropSubSampling { get; set; } = new List<Dictionary<string, CropSubSamplingClass>>();
+        [JsonPropertyName("CropSubSampling")]
+        public List<CropSubSamplingClass> CropSubSampling { get; set; } = new List<CropSubSamplingClass>();
 
 
         public class NikonSensorSpec {
@@ -30,8 +33,17 @@ namespace LucasAlias.NINA.NEK.Database {
         }
 
         public class CropSubSamplingClass {
-            public int ResX { get; set; } = -1;
-            public int ResY { get; set; } = -1;
+            [JsonPropertyName("Crop")]
+            public String Crop { get; set; }
+            [JsonPropertyName("Subs")]
+            public Dictionary<string, SubSamplingClass> Subs { get; set; }
+
+            public class SubSamplingClass {
+                [JsonPropertyName("ResX")]
+                public int ResX { get; set; } = -1;
+                [JsonPropertyName("ResY")]
+                public int ResY { get; set; } = -1;
+            }
         }
 
         internal static Dictionary<string, Database.NikonCameraSpec> ReadDatabase() {

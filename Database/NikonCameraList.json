@@ -33,12 +33,64 @@
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 4544,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3968,
+            "ResY": 2640
+          },
+          "Size M": {
+            "ResX": 2976,
+            "ResY": 1976
+          },
+          "Size S": {
+            "ResX": 1984,
+            "ResY": 1320
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 5056,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 3792,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 2528,
+            "ResY": 2016
+          }
+        }
+      }
+    ]
   },
   "D3S": {
     "Name": "D3S",
     "Year": 2009,
-    "Processor": "",
+    "Processor": "EXPEED",
     "Sensor": {
       "Name": "Nikon ?",
       "Type": "CMOS",
@@ -69,7 +121,76 @@
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4928,
+            "ResY": 3280
+          },
+          "Size M": {
+            "ResX": 3696,
+            "ResY": 2456
+          },
+          "Size S": {
+            "ResX": 2464,
+            "ResY": 1640
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3200,
+            "ResY": 2128
+          },
+          "Size M": {
+            "ResX": 2400,
+            "ResY": 1592
+          },
+          "Size S": {
+            "ResX": 1600,
+            "ResY": 1064
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 4096,
+            "ResY": 3280
+          },
+          "Size M": {
+            "ResX": 3072,
+            "ResY": 2456
+          },
+          "Size S": {
+            "ResX": 2048,
+            "ResY": 1640
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4096,
+            "ResY": 2720
+          },
+          "Size M": {
+            "ResX": 3072,
+            "ResY": 2040
+          },
+          "Size S": {
+            "ResX": 2048,
+            "ResY": 1360
+          }
+        }
+      }
+    ]
   },
   "D4S": {
     "Name": "D4S",
@@ -87,7 +208,76 @@
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4928,
+            "ResY": 3280
+          },
+          "Size M": {
+            "ResX": 3696,
+            "ResY": 2456
+          },
+          "Size S": {
+            "ResX": 2464,
+            "ResY": 1640
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3200,
+            "ResY": 2128
+          },
+          "Size M": {
+            "ResX": 2400,
+            "ResY": 1592
+          },
+          "Size S": {
+            "ResX": 1600,
+            "ResY": 1064
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 4096,
+            "ResY": 3280
+          },
+          "Size M": {
+            "ResX": 3072,
+            "ResY": 2456
+          },
+          "Size S": {
+            "ResX": 2048,
+            "ResY": 1640
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4096,
+            "ResY": 2720
+          },
+          "Size M": {
+            "ResX": 3072,
+            "ResY": 2040
+          },
+          "Size S": {
+            "ResX": 2048,
+            "ResY": 1360
+          }
+        }
+      }
+    ]
   },
   "D5": {
     "Name": "D5",
@@ -105,7 +295,76 @@
       "PixelSizeX": 6.44,
       "PixelSizeY": 6.44
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3648,
+            "ResY": 2432
+          },
+          "Size M": {
+            "ResX": 2736,
+            "ResY": 1824
+          },
+          "Size S": {
+            "ResX": 1824,
+            "ResY": 1216
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 4640,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 3472,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2320,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4640,
+            "ResY": 3088
+          },
+          "Size M": {
+            "ResX": 3472,
+            "ResY": 2312
+          },
+          "Size S": {
+            "ResX": 2320,
+            "ResY": 1544
+          }
+        }
+      }
+    ]
   },
   "D6": {
     "Name": "D6",
@@ -123,7 +382,110 @@
       "PixelSizeX": 6.44,
       "PixelSizeY": 6.44
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3648,
+            "ResY": 2432
+          },
+          "Size M": {
+            "ResX": 2736,
+            "ResY": 1824
+          },
+          "Size S": {
+            "ResX": 1824,
+            "ResY": 1216
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 4640,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 3472,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2320,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4640,
+            "ResY": 3088
+          },
+          "Size M": {
+            "ResX": 3472,
+            "ResY": 2312
+          },
+          "Size S": {
+            "ResX": 2320,
+            "ResY": 1544
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 3712,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 2784,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 1856,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3128
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2344
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1560
+          }
+        }
+      }
+    ]
   },
   "D40": {
     "Name": "D40",
@@ -213,7 +575,25 @@
       "PixelSizeX": 5.53,
       "PixelSizeY": 5.53
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4288,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3216,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2144,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "D200": {
     "Name": "D200",
@@ -249,7 +629,25 @@
       "PixelSizeX": 5.5,
       "PixelSizeY": 5.5
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4288,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3216,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2144,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "D300S": {
     "Name": "D300S",
@@ -267,7 +665,25 @@
       "PixelSizeX": 5.5,
       "PixelSizeY": 5.5
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4288,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3216,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2144,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "D500": {
     "Name": "D500",
@@ -285,7 +701,42 @@
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1.3x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4272,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3200,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2128,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "D600": {
     "Name": "D600",
@@ -303,7 +754,42 @@
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 4512,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 3008,
+            "ResY": 2008
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      }
+    ]
   },
   "D610": {
     "Name": "D610",
@@ -321,7 +807,42 @@
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 4512,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 3008,
+            "ResY": 2008
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      }
+    ]
   },
   "D700": {
     "Name": "D700",
@@ -339,7 +860,42 @@
       "PixelSizeX": 8.45,
       "PixelSizeY": 8.45
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4256,
+            "ResY": 2832
+          },
+          "Size M": {
+            "ResX": 3184,
+            "ResY": 2120
+          },
+          "Size S": {
+            "ResX": 2128,
+            "ResY": 1416
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 2784,
+            "ResY": 1848
+          },
+          "Size M": {
+            "ResX": 2080,
+            "ResY": 1384
+          },
+          "Size S": {
+            "ResX": 1392,
+            "ResY": 920
+          }
+        }
+      }
+    ]
   },
   "D750": {
     "Name": "D750",
@@ -357,7 +913,59 @@
       "PixelSizeX": 5.97,
       "PixelSizeY": 5.97
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 4512,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 3008,
+            "ResY": 2008
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 5008,
+            "ResY": 3336
+          },
+          "Size M": {
+            "ResX": 3752,
+            "ResY": 2504
+          },
+          "Size S": {
+            "ResX": 2504,
+            "ResY": 1664
+          }
+        }
+      }
+    ]
   },
   "D780": {
     "Name": "D780",
@@ -375,7 +983,76 @@
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4024
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3016
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 3008,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 2000,
+            "ResY": 2000
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
+        }
+      }
+    ]
   },
   "D800": {
     "Name": "D800",
@@ -393,7 +1070,76 @@
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 7360,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 5520,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3680,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4080
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3056
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2040
+          }
+        }
+      }
+    ]
   },
   "D800E": {
     "Name": "D800E",
@@ -411,7 +1157,76 @@
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 7360,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 5520,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3680,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4080
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3056
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2040
+          }
+        }
+      }
+    ]
   },
   "D810": {
     "Name": "D810",
@@ -429,7 +1244,76 @@
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 7360,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 5520,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3680,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4080
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3056
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2040
+          }
+        }
+      }
+    ]
   },
   "D810A": {
     "Name": "D810A",
@@ -447,7 +1331,76 @@
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 7360,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 5520,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3680,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4912
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3680
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2456
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 6144,
+            "ResY": 4080
+          },
+          "Size M": {
+            "ResX": 4608,
+            "ResY": 3056
+          },
+          "Size S": {
+            "ResX": 3072,
+            "ResY": 2040
+          }
+        }
+      }
+    ]
   },
   "D850": {
     "Name": "D850",
@@ -465,7 +1418,93 @@
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5408,
+            "ResY": 3600
+          },
+          "Size M": {
+            "ResX": 4048,
+            "ResY": 2696
+          },
+          "Size S": {
+            "ResX": 2704,
+            "ResY": 1800
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6880,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 5152,
+            "ResY": 4120
+          },
+          "Size S": {
+            "ResX": 3440,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "1.2x",
+        "Subs": {
+          "Size L": {
+            "ResX": 6880,
+            "ResY": 4584
+          },
+          "Size M": {
+            "ResX": 5152,
+            "ResY": 3432
+          },
+          "Size S": {
+            "ResX": 3440,
+            "ResY": 2288
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 5504,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 4128,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 2752,
+            "ResY": 2752
+          }
+        }
+      }
+    ]
   },
   "D5000": {
     "Name": "D5000",
@@ -483,7 +1522,25 @@
       "PixelSizeX": 5.53,
       "PixelSizeY": 5.53
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4288,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3216,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2144,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "D5100": {
     "Name": "D5100",
@@ -501,7 +1558,25 @@
       "PixelSizeX": 4.78,
       "PixelSizeY": 4.78
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4928,
+            "ResY": 3264
+          },
+          "Size M": {
+            "ResX": 3696,
+            "ResY": 2448
+          },
+          "Size S": {
+            "ResX": 2464,
+            "ResY": 1632
+          }
+        }
+      }
+    ]
   },
   "D5200": {
     "Name": "D5200",
@@ -512,14 +1587,32 @@
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
-      "ResX": 6010,
+      "ResX": 6000,
       "ResY": 4000,
       "SizeX": 23.5,
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      }
+    ]
   },
   "D5300": {
     "Name": "D5300",
@@ -537,7 +1630,25 @@
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      }
+    ]
   },
   "D5500": {
     "Name": "D5500",
@@ -555,7 +1666,25 @@
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      }
+    ]
   },
   "D5600": {
     "Name": "D5600",
@@ -573,7 +1702,25 @@
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      }
+    ]
   },
   "D7000": {
     "Name": "D7000",
@@ -591,7 +1738,25 @@
       "PixelSizeX": 4.78,
       "PixelSizeY": 4.78
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4928,
+            "ResY": 3264
+          },
+          "Size M": {
+            "ResX": 3696,
+            "ResY": 2448
+          },
+          "Size S": {
+            "ResX": 2464,
+            "ResY": 1632
+          }
+        }
+      }
+    ]
   },
   "D7100": {
     "Name": "D7100",
@@ -609,7 +1774,42 @@
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      },
+      {
+        "Crop": "1.3x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      }
+    ]
   },
   "D7200": {
     "Name": "D7200",
@@ -627,7 +1827,42 @@
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6000,
+            "ResY": 4000
+          },
+          "Size M": {
+            "ResX": 4496,
+            "ResY": 3000
+          },
+          "Size S": {
+            "ResX": 2992,
+            "ResY": 2000
+          }
+        }
+      },
+      {
+        "Crop": "1.3x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4800,
+            "ResY": 3200
+          },
+          "Size M": {
+            "ResX": 3600,
+            "ResY": 2400
+          },
+          "Size S": {
+            "ResX": 2400,
+            "ResY": 1600
+          }
+        }
+      }
+    ]
   },
   "D7500": {
     "Name": "D7500",
@@ -645,7 +1880,42 @@
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1.3x",
+        "Subs": {
+          "Size L": {
+            "ResX": 4272,
+            "ResY": 2848
+          },
+          "Size M": {
+            "ResX": 3200,
+            "ResY": 2136
+          },
+          "Size S": {
+            "ResX": 2128,
+            "ResY": 1424
+          }
+        }
+      }
+    ]
   },
   "DF": {
     "Name": "DF",
@@ -663,7 +1933,42 @@
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4928,
+            "ResY": 3280
+          },
+          "Size M": {
+            "ResX": 3696,
+            "ResY": 2456
+          },
+          "Size S": {
+            "ResX": 2464,
+            "ResY": 1640
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3200,
+            "ResY": 2128
+          },
+          "Size M": {
+            "ResX": 2400,
+            "ResY": 1592
+          },
+          "Size S": {
+            "ResX": 1600,
+            "ResY": 1064
+          }
+        }
+      }
+    ]
   },
   "1V3": {
     "Name": "1V3",
@@ -681,7 +1986,25 @@
       "PixelSizeX": 2.52,
       "PixelSizeY": 2.52
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "1inch",
+        "Subs": {
+          "Size L": {
+            "ResX": 5232,
+            "ResY": 3488
+          },
+          "Size M": {
+            "ResX": 3920,
+            "ResY": 2616
+          },
+          "Size S": {
+            "ResX": 2608,
+            "ResY": 1744
+          }
+        }
+      }
+    ]
   },
   "Z 5": {
     "Name": "Z5",
@@ -699,7 +2022,76 @@
       "PixelSizeX": 5.97,
       "PixelSizeY": 5.97
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 4512,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 3008,
+            "ResY": 2008
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 3008,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 2000,
+            "ResY": 2000
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6016,
+            "ResY": 3384
+          },
+          "Size M": {
+            "ResX": 4512,
+            "ResY": 2536
+          },
+          "Size S": {
+            "ResX": 3008,
+            "ResY": 1688
+          }
+        }
+      }
+    ]
   },
   "Z 5_2": {
     "Name": "Z5II",
@@ -735,7 +2127,76 @@
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4024
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3016
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 3008,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 2000,
+            "ResY": 2000
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
+        }
+      }
+    ]
   },
   "Z 6_2": {
     "Name": "Z6II",
@@ -755,59 +2216,71 @@
     },
     "CropSubSampling": [
       {
-        "Size L": {
-          "ResX": 6048,
-          "ResY": 4024
-        },
-        "Size M": {
-          "ResX": 4528,
-          "ResY": 3016
-        },
-        "Size S": {
-          "ResX": 3024,
-          "ResY": 2016
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4024
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3016
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
         }
       },
       {
-        "Size L": {
-          "ResX": 3936,
-          "ResY": 2624
-        },
-        "Size M": {
-          "ResX": 2944,
-          "ResY": 1968
-        },
-        "Size S": {
-          "ResX": 1968,
-          "ResY": 1312
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3936,
+            "ResY": 2624
+          },
+          "Size M": {
+            "ResX": 2944,
+            "ResY": 1968
+          },
+          "Size S": {
+            "ResX": 1968,
+            "ResY": 1312
+          }
         }
       },
       {
-        "Size L": {
-          "ResX": 4016,
-          "ResY": 4016
-        },
-        "Size M": {
-          "ResX": 3008,
-          "ResY": 3008
-        },
-        "Size S": {
-          "ResX": 2000,
-          "ResY": 2000
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4016,
+            "ResY": 4016
+          },
+          "Size M": {
+            "ResX": 3008,
+            "ResY": 3008
+          },
+          "Size S": {
+            "ResX": 2000,
+            "ResY": 2000
+          }
         }
       },
       {
-        "Size L": {
-          "ResX": 6048,
-          "ResY": 3400
-        },
-        "Size M": {
-          "ResX": 4528,
-          "ResY": 2544
-        },
-        "Size S": {
-          "ResX": 3024,
-          "ResY": 1696
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
         }
       }
     ]
@@ -846,7 +2319,93 @@
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5408,
+            "ResY": 3600
+          },
+          "Size M": {
+            "ResX": 4048,
+            "ResY": 2696
+          },
+          "Size S": {
+            "ResX": 2704,
+            "ResY": 1800
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6880,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 5152,
+            "ResY": 4120
+          },
+          "Size S": {
+            "ResX": 3440,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 5504,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 4128,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 2752,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 4640
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 3480
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2320
+          }
+        }
+      }
+    ]
   },
   "Z 7_2": {
     "Name": "Z7II",
@@ -864,7 +2423,93 @@
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5408,
+            "ResY": 3600
+          },
+          "Size M": {
+            "ResX": 4048,
+            "ResY": 2696
+          },
+          "Size S": {
+            "ResX": 2704,
+            "ResY": 1800
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 6880,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 5152,
+            "ResY": 4120
+          },
+          "Size S": {
+            "ResX": 3440,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 5504,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 4128,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 2752,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 4640
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 3480
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2320
+          }
+        }
+      }
+    ]
   },
   "Z 8": {
     "Name": "Z8",
@@ -882,7 +2527,76 @@
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5392,
+            "ResY": 3592
+          },
+          "Size M": {
+            "ResX": 4032,
+            "ResY": 2688
+          },
+          "Size S": {
+            "ResX": 2688,
+            "ResY": 1792
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 5504,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 4128,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 2752,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 4640
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 3480
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2320
+          }
+        }
+      }
+    ]
   },
   "Z 9": {
     "Name": "Z9",
@@ -900,7 +2614,76 @@
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5392,
+            "ResY": 3592
+          },
+          "Size M": {
+            "ResX": 4032,
+            "ResY": 2688
+          },
+          "Size S": {
+            "ResX": 2688,
+            "ResY": 1792
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 5504,
+            "ResY": 5504
+          },
+          "Size M": {
+            "ResX": 4128,
+            "ResY": 4128
+          },
+          "Size S": {
+            "ResX": 2752,
+            "ResY": 2752
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 8256,
+            "ResY": 4640
+          },
+          "Size M": {
+            "ResX": 6192,
+            "ResY": 3480
+          },
+          "Size S": {
+            "ResX": 4128,
+            "ResY": 2320
+          }
+        }
+      }
+    ]
   },
   "Z 50": {
     "Name": "Z50",
@@ -918,7 +2701,59 @@
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 3712,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 2784,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 1856,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3128
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2344
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1560
+          }
+        }
+      }
+    ]
   },
   "Z 50_2": {
     "Name": "Z50II",

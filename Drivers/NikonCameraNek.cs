@@ -225,37 +225,67 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
         public short BayerOffsetX { get => 0; } //TO RECHECK
         public short BayerOffsetY { get => 0; } //TO RECHECK
-        internal (int, int) CameraSize {
+        internal Database.NikonCameraSpec.CropSubSamplingClass Crop {
             get {
                 if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.CaptureAreaCrop)) {
                     try {
                         var result = this.camera.GetDevicePropDesc(NikonMtpDevicePropCode.CaptureAreaCrop);
                         if (!result.TryGetUInteger(out var cropSize)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "CameraSize", sourceFile);
-                            return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "Crop", sourceFile);
+                            return null;
                         }
 
-                        List<ulong> cropList = new List<ulong>();
-                        if (cropSize.FormFlag == NikonMtpFormtypeCode.Enum) cropList = cropSize.EnumFORM.ToList();
-                        else if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
+                        //if (cropList.Count > this.cameraSpec.CropSubSampling.Count); // TODO: Add warning
+
+                        Database.NikonCameraSpec.CropSubSamplingClass crop = null;
+                        if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
+                            List<ulong> cropList = new List<ulong>();
                             for (var i = cropSize.RangeFORM.min; i <= cropSize.RangeFORM.max; i += cropSize.RangeFORM.step) {
                                 cropList.Add(i);
                             }
+                            crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
+                        } else if (cropSize.FormFlag == NikonMtpFormtypeCode.Enum) {
+                            switch (cropSize.CurrentValue) {
+                                case 0:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "FX");
+                                    break;
+                                case 1:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1.2x");
+                                    break;
+                                case 2:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "DX");
+                                    break;
+                                case 3:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "5:4");
+                                    break;
+                                case 4:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1:1");
+                                    break;
+                                case 5:
+                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "16:9");
+                                    break;
+                            }
                         }
 
-                        if (cropList.Count > this.cameraSpec.CropSubSampling.Count) return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY); // TODO: Add warning
-
-                        var crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
-                        if (crop.Count == 0) return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY); // TODO: Add warning
-                        return (crop.First().Value.ResX, crop.First().Value.ResY);
+                        if (crop == null || crop.Subs.Count == 0) return null; // TODO: Add error
+                        return crop;
 
                     } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "CameraSize", sourceFile);
-                        return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
+                        Logger.Error(this.Name, e, "Crop", sourceFile);
+                        return null;
                     } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "CameraSize", sourceFile);
-                        return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
+                        Logger.Error(this.Name, e, "Crop", sourceFile);
+                        return null;
                     }
+                }
+                return null;
+            }
+        }
+        internal (int, int) CameraSize {
+            get {
+                if (this.Crop != null) {
+                    var size = this.Crop.Subs.First().Value;
+                    return (size.ResX, size.ResY);
                 }
                 return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
             }
