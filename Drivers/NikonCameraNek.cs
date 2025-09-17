@@ -225,60 +225,74 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
         public short BayerOffsetX { get => 0; } //TO RECHECK
         public short BayerOffsetY { get => 0; } //TO RECHECK
+
+        private bool _isCropDirty = true;
+        private Database.NikonCameraSpec.CropSubSamplingClass _cachedCrop;
         internal Database.NikonCameraSpec.CropSubSamplingClass Crop {
             get {
-                if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.CaptureAreaCrop)) {
-                    try {
-                        var result = this.camera.GetDevicePropDesc(NikonMtpDevicePropCode.CaptureAreaCrop);
-                        if (!result.TryGetUInteger(out var cropSize)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "Crop", sourceFile);
-                            return null;
-                        }
+                if (_isCropDirty) {
+                    var getter = () => {
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.CaptureAreaCrop)) {
+                            try {
+                                var result = this.camera.GetDevicePropDesc(NikonMtpDevicePropCode.CaptureAreaCrop);
+                                if (!result.TryGetUInteger(out var cropSize)) {
+                                    Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "Crop", sourceFile);
+                                    return null;
+                                }
 
-                        //if (cropList.Count > this.cameraSpec.CropSubSampling.Count); // TODO: Add warning
+                                //if (cropList.Count > this.cameraSpec.CropSubSampling.Count); // TODO: Add warning
 
-                        Database.NikonCameraSpec.CropSubSamplingClass crop = null;
-                        if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
-                            List<ulong> cropList = new List<ulong>();
-                            for (var i = cropSize.RangeFORM.min; i <= cropSize.RangeFORM.max; i += cropSize.RangeFORM.step) {
-                                cropList.Add(i);
+                                Database.NikonCameraSpec.CropSubSamplingClass crop = null;
+                                if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
+                                    List<ulong> cropList = new List<ulong>();
+                                    for (var i = cropSize.RangeFORM.min; i <= cropSize.RangeFORM.max; i += cropSize.RangeFORM.step) {
+                                        cropList.Add(i);
+                                    }
+                                    crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
+                                } else if (cropSize.FormFlag == NikonMtpFormtypeCode.Enum) {
+                                    switch (cropSize.CurrentValue) {
+                                        case 0:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "FX");
+                                            break;
+                                        case 1:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1.2x");
+                                            break;
+                                        case 2:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "DX");
+                                            break;
+                                        case 3:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "5:4");
+                                            break;
+                                        case 4:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1:1");
+                                            break;
+                                        case 5:
+                                            crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "16:9");
+                                            break;
+                                    }
+                                }
+
+                                if (crop == null || crop.Subs.Count == 0) return null; // TODO: Add error
+                                return crop;
+
+                            } catch (MtpDeviceException e) {
+                                Logger.Error(this.Name, e, "Crop", sourceFile);
+                                return null;
+                            } catch (MtpException e) {
+                                Logger.Error(this.Name, e, "Crop", sourceFile);
+                                return null;
                             }
-                            crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
-                        } else if (cropSize.FormFlag == NikonMtpFormtypeCode.Enum) {
-                            switch (cropSize.CurrentValue) {
-                                case 0:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "FX");
-                                    break;
-                                case 1:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1.2x");
-                                    break;
-                                case 2:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "DX");
-                                    break;
-                                case 3:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "5:4");
-                                    break;
-                                case 4:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "1:1");
-                                    break;
-                                case 5:
-                                    crop = this.cameraSpec.CropSubSampling.Find(x => x.Crop == "16:9");
-                                    break;
-                            }
                         }
-
-                        if (crop == null || crop.Subs.Count == 0) return null; // TODO: Add error
-                        return crop;
-
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "Crop", sourceFile);
                         return null;
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "Crop", sourceFile);
-                        return null;
-                    }
+                    };
+                    _cachedCrop = getter();
+                    _isCropDirty = false;
+
+                    RaisePropertyChanged("CameraXSize");
+                    RaisePropertyChanged("CameraYSize");
                 }
-                return null;
+
+                return _cachedCrop;
             }
         }
         internal (int, int) CameraSize {
@@ -290,8 +304,24 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
             }
         }
-        public int CameraXSize { get => this.CameraSize.Item1; }
-        public int CameraYSize { get => this.CameraSize.Item2; }
+        public int CameraXSize {
+            get {
+                if (this.Crop != null) {
+                    var size = this.Crop.Subs.First().Value;
+                    return size.ResX;
+                }
+                return this.cameraSpec.Sensor.ResX;
+            }
+        }
+        public int CameraYSize {
+            get {
+                if (this.Crop != null) {
+                    var size = this.Crop.Subs.First().Value;
+                    return size.ResY;
+                }
+                return this.cameraSpec.Sensor.ResY;
+            }
+        }
         public double PixelSizeX { get => this.cameraSpec.Sensor.PixelSizeX; }
         public double PixelSizeY { get => this.cameraSpec.Sensor.PixelSizeY; }
         public int BitDepth {
@@ -648,6 +678,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     case NikonMtpDevicePropCode.Fnumber:
                     case NikonMtpDevicePropCode.FocalLength:
                         updateLensInfo();
+                        break;
+                    case NikonMtpDevicePropCode.CaptureAreaCrop:
+                        this._isCropDirty = true;
+                        _ = this.Crop;
                         break;
                 }
             }
