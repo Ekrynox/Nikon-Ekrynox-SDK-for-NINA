@@ -142,6 +142,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._liveviewEnabled = false;
                 this.sdramHandle = 0xFFFF0001;
 
+                this._isBitDepthDirty = true;
+                this._isCropDirty = true;
+                this._isExposuresDirty = true;
+                this._isGainsDirty = true;
+
                 updateLensInfo(true);
 
                 return this.camera.isConnected();
@@ -430,6 +435,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public short ReadoutModeForSnapImages { get => 0; set { } } //TO CHECK
         public short ReadoutModeForNormalImages { get => 0; set { } } //TO CHECK
 
+        private bool _isGainsDirty = true;
+        private List<int> _cachedGains;
         public bool CanGetGain { get => Connected && this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndex) || this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx); }
         public bool CanSetGain {
             get {
@@ -468,32 +475,43 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
         public IList<int> Gains {
             get {
-                if (Connected) {
-                    try {
-                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
-                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
-                            if (!result.TryGetUInteger(out var gains)) {
-                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
+                if (this._isGainsDirty) {
+                    var getter = () => {
+                        if (this.Connected) {
+                            try {
+                                if (this.cameraInfo.DevicePropertiesSupported.Contains(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx)) {
+                                    var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndexEx);
+                                    if (!result.TryGetUInteger(out var gains)) {
+                                        Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndexEx on " + this.Name, "Gains", sourceFile);
+                                        return new List<int>();
+                                    }
+                                    return gains.EnumFORM.Select(x => (int)x).ToList();
+                                } else {
+                                    var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
+                                    if (!result.TryGetUInteger(out var gains)) {
+                                        Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndex on " + this.Name, "Gains", sourceFile);
+                                        return new List<int>();
+                                    }
+                                    return gains.EnumFORM.Select(x => (int)x).ToList();
+                                }
+                            } catch (MtpDeviceException e) {
+                                Logger.Error(this.Name, e, "Gains", sourceFile);
+                                return new List<int>();
+                            } catch (MtpException e) {
+                                Logger.Error(this.Name, e, "Gains", sourceFile);
                                 return new List<int>();
                             }
-                            return gains.EnumFORM.Select(x => (int)x).ToList();
-                        } else {
-                            var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureIndex);
-                            if (!result.TryGetUInteger(out var gains)) {
-                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureIndex on " + this.Name, "Gains", sourceFile);
-                                return new List<int>();
-                            }
-                            return gains.EnumFORM.Select(x => (int)x).ToList();
                         }
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "Gains", sourceFile);
                         return new List<int>();
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "Gains", sourceFile);
-                        return new List<int>();
-                    }
+                    };
+                    this._cachedGains = getter();
+                    this._isGainsDirty = false;
+                    RaisePropertyChanged(nameof(Gains));
+                    RaisePropertyChanged(nameof(GainMin));
+                    RaisePropertyChanged(nameof(GainMax));
                 }
-                return new List<int>();
+
+                return _cachedGains;
             }
         }
         public int Gain {
@@ -546,64 +564,65 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         private bool _isBulb;
         private double _bulbTime;
-
         public bool CanSetBulb {
             get {
                 if (Connected) {
-                    if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
-                    try {
-                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInteger(out var exp)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureTime on " + this.Name, "CanSetBulb", sourceFile);
-                            return false;
-                        }
-                        return exp.EnumFORM.ToList().Contains(0xFFFFFFFF);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "CanSetBulb", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "CanSetBulb", sourceFile);
-                    }
+                    if (!this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
+                    if (this._isExposuresDirty) _ = this.Exposures;
+                    return this._cachedExposures.Contains(0xFFFFFFFF);
                 }
                 return false;
             }
         }
+
+        private bool _isExposuresDirty = true;
+        private List<UInt64> _cachedExposures;
         public IList<double> Exposures {
             get {
-                if (Connected) {
-                    try {
-                        var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
-                        if (!result.TryGetUInteger(out var exp)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureTime on " + this.Name, "Exposures", sourceFile);
-                            return new List<double>();
+                if (this._isExposuresDirty) {
+                    var getter = () => {
+                        if (Connected) {
+                            try {
+                                var result = this.camera.GetDevicePropDesc(NEKCS.NikonMtpDevicePropCode.ExposureTime);
+                                if (!result.TryGetUInteger(out var exp)) {
+                                    Logger.Error("Wrong Datatype UInteger! Expected: " + result.DataType.ToString() + " for ExposureTime on " + this.Name, "Exposures", sourceFile);
+                                    return new List<UInt64>();
+                                }
+                                return exp.EnumFORM.ToList();
+                            } catch (MtpDeviceException e) {
+                                Logger.Error(this.Name, e, "Exposures", sourceFile);
+                            } catch (MtpException e) {
+                                Logger.Error(this.Name, e, "Exposures", sourceFile);
+                            }
                         }
-
-                        _isBulb = (exp.CurrentValue == 0xFFFFFFFF); //Bulb
-
-                        var exps = exp.EnumFORM.ToList();
-                        exps.Remove(0xFFFFFFFF); //Bulb
-                        exps.Remove(0xFFFFFFFD); //Time
-                        return exps.Select(x => x / 10000.0).ToList();
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "Exposures", sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "Exposures", sourceFile);
-                    }
+                        return new List<UInt64>();
+                    };
+                    this._cachedExposures = getter();
+                    this._isExposuresDirty = false;
+                    RaisePropertyChanged(nameof(CanSetBulb));
+                    RaisePropertyChanged(nameof(Exposures));
+                    RaisePropertyChanged(nameof(ExposureMin));
+                    RaisePropertyChanged(nameof(ExposureMax));
                 }
-                return new List<double>();
+
+                var exps = _cachedExposures.ToList();
+                exps.Remove(0xFFFFFFFF); //Bulb
+                exps.Remove(0xFFFFFFFD); //Time
+                return exps.Select(x => x / 10000.0).ToList();
             }
         }
         public double ExposureMin {
             get {
-                var exps = Exposures;
+                var exps = this.Exposures;
                 return exps.Count > 0 ? exps.Min() : double.NaN;
             }
         }
         public double ExposureMax {
             get {
-                if (CanSetBulb) {
+                if (this.CanSetBulb) {
                     return double.PositiveInfinity;
                 }
-                var exps = Exposures;
+                var exps = this.Exposures;
                 return exps.Count > 0 ? exps.Max() : double.NaN;
             }
         }
@@ -680,11 +699,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         break;
                     case NikonMtpDevicePropCode.ExposureIndexEx:
                     case NikonMtpDevicePropCode.ExposureIndex:
-                        RaisePropertyChanged(nameof(Gain));
+                        this._isGainsDirty = true;
+                        _ = this.Gains;
                         break;
                     case NikonMtpDevicePropCode.ExposureTime:
-                        RaisePropertyChanged(nameof(ExposureMin));
-                        RaisePropertyChanged(nameof(ExposureMax));
+                        this._isExposuresDirty = true;
+                        _ = this.Exposures;
                         break;
                     case NikonMtpDevicePropCode.LensID:
                     case NikonMtpDevicePropCode.LensSort:
