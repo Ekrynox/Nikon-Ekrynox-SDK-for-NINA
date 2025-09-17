@@ -4,7 +4,7 @@
     "Year": 2007,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "Nikon ?",
+      "Name": "Nikon NC81338L",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -15,14 +15,66 @@
       "PixelSizeX": 8.43,
       "PixelSizeY": 8.43
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4256,
+            "ResY": 2832
+          },
+          "Size M": {
+            "ResX": 3184,
+            "ResY": 2120
+          },
+          "Size S": {
+            "ResX": 2128,
+            "ResY": 1416
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 2784,
+            "ResY": 1848
+          },
+          "Size M": {
+            "ResX": 2080,
+            "ResY": 1384
+          },
+          "Size S": {
+            "ResX": 1392,
+            "ResY": 920
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 3552,
+            "ResY": 2832
+          },
+          "Size M": {
+            "ResX": 2656,
+            "ResY": 2120
+          },
+          "Size S": {
+            "ResX": 1776,
+            "ResY": 1416
+          }
+        }
+      }
+    ]
   },
   "D3X": {
     "Name": "D3X",
     "Year": 2008,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-028",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -92,7 +144,7 @@
     "Year": 2009,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "Nikon ?",
+      "Name": "Nikon NC81361A",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -103,14 +155,66 @@
       "PixelSizeX": 8.43,
       "PixelSizeY": 8.43
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 4256,
+            "ResY": 2832
+          },
+          "Size M": {
+            "ResX": 3184,
+            "ResY": 2120
+          },
+          "Size S": {
+            "ResX": 2128,
+            "ResY": 1416
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 2784,
+            "ResY": 1848
+          },
+          "Size M": {
+            "ResX": 2080,
+            "ResY": 1384
+          },
+          "Size S": {
+            "ResX": 1392,
+            "ResY": 920
+          }
+        }
+      },
+      {
+        "Crop": "5:4",
+        "Subs": {
+          "Size L": {
+            "ResX": 3552,
+            "ResY": 2832
+          },
+          "Size M": {
+            "ResX": 2656,
+            "ResY": 2120
+          },
+          "Size S": {
+            "ResX": 1776,
+            "ResY": 1416
+          }
+        }
+      }
+    ]
   },
   "D4": {
     "Name": "D4",
     "Year": 2012,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "Nikon ?",
+      "Name": "Nikon NC81366W",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -197,7 +301,7 @@
     "Year": 2014,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Nikon NC81366W",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -284,7 +388,7 @@
     "Year": 2016,
     "Processor": "EXPEED 5",
     "Sensor": {
-      "Name": "Toshiba ?",
+      "Name": "Toshiba (Sony) T4K54",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -371,7 +475,7 @@
     "Year": 2020,
     "Processor": "EXPEED 6",
     "Sensor": {
-      "Name": "Sony ?",
+      "Name": "Toshiba (Sony) T4K54",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -492,7 +596,7 @@
     "Year": 2006,
     "Processor": "",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony ICX-453-AQ",
       "Type": "CCD",
       "Bayer": "",
       "BitDepth": 12,
@@ -503,14 +607,32 @@
       "PixelSizeX": 7.85,
       "PixelSizeY": 7.85
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3008,
+            "ResY": 2000
+          },
+          "Size M": {
+            "ResX": 2256,
+            "ResY": 1496
+          },
+          "Size S": {
+            "ResX": 1504,
+            "ResY": 1000
+          }
+        }
+      }
+    ]
   },
   "D40X": {
     "Name": "D40X",
     "Year": 2007,
     "Processor": "",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony ICX-493-AQA",
       "Type": "CCD",
       "Bayer": "",
       "BitDepth": 12,
@@ -521,14 +643,32 @@
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3872,
+            "ResY": 2592
+          },
+          "Size M": {
+            "ResX": 2896,
+            "ResY": 1944
+          },
+          "Size S": {
+            "ResX": 1936,
+            "ResY": 1296
+          }
+        }
+      }
+    ]
   },
   "D60": {
     "Name": "D60",
     "Year": 2008,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony ICX-493-AQA",
       "Type": "CCD",
       "Bayer": "",
       "BitDepth": 12,
@@ -539,14 +679,32 @@
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3872,
+            "ResY": 2592
+          },
+          "Size M": {
+            "ResX": 2896,
+            "ResY": 1944
+          },
+          "Size S": {
+            "ResX": 1936,
+            "ResY": 1296
+          }
+        }
+      }
+    ]
   },
   "D80": {
     "Name": "D80",
     "Year": 2006,
     "Processor": "",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony ICX-493-AQA",
       "Type": "CCD",
       "Bayer": "",
       "BitDepth": 12,
@@ -557,14 +715,32 @@
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3872,
+            "ResY": 2592
+          },
+          "Size M": {
+            "ResX": 2896,
+            "ResY": 1944
+          },
+          "Size S": {
+            "ResX": 1936,
+            "ResY": 1296
+          }
+        }
+      }
+    ]
   },
   "D90": {
     "Name": "D90",
     "Year": 2008,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-038-BQL",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 12,
@@ -600,7 +776,7 @@
     "Year": 2005,
     "Processor": "",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony ICX-483-AQA",
       "Type": "CCD",
       "Bayer": "",
       "BitDepth": 12,
@@ -611,14 +787,32 @@
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3872,
+            "ResY": 2592
+          },
+          "Size M": {
+            "ResX": 2896,
+            "ResY": 1944
+          },
+          "Size S": {
+            "ResX": 1936,
+            "ResY": 1296
+          }
+        }
+      }
+    ]
   },
   "D300": {
     "Name": "D300",
     "Year": 2007,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-021-BQR",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -654,7 +848,7 @@
     "Year": 2009,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-038-BQL",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -690,7 +884,7 @@
     "Year": 2016,
     "Processor": "EXPEED 5",
     "Sensor": {
-      "Name": "Sony ?",
+      "Name": "Sony IMX-321",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -743,7 +937,7 @@
     "Year": 2012,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-128- (L) -AQP",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -796,7 +990,7 @@
     "Year": 2013,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "Sony ?",
+      "Name": "Sony IMX-128- (L) -AQP",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -849,7 +1043,7 @@
     "Year": 2008,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "Nikon ?",
+      "Name": "Nikon NC81338L",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -902,7 +1096,7 @@
     "Year": 2014,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-128- (L) -AQP",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -1059,7 +1253,7 @@
     "Year": 2012,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-094-AQP",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -1146,7 +1340,7 @@
     "Year": 2012,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-094-AQP",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1233,7 +1427,7 @@
     "Year": 2014,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-094-AQP",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1320,7 +1514,7 @@
     "Year": 2015,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-094-AQP",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1407,7 +1601,7 @@
     "Year": 2017,
     "Processor": "EXPEED 5",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-309-AQJ",
       "Type": "BSI-CMOS (without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1511,7 +1705,7 @@
     "Year": 2009,
     "Processor": "EXPEED",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-038-BQL",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 12,
@@ -1583,7 +1777,7 @@
     "Year": 2012,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "Toshiba TOS-5105",
+      "Name": "Toshiba HEZ1 TOS-5105",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -1619,7 +1813,7 @@
     "Year": 2013,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-193-AQK",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1655,7 +1849,7 @@
     "Year": 2015,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-193-AQK",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1691,7 +1885,7 @@
     "Year": 2016,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-193-AQK",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1763,7 +1957,7 @@
     "Year": 2013,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "",
+      "Name": "Toshiba HEZ1 TOS-5105",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1816,7 +2010,7 @@
     "Year": 2015,
     "Processor": "EXPEED 4",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-193-AQK",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1869,7 +2063,7 @@
     "Year": 2017,
     "Processor": "EXPEED 5",
     "Sensor": {
-      "Name": "",
+      "Name": "Sony IMX-321",
       "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -1922,7 +2116,7 @@
     "Year": 2013,
     "Processor": "EXPEED 3",
     "Sensor": {
-      "Name": "",
+      "Name": "Nikon NC81366W",
       "Type": "CMOS",
       "Bayer": "",
       "BitDepth": 14,
@@ -2109,7 +2303,76 @@
       "PixelSizeX": 5.93,
       "PixelSizeY": 5.93
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3984,
+            "ResY": 2656
+          },
+          "Size M": {
+            "ResX": 2976,
+            "ResY": 1992
+          },
+          "Size S": {
+            "ResX": 1984,
+            "ResY": 1328
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4032,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 3024,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 2016,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
+        }
+      }
+    ]
   },
   "Z 6": {
     "Name": "Z6",
@@ -2301,14 +2564,83 @@
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3984,
+            "ResY": 2656
+          },
+          "Size M": {
+            "ResX": 2976,
+            "ResY": 1992
+          },
+          "Size S": {
+            "ResX": 1984,
+            "ResY": 1328
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4032,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 3024,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 2016,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
+        }
+      }
+    ]
   },
   "Z 7": {
     "Name": "Z7",
     "Year": 2018,
     "Processor": "EXPEED 6",
     "Sensor": {
-      "Name": "Sony ?",
+      "Name": "Sony IMX-309-BQJ",
       "Type": "BSI-CMOS (without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -2412,7 +2744,7 @@
     "Year": 2020,
     "Processor": "EXPEED 6 Dual",
     "Sensor": {
-      "Name": "Sony ?",
+      "Name": "Sony IMX-309-BQJ",
       "Type": "BSI-CMOS (without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
@@ -2771,7 +3103,59 @@
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 3712,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 2784,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 1856,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3128
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2344
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1560
+          }
+        }
+      }
+    ]
   },
   "Z f": {
     "Name": "Zf",
@@ -2789,7 +3173,76 @@
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3984,
+            "ResY": 2656
+          },
+          "Size M": {
+            "ResX": 2976,
+            "ResY": 1992
+          },
+          "Size S": {
+            "ResX": 1984,
+            "ResY": 1328
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4032,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 3024,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 2016,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
+          }
+        }
+      }
+    ]
   },
   "Z fc": {
     "Name": "Zfc",
@@ -2807,6 +3260,58 @@
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
     },
-    "CropSubSampling": []
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 3712,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 2784,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 1856,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3128
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2344
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1560
+          }
+        }
+      }
+    ]
   }
 }
