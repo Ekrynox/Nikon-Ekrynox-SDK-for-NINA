@@ -89,6 +89,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     return false;
                 }
 
+                if (this.cameraSpec.Year < 0) {
+                    Logger.Warning($"\"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", "Connect", sourceFile);
+                    Notification.ShowWarning($"Nikon Nek: \"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(5));
+                }
+
                 try {
                     //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                     this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams());
@@ -188,7 +193,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
         public bool HasShutter { get => true; } //TO RECHECK: not true for all camera => Z6/7 in Silence mode, Z8, ...
-        public string SensorName { get => this.cameraSpec.Sensor.Name; } //TO RECHECK: doesn't seem easly feasible
+        public string SensorName { get => this.cameraSpec.Sensor.Name; }
         public SensorType SensorType {
             get {
                 switch (this.cameraSpec.Sensor.Bayer) {
@@ -232,15 +237,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
             get {
                 if (_isCropDirty) {
                     var getter = () => {
-                        if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.CaptureAreaCrop)) {
+                        if ((this.cameraSpec.Year >= 0) && this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.CaptureAreaCrop)) {
                             try {
                                 var result = this.camera.GetDevicePropDesc(NikonMtpDevicePropCode.CaptureAreaCrop);
                                 if (!result.TryGetUInteger(out var cropSize)) {
                                     Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "Crop", sourceFile);
                                     return null;
                                 }
-
-                                //if (cropList.Count > this.cameraSpec.CropSubSampling.Count); // TODO: Add warning
 
                                 Database.NikonCameraSpec.CropSubSamplingClass crop = null;
                                 if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
@@ -249,6 +252,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                                         cropList.Add(i);
                                     }
                                     crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
+
+                                    if (cropList.Count > this.cameraSpec.CropSubSampling.Count) crop = null;
                                 } else if (cropSize.FormFlag == NikonMtpFormtypeCode.Enum) {
                                     switch (cropSize.CurrentValue) {
                                         case 0:
@@ -272,7 +277,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                                     }
                                 }
 
-                                if (crop == null || crop.Subs.Count == 0) return null; // TODO: Add error
+                                if (crop == null || crop.Subs.Count == 0) {
+                                    Logger.Warning($"\"{this.cameraSpec.Name}\" database for Crop Area seem incomplete. Falling back to full Sensor Size value.", "Crop", sourceFile);
+                                    Notification.ShowWarning($"Nikon NEK: \"{this.cameraSpec.Name}\" database for Crop Area seem incomplete. Falling back to full Sensor Size value.", TimeSpan.FromSeconds(5));
+                                    return null;
+                                }
                                 return crop;
 
                             } catch (MtpDeviceException e) {
