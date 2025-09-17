@@ -304,15 +304,6 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 return _cachedCrop;
             }
         }
-        internal (int, int) CameraSize {
-            get {
-                if (this.Crop != null) {
-                    var size = this.Crop.Subs.First().Value;
-                    return (size.ResX, size.ResY);
-                }
-                return (this.cameraSpec.Sensor.ResX, this.cameraSpec.Sensor.ResY);
-            }
-        }
         public int CameraXSize {
             get {
                 if (this.Crop != null) {
