@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 namespace LucasAlias.NINA.NEK.Database {
     public class NikonCameraSpec {
         public string Name { get; set; } = "";
-        public int year { get; set; } = -1;
+        public int Year { get; set; } = -1;
         public string Processor { get; set; } = "";
         public NikonSensorSpec Sensor { get; set; } = new NikonSensorSpec();
+        public List<Dictionary<string, CropSubSamplingClass>> CropSubSampling { get; set; } = new List<Dictionary<string, CropSubSamplingClass>>();
 
 
         public class NikonSensorSpec {
@@ -26,6 +27,11 @@ namespace LucasAlias.NINA.NEK.Database {
             public double SizeY { get; set; } = double.NaN;
             public double PixelSizeX { get; set; } = double.NaN;
             public double PixelSizeY { get; set; } = double.NaN;
+        }
+
+        public class CropSubSamplingClass {
+            public int ResX { get; set; } = -1;
+            public int ResY { get; set; } = -1;
         }
 
         internal static Dictionary<string, Database.NikonCameraSpec> ReadDatabase() {

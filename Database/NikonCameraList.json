@@ -14,7 +14,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 8.43,
       "PixelSizeY": 8.43
-    }
+    },
+    "CropSubSampling": []
   },
   "D3X": {
     "Name": "D3X",
@@ -31,7 +32,8 @@
       "SizeY": 24,
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
-    }
+    },
+    "CropSubSampling": []
   },
   "D3S": {
     "Name": "D3S",
@@ -48,7 +50,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 8.43,
       "PixelSizeY": 8.43
-    }
+    },
+    "CropSubSampling": []
   },
   "D4": {
     "Name": "D4",
@@ -65,7 +68,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
-    }
+    },
+    "CropSubSampling": []
   },
   "D4S": {
     "Name": "D4S",
@@ -82,7 +86,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
-    }
+    },
+    "CropSubSampling": []
   },
   "D5": {
     "Name": "D5",
@@ -99,7 +104,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 6.44,
       "PixelSizeY": 6.44
-    }
+    },
+    "CropSubSampling": []
   },
   "D6": {
     "Name": "D6",
@@ -116,7 +122,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 6.44,
       "PixelSizeY": 6.44
-    }
+    },
+    "CropSubSampling": []
   },
   "D40": {
     "Name": "D40",
@@ -133,7 +140,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 7.85,
       "PixelSizeY": 7.85
-    }
+    },
+    "CropSubSampling": []
   },
   "D40X": {
     "Name": "D40X",
@@ -150,7 +158,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
-    }
+    },
+    "CropSubSampling": []
   },
   "D60": {
     "Name": "D60",
@@ -167,7 +176,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
-    }
+    },
+    "CropSubSampling": []
   },
   "D80": {
     "Name": "D80",
@@ -184,7 +194,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
-    }
+    },
+    "CropSubSampling": []
   },
   "D90": {
     "Name": "D90",
@@ -201,7 +212,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 5.53,
       "PixelSizeY": 5.53
-    }
+    },
+    "CropSubSampling": []
   },
   "D200": {
     "Name": "D200",
@@ -218,7 +230,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 6.11,
       "PixelSizeY": 6.11
-    }
+    },
+    "CropSubSampling": []
   },
   "D300": {
     "Name": "D300",
@@ -235,7 +248,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 5.5,
       "PixelSizeY": 5.5
-    }
+    },
+    "CropSubSampling": []
   },
   "D300S": {
     "Name": "D300S",
@@ -252,7 +266,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 5.5,
       "PixelSizeY": 5.5
-    }
+    },
+    "CropSubSampling": []
   },
   "D500": {
     "Name": "D500",
@@ -269,7 +284,8 @@
       "SizeY": 15.7,
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
-    }
+    },
+    "CropSubSampling": []
   },
   "D600": {
     "Name": "D600",
@@ -286,7 +302,8 @@
       "SizeY": 24,
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
-    }
+    },
+    "CropSubSampling": []
   },
   "D610": {
     "Name": "D610",
@@ -303,7 +320,8 @@
       "SizeY": 24,
       "PixelSizeX": 5.95,
       "PixelSizeY": 5.95
-    }
+    },
+    "CropSubSampling": []
   },
   "D700": {
     "Name": "D700",
@@ -320,7 +338,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 8.45,
       "PixelSizeY": 8.45
-    }
+    },
+    "CropSubSampling": []
   },
   "D750": {
     "Name": "D750",
@@ -337,7 +356,8 @@
       "SizeY": 24,
       "PixelSizeX": 5.97,
       "PixelSizeY": 5.97
-    }
+    },
+    "CropSubSampling": []
   },
   "D780": {
     "Name": "D780",
@@ -354,7 +374,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
-    }
+    },
+    "CropSubSampling": []
   },
   "D800": {
     "Name": "D800",
@@ -371,7 +392,8 @@
       "SizeY": 24,
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
-    }
+    },
+    "CropSubSampling": []
   },
   "D800E": {
     "Name": "D800E",
@@ -388,7 +410,8 @@
       "SizeY": 24,
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
-    }
+    },
+    "CropSubSampling": []
   },
   "D810": {
     "Name": "D810",
@@ -405,7 +428,8 @@
       "SizeY": 24,
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
-    }
+    },
+    "CropSubSampling": []
   },
   "D810A": {
     "Name": "D810A",
@@ -422,7 +446,8 @@
       "SizeY": 24,
       "PixelSizeX": 4.88,
       "PixelSizeY": 4.88
-    }
+    },
+    "CropSubSampling": []
   },
   "D850": {
     "Name": "D850",
@@ -439,7 +464,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
-    }
+    },
+    "CropSubSampling": []
   },
   "D5000": {
     "Name": "D5000",
@@ -456,7 +482,8 @@
       "SizeY": 15.8,
       "PixelSizeX": 5.53,
       "PixelSizeY": 5.53
-    }
+    },
+    "CropSubSampling": []
   },
   "D5100": {
     "Name": "D5100",
@@ -473,7 +500,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 4.78,
       "PixelSizeY": 4.78
-    }
+    },
+    "CropSubSampling": []
   },
   "D5200": {
     "Name": "D5200",
@@ -490,7 +518,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D5300": {
     "Name": "D5300",
@@ -507,7 +536,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D5500": {
     "Name": "D5500",
@@ -524,7 +554,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D5600": {
     "Name": "D5600",
@@ -541,7 +572,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D7000": {
     "Name": "D7000",
@@ -558,7 +590,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 4.78,
       "PixelSizeY": 4.78
-    }
+    },
+    "CropSubSampling": []
   },
   "D7100": {
     "Name": "D7100",
@@ -575,7 +608,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D7200": {
     "Name": "D7200",
@@ -592,7 +626,8 @@
       "SizeY": 15.6,
       "PixelSizeX": 3.91,
       "PixelSizeY": 3.91
-    }
+    },
+    "CropSubSampling": []
   },
   "D7500": {
     "Name": "D7500",
@@ -609,7 +644,8 @@
       "SizeY": 15.7,
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
-    }
+    },
+    "CropSubSampling": []
   },
   "DF": {
     "Name": "DF",
@@ -626,7 +662,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 7.29,
       "PixelSizeY": 7.29
-    }
+    },
+    "CropSubSampling": []
   },
   "1V3": {
     "Name": "1V3",
@@ -643,7 +680,8 @@
       "SizeY": 8.8,
       "PixelSizeX": 2.52,
       "PixelSizeY": 2.52
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 5": {
     "Name": "Z5",
@@ -660,7 +698,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.97,
       "PixelSizeY": 5.97
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 5_2": {
     "Name": "Z5II",
@@ -677,7 +716,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.93,
       "PixelSizeY": 5.93
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 6": {
     "Name": "Z6",
@@ -694,7 +734,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 6_2": {
     "Name": "Z6II",
@@ -711,7 +752,65 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
-    }
+    },
+    "CropSubSampling": [
+      {
+        "Size L": {
+          "ResX": 6048,
+          "ResY": 4024
+        },
+        "Size M": {
+          "ResX": 4528,
+          "ResY": 3016
+        },
+        "Size S": {
+          "ResX": 3024,
+          "ResY": 2016
+        }
+      },
+      {
+        "Size L": {
+          "ResX": 3936,
+          "ResY": 2624
+        },
+        "Size M": {
+          "ResX": 2944,
+          "ResY": 1968
+        },
+        "Size S": {
+          "ResX": 1968,
+          "ResY": 1312
+        }
+      },
+      {
+        "Size L": {
+          "ResX": 4016,
+          "ResY": 4016
+        },
+        "Size M": {
+          "ResX": 3008,
+          "ResY": 3008
+        },
+        "Size S": {
+          "ResX": 2000,
+          "ResY": 2000
+        }
+      },
+      {
+        "Size L": {
+          "ResX": 6048,
+          "ResY": 3400
+        },
+        "Size M": {
+          "ResX": 4528,
+          "ResY": 2544
+        },
+        "Size S": {
+          "ResX": 3024,
+          "ResY": 1696
+        }
+      }
+    ]
   },
   "Z 6_3": {
     "Name": "Z6III",
@@ -728,7 +827,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 7": {
     "Name": "Z7",
@@ -745,7 +845,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 7_2": {
     "Name": "Z7II",
@@ -762,7 +863,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 8": {
     "Name": "Z8",
@@ -779,7 +881,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 9": {
     "Name": "Z9",
@@ -796,7 +899,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 4.35,
       "PixelSizeY": 4.35
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 50": {
     "Name": "Z50",
@@ -813,7 +917,8 @@
       "SizeY": 15.7,
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
-    }
+    },
+    "CropSubSampling": []
   },
   "Z 50_2": {
     "Name": "Z50II",
@@ -830,7 +935,8 @@
       "SizeY": 15.7,
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
-    }
+    },
+    "CropSubSampling": []
   },
   "Z f": {
     "Name": "Zf",
@@ -847,7 +953,8 @@
       "SizeY": 23.9,
       "PixelSizeX": 5.94,
       "PixelSizeY": 5.94
-    }
+    },
+    "CropSubSampling": []
   },
   "Z fc": {
     "Name": "Zfc",
@@ -864,6 +971,7 @@
       "SizeY": 15.7,
       "PixelSizeX": 4.22,
       "PixelSizeY": 4.22
-    }
+    },
+    "CropSubSampling": []
   }
 }
