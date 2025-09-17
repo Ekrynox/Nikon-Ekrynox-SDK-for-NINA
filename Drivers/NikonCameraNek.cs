@@ -324,33 +324,46 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
         public double PixelSizeX { get => this.cameraSpec.Sensor.PixelSizeX; }
         public double PixelSizeY { get => this.cameraSpec.Sensor.PixelSizeY; }
+
+        private bool _isBitDepthDirty = true;
+        private int _cachedBitDepth;
         public int BitDepth {
             get {
-                //RawCompressionBitMode
-                if (this.cameraInfo.DevicePropertiesSupported.Contains((NikonMtpDevicePropCode)0xD149)) {
-                    try {
-                        var result = this.camera.GetDevicePropValue((NikonMtpDevicePropCode)0xD149);
-                        if (!result.TryGetUInteger(out var bitDepth)) {
-                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "BitDepth", sourceFile);
-                            return this.cameraSpec.Sensor.BitDepth;
+                if (_isBitDepthDirty) {
+                    var getter = () => {
+                        //RawCompressionBitMode
+                        if (this.cameraInfo.DevicePropertiesSupported.Contains((NikonMtpDevicePropCode)0xD149)) {
+                            try {
+                                var result = this.camera.GetDevicePropValue((NikonMtpDevicePropCode)0xD149);
+                                if (!result.TryGetUInteger(out var bitDepth)) {
+                                    Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " on " + this.Name, "BitDepth", sourceFile);
+                                    return this.cameraSpec.Sensor.BitDepth;
+                                }
+                                switch (bitDepth) {
+                                    case 0:
+                                        return 12;
+                                    case 1:
+                                        return 14;
+                                    default:
+                                        return (int)bitDepth;
+                                }
+                            } catch (MtpDeviceException e) {
+                                Logger.Error(this.Name, e, "BitDepth", sourceFile);
+                                return this.cameraSpec.Sensor.BitDepth;
+                            } catch (MtpException e) {
+                                Logger.Error(this.Name, e, "BitDepth", sourceFile);
+                                return this.cameraSpec.Sensor.BitDepth;
+                            }
                         }
-                        switch (bitDepth) {
-                            case 0:
-                                return 12;
-                            case 1:
-                                return 14;
-                            default:
-                                return (int)bitDepth;
-                        }
-                    } catch (MtpDeviceException e) {
-                        Logger.Error(this.Name, e, "BitDepth", sourceFile);
                         return this.cameraSpec.Sensor.BitDepth;
-                    } catch (MtpException e) {
-                        Logger.Error(this.Name, e, "BitDepth", sourceFile);
-                        return this.cameraSpec.Sensor.BitDepth;
-                    }
+                    };
+                    _cachedBitDepth = getter();
+                    _isBitDepthDirty = false;
+
+                    RaisePropertyChanged("BitDepth");
                 }
-                return this.cameraSpec.Sensor.BitDepth;
+
+                return _cachedBitDepth;
             }
         }
 
@@ -681,7 +694,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         break;
                     case NikonMtpDevicePropCode.CaptureAreaCrop:
                         this._isCropDirty = true;
-                        _ = this.Crop;
+                        _= this.Crop;
+                        break;
+                    case (NikonMtpDevicePropCode)0xD149:
+                        this._isBitDepthDirty = true;
+                        _ = this.BitDepth;
                         break;
                 }
             }
