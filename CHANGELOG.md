@@ -1,5 +1,14 @@
 ﻿# Nikon Ekrynox SDK
 
+## 0.4.0.0
+- First Iteration of Settings UI for the plugin
+- First Iteration of button to rerun Focuser Calibration
+- Rework of Focuser code
+- Add a Database for Sensor Informations: Nb Pixels, Pixel's size, ...
+- Add detection of Crop Area
+- Add detection of Bit depth for FreeImage
+
+
 ## 0.3.7.0
 - Some fixes & optimizations on the focuser
 
