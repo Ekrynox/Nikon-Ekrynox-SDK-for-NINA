@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Markup.Localizer;
+using System.Diagnostics.Eventing.Reader;
 
 namespace LucasAlias.NINA.NEK.Drivers {
     public partial class NikonCameraNek {
@@ -95,33 +96,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         return false;
                     }
 
-                    _isConnected = true;
+                    this._isConnected = true;
+                    this._ismoving = false;
 
-                    _minStepSize = 32;
-                    _maxStepSize = 32767;
-                    _nbSteps = int.MaxValue;
-                    _position = 0;
-                    _ismoving = false;
-
-                    Logger.Info("Start detecting the max step.", "Connect", sourceFile);
-                    DetectMaxStep(token);
-                    Logger.Info("Detected max step: " + this._maxStepSize, "Connect", sourceFile);
+                    this.Calibrate(token);
                     if (token.IsCancellationRequested) {
-                        _isConnected = false;
-                        return false;
-                    }
-                    Logger.Info("Start detecting the min step.", "Connect", sourceFile);
-                    DetectMinStep(token);
-                    Logger.Info("Detected min step: " + this._minStepSize, "Connect", sourceFile);
-                    if (token.IsCancellationRequested) {
-                        _isConnected = false;
-                        return false;
-                    }
-                    Logger.Info("Start detecting the number of steps.", "Connect", sourceFile);
-                    DetectStepsNb(token);
-                    Logger.Info("Detected number of steps: " + this._nbSteps, "Connect", sourceFile);
-                    if (token.IsCancellationRequested) {
-                        _isConnected = false;
+                        this._isConnected = false;
+                        this._ismoving = false;
                         return false;
                     }
 
@@ -181,14 +162,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         while (true) {
                             var result = MoveBy(_maxStepSize, false, ct, false).Result;
                             if (ct.IsCancellationRequested) break;
-                            if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
+                            if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                                _ = MoveBy(_maxStepSize, false, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
+                                break;
+                            }
                         }
                     } else if (position >= (int)_nbSteps) {
                         _position = 0;
                         while (true) {
                             var result = MoveBy(_maxStepSize, true, ct, false).Result;
                             if (ct.IsCancellationRequested) break;
-                            if (result == NikonMtpResponseCode.MfDrive_Step_End) break;
+                            if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                                _ = MoveBy(_maxStepSize, true, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
+                                break;
+                            }
                         }
                     } else {
                         while (position != (int)_position && !ct.IsCancellationRequested) {
@@ -270,10 +257,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     parameters.addUint32((UInt32)(toInf ? 2 : 1));
                     parameters.addUint32(distance);
                     var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, parameters);
-                    var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 100);
+                    var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 20);
 
                     if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
+                        _position = toInf ? _nbSteps : 0;
                     } else if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
                         result = NikonMtpResponseCode.MfDrive_Step_End;
                         _position = toInf ? _nbSteps : 0;
@@ -319,10 +307,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public ICommand CancelCalibration { get; }
 
             public void Calibrate(CancellationToken token) {
-                _minStepSize = 32;
-                _maxStepSize = 32767;
-                _nbSteps = int.MaxValue;
-                _position = 0;
+                this._minStepSize = 32;
+                this._maxStepSize = 32767;
+                this._nbSteps = int.MaxValue;
+                this._position = 0;
 
                 Logger.Info("Start detecting the max step.", "Calibrate", sourceFile);
                 DetectMaxStep(token);
@@ -330,12 +318,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if (token.IsCancellationRequested) {
                     return;
                 }
-                Logger.Info("Start detecting the min step.", "Calibrate", sourceFile);
+                /*Logger.Info("Start detecting the min step.", "Calibrate", sourceFile);
                 DetectMinStep(token);
                 Logger.Info("Detected min step: " + this._minStepSize, "Calibrate", sourceFile);
                 if (token.IsCancellationRequested) {
                     return;
-                }
+                }*/
                 Logger.Info("Start detecting the number of steps.", "Calibrate", sourceFile);
                 DetectStepsNb(token);
                 Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
@@ -346,6 +334,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
             public void DetectMinStep(CancellationToken token) {
+                return; //NikonMtpResponseCode.MfDrive_Step_Insufficiency seem to indicate a already reached end on some lens => the function need to be rethinked
                 if (!Connected) return;
                 UInt32 stepSize = _minStepSize;
                 UInt32 maxStepSize = _maxStepSize;
@@ -386,19 +375,16 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait(CancellationToken.None);
                     if (token.IsCancellationRequested) break;
-                    var result = MoveBy(stepSize, toInf, token, false);
+                    var result = MoveBy(stepSize, toInf, token, false).Result;
                     if (token.IsCancellationRequested) break;
 
                     toInf = !toInf;
-                    if (result.Result == NikonMtpResponseCode.MfDrive_Step_End) {
+                    if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         _maxStepSize = stepSize;
+                        RaisePropertyChanged(nameof(this.MaxIncrement));
                         stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
-                    } else if (result.Result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
-                        minStepSize = stepSize;
-                        stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
-                        continue;
-                    } else if (result.Result == NikonMtpResponseCode.OK) {
+                    } else if (result == NikonMtpResponseCode.OK) {
                         minStepSize = stepSize;
                         stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
@@ -447,6 +433,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     nbSteps0 = _nbSteps;
                     nbStepsInf = _nbSteps;
                     _nbSteps += stepSize;
+                    RaisePropertyChanged(nameof(this.MaxStep));
                     stepSize = (UInt32)Math.Floor(stepSize / 2.0);
                 }
 
