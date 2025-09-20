@@ -6,11 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace LucasAlias.NINA.NEK {
+namespace LucasAlias.NINA.NEK.Drivers {
     [Export(typeof(ResourceDictionary))]
-    partial class Options : ResourceDictionary {
-
-        public Options() {
+    public partial class NikonFocuserNekSettings : ResourceDictionary {
+        public NikonFocuserNekSettings() {
             InitializeComponent();
         }
     }

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 
 
-namespace LucasAlias.NINA.NEK.NEKDrivers {
+namespace LucasAlias.NINA.NEK.Drivers {
 	[Export(typeof(IEquipmentProvider))]
 	public class NikonCameraNekProvider : IEquipmentProvider<ICamera> {
 		private IProfileService profileService;

@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("0.3.7.0")]
-[assembly: AssemblyFileVersion("0.3.7.0")]
+[assembly: AssemblyVersion("0.4.0.0")]
+[assembly: AssemblyFileVersion("0.4.0.0")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Nikon Ekrynox SDK")]
@@ -42,16 +42,23 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Tags", "Nikon")]
 
 //[Optional] A link that will show a log of all changes in between your plugin's versions
-[assembly: AssemblyMetadata("ChangelogURL", "")]
+[assembly: AssemblyMetadata("ChangelogURL", "https://github.com/Ekrynox/Nikon-Ekrynox-SDK-for-NINA/blob/main/CHANGELOG.md")]
 
 //[Optional] The url to a featured logo that will be displayed in the plugin list next to the name
 [assembly: AssemblyMetadata("FeaturedImageURL", "https://github.com/Ekrynox/Nikon-Ekrynox-SDK-for-NINA/blob/main/assets/images/NEF%20for%20NINA.png?raw=true")]
 //[Optional] A url to an example screenshot of your plugin in action
-[assembly: AssemblyMetadata("ScreenshotURL", "")]
+[assembly: AssemblyMetadata("ScreenshotURL", "https://github.com/Ekrynox/Nikon-Ekrynox-SDK-for-NINA/blob/main/assets/images/Screenshot1.png?raw=true")]
 //[Optional] An additional url to an example example screenshot of your plugin in action
-[assembly: AssemblyMetadata("AltScreenshotURL", "")]
+[assembly: AssemblyMetadata("AltScreenshotURL", "https://github.com/Ekrynox/Nikon-Ekrynox-SDK-for-NINA/blob/main/assets/images/Screenshot2.png?raw=true")]
 //[Optional] An in-depth description of your plugin
-[assembly: AssemblyMetadata("LongDescription", @"")]
+[assembly: AssemblyMetadata("LongDescription", @"
+This plugin adds an alternative Nikon camera support.
+
+Directly connecting to the camera through MTP/PTP and Windows Portable Device API, it should allow support for some unsupported cameras (as long as their MTP/PTP API remains similar to that of other cameras).
+
+This plugin also includes an in-built focuser to control CPU focus drivable lenses.
+For this to work, the camera must be connected with this plugin's implementation and support Liveview!
+")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
