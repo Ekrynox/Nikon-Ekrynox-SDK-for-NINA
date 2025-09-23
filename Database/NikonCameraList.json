@@ -706,7 +706,7 @@
     "Sensor": {
       "Name": "Sony ICX-493-AQA",
       "Type": "CCD",
-      "Bayer": "",
+      "Bayer": "GBRG",
       "BitDepth": 12,
       "ResX": 3872,
       "ResY": 2592,
@@ -3087,7 +3087,7 @@
       }
     ]
   },
-  "Z 50_2": {
+  "Z50_2": {
     "Name": "Z50II",
     "Year": 2024,
     "Processor": "EXPEED 7",
