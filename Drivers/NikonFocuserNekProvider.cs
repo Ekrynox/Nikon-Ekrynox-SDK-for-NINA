@@ -19,11 +19,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
     public class NikonCameraNekFocuserProvider : IEquipmentProvider<IFocuser> {
         private IProfileService profileService;
         private ICameraMediator cameraMediator;
+        private IFocuserMediator focuserMediator;
 
         [ImportingConstructor]
-        public NikonCameraNekFocuserProvider(IProfileService profileService, ICameraMediator cameraMediator) {
+        public NikonCameraNekFocuserProvider(IProfileService profileService, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
             this.profileService = profileService;
             this.cameraMediator = cameraMediator;
+            this.focuserMediator = focuserMediator;
         }
 
         public string Name => "Nikon";
@@ -34,7 +36,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (cameraMediator.GetDevice() != null && cameraMediator.GetDevice().Connected) {
                 if (cameraMediator.GetDevice() is NikonCameraNek cam) {
                     if (cam.isFocusDrivableLens()) {
-                        devices.Add(new NikonCameraNek.NikonFocuserNek(profileService, cameraMediator));
+                        devices.Add(new NikonCameraNek.NikonFocuserNek(profileService, cameraMediator, focuserMediator));
                     }
                 }
             }
