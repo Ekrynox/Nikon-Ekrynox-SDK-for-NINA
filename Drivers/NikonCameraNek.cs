@@ -943,6 +943,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (bulbToken.IsCancellationRequested) return;
                     lock (_gateCameraState) {
                         if (_cameraState == CameraStates.Exposing) {
+                            if (!Connected) return;
                             try {
                                 var p = new MtpParams();
                                 p.addUint32(0);
@@ -959,6 +960,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
         }
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
+            if (!Connected) return;
+
             lock (_gateCameraState) {
                 if (_cameraState != CameraStates.Exposing && _cameraState != CameraStates.Idle) return;
             }
@@ -971,6 +974,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public void StopExposure() {
+            if (!Connected) return;
+
             if (_isBulb) {
                 lock (_gateCameraState) {
                     if (_cameraState == CameraStates.Exposing) {
@@ -991,6 +996,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public void AbortExposure() {
+            if (!Connected) return;
+
             if (_isBulb) {
                 lock (_gateCameraState) {
                     if (_cameraState == CameraStates.Exposing) {
@@ -1011,6 +1018,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public async Task<IExposureData> DownloadExposure(CancellationToken token) {
+            if (!Connected) return null;
+
             if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
                 await tcs.Task;
                 if (tcs.Task.IsCanceled) return null;
@@ -1041,6 +1050,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
         public bool LiveViewEnabled {
             get {
+                if (!Connected) return false;
                 if (!this._liveviewEnabled) return false;
                 try {
                     camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInteger(out var lvState);
@@ -1052,6 +1062,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public void StartLiveView(CaptureSequence sequence) {
+            if (!Connected) return;
+
             try {
                 this._liveviewEnabled = true;
                 camera.StartLiveView();
@@ -1062,6 +1074,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             RaisePropertyChanged(nameof(LiveViewEnabled));
         }
         public void StartLiveViewBackground() {
+            if (!Connected) return;
+
             try {
                 Interlocked.Increment(ref this._requestedLiveview);
                 camera.StartLiveView();
@@ -1072,6 +1086,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public Task<IExposureData> DownloadLiveView(CancellationToken token) {
+            if (!Connected) return null;
+
             return Task.Run<IExposureData>(() => {
                 NEKCS.MtpParams parameters = new();
                 NEKCS.MtpResponse response;
@@ -1112,6 +1128,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         public void StopLiveView() {
+            if (!Connected) return;
+
             try {
                 this._liveviewEnabled = false;
                 RaisePropertyChanged(nameof(LiveViewEnabled));
@@ -1123,6 +1141,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
         }
         public void StopLiveViewBackground() {
+            if (!Connected) return;
+
             try {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
@@ -1131,6 +1151,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
         }
         public void StopLiveViewBackground(int waitms) {
+            if (!Connected) return;
+
             try {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
