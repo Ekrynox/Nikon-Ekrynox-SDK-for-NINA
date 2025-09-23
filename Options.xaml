@@ -4,16 +4,33 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary">
     <DataTemplate x:Key="Nikon Ekrynox SDK_Options">
-        <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Number of additional Threads" />
-                <ninactrl:IntStepperControl MinValue="0" MaxValue="256" StepSize="1" Value="{Binding NbAdditionalThreads}"/>
-            </StackPanel>
+        <StackPanel Grid.IsSharedSizeScope="True" Orientation="Vertical">
 
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Update Telescope Info if CPU Lens is mounted" />
-                <CheckBox IsChecked="{Binding UpdateLensInfo}" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Number of additional Threads:" VerticalAlignment="Center" />
+                    <TextBlock Text="Main Thread + Additional Task Threads + Event Thread" VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                </StackPanel>
+                <ninactrl:IntStepperControl MinValue="0" MaxValue="256" StepSize="1" Value="{Binding NbAdditionalThreads}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left"/>
+            </Grid>
+
+            <Grid Margin="0,7,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Update Telescope Info if CPU Lens is mounted ?" VerticalAlignment="Center" />
+                <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
+            </Grid>
+
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>
