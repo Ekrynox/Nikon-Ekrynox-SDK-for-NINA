@@ -4,10 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary">
     <DataTemplate x:Key="LucasAlias.NINA.NEK.Drivers.NikonCameraNek+NikonFocuserNek_FocuserSettings">
-        <Grid>
-            <StackPanel Orientation="Vertical">
-                <ninactrl:CancellableButton ButtonText="Calibrate" Command="{Binding StartCalibration}" CancelCommand="{Binding CancelCalibration}" CancelButtonImage="{StaticResource CancelSVG}"/>
-            </StackPanel>
-        </Grid>
+        <StackPanel Orientation="Vertical">
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ninactrl:CancellableButton ButtonText="Calibrate" Command="{Binding StartCalibration}" CancelCommand="{Binding CancelCalibration}" CancelButtonImage="{StaticResource CancelSVG}" Width="120" Height="30"/>
+            </Grid>
+        
+        </StackPanel>
     </DataTemplate>
 </ResourceDictionary>
