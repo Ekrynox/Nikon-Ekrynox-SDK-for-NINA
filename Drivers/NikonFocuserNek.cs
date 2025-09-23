@@ -243,7 +243,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if (this.cameraNek == null) return;
                 _ismoving = false;
                 RaisePropertyChanged(nameof(IsMoving));
-                cameraNek.StopLiveViewBackground(5000);
+                this.cameraNek.StopLiveViewBackground(5000);
                 lock (this.cameraNek._gateCameraState) { if (this.cameraNek._cameraState == CameraStates.Waiting) this.cameraNek._cameraState = CameraStates.Idle; }
                 if (this.cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
                 this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
