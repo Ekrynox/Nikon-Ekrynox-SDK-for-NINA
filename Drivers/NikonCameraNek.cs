@@ -91,7 +91,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 if (this.cameraSpec.Year < 0) {
                     Logger.Warning($"\"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", "Connect", sourceFile);
-                    Notification.ShowWarning($"Nikon Nek: \"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(5));
+                    Notification.ShowWarning($"Nikon Nek: \"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(10));
                 }
 
                 try {
@@ -284,7 +284,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                                 if (crop == null || crop.Subs.Count == 0) {
                                     Logger.Warning($"\"{this.cameraSpec.Name}\" database for Crop Area seem incomplete. Falling back to full Sensor Size value.", "Crop", sourceFile);
-                                    Notification.ShowWarning($"Nikon NEK: \"{this.cameraSpec.Name}\" database for Crop Area seem incomplete. Falling back to full Sensor Size value.", TimeSpan.FromSeconds(5));
+                                    Notification.ShowWarning($"Nikon NEK: \"{this.cameraSpec.Name}\" database for Crop Area seem incomplete. Falling back to full Sensor Size value.", TimeSpan.FromSeconds(10));
                                     return null;
                                 }
                                 return crop;
