@@ -59,7 +59,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public bool HasSetupDialog { get => false; } // TODO
         public string Id { get => cameraInfo.SerialNumber; }
         public string Name { get => "Nikon " + this.cameraSpec.Name; }
-        public string DisplayName { get => "Nikon " + this.cameraSpec.Name + " (NEK Experimental)"; }
+        public string DisplayName { get => "Nikon " + this.cameraSpec.Name + " (NEK)"; }
         public string Category { get => "Nikon"; }
         public bool Connected {
             get {

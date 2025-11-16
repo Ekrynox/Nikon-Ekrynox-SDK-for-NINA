@@ -61,7 +61,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public bool HasSetupDialog { get => false; }
             public string Id { get => "NEKLF"; }
             public string Name { get => cameraNek != null ? cameraNek.Name + " Lens" : "NEK Lens Focuser"; }
-            public string DisplayName { get => "Nikon Lens Focuser (NEK Experimental)"; }
+            public string DisplayName { get => "Nikon Lens Focuser (NEK)"; }
             public string Category { get => "Nikon"; }
             public bool Connected { get => this._isConnected && this.cameraNek != null; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
