@@ -706,7 +706,7 @@
     "Sensor": {
       "Name": "Sony ICX-493-AQA",
       "Type": "CCD",
-      "Bayer": "",
+      "Bayer": "GBRG",
       "BitDepth": 12,
       "ResX": 3872,
       "ResY": 2592,
@@ -1699,6 +1699,108 @@
         }
       }
     ]
+  },
+  "D3000": {
+    "Name": "D3000",
+    "Year": 2009,
+    "Processor": "EXPEED",
+    "Sensor": {
+      "Name": "Sony ICX-493-AQA",
+      "Type": "BSI-CMOS (without AA filter)",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 3872,
+      "ResY": 2592,
+      "SizeX": 23.9,
+      "SizeY": 15.8,
+      "PixelSizeX": 6.11,
+      "PixelSizeY": 6.11
+    }
+  },
+  "D3100": {
+    "Name": "D3100",
+    "Year": 2010,
+    "Processor": "EXPEED 2",
+    "Sensor": {
+      "Name": "Nikon NC81362A",
+      "Type": "CCD",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 4608,
+      "ResY": 3072,
+      "SizeX": 23.1,
+      "SizeY": 15.4,
+      "PixelSizeX": 5.01,
+      "PixelSizeY": 5.01
+    }
+  },
+  "D3200": {
+    "Name": "D3200",
+    "Year": 2012,
+    "Processor": "EXPEED 3",
+    "Sensor": {
+      "Name": "Nikon NC81369R",
+      "Type": "CMOS",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 6016,
+      "ResY": 4000,
+      "SizeX": 23.2,
+      "SizeY": 15.4,
+      "PixelSizeX": 3.85,
+      "PixelSizeY": 3.85
+    }
+  },
+  "D3300": {
+    "Name": "D3300",
+    "Year": 2014,
+    "Processor": "EXPEED 4",
+    "Sensor": {
+      "Name": "Sony IMX-193-AQK",
+      "Type": "CMOS",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 6000,
+      "ResY": 4000,
+      "SizeX": 23.5,
+      "SizeY": 15.6,
+      "PixelSizeX": 3.91,
+      "PixelSizeY": 3.91
+    }
+  },
+  "D3400": {
+    "Name": "D3400",
+    "Year": 2016,
+    "Processor": "EXPEED 4",
+    "Sensor": {
+      "Name": "Sony IMX-193-AQK",
+      "Type": "CMOS (Without AA filter)",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 6000,
+      "ResY": 4000,
+      "SizeX": 23.5,
+      "SizeY": 15.6,
+      "PixelSizeX": 3.91,
+      "PixelSizeY": 3.91
+    }
+  },
+  "D3500": {
+    "Name": "D3500",
+    "Year": 2018,
+    "Processor": "EXPEED 4",
+    "Sensor": {
+      "Name": "Sony IMX-193-AQK",
+      "Type": "CMOS (Without AA filter)",
+      "Bayer": "",
+      "BitDepth": 12,
+      "ResX": 6000,
+      "ResY": 4000,
+      "SizeX": 23.5,
+      "SizeY": 15.6,
+      "PixelSizeX": 3.91,
+      "PixelSizeY": 3.91
+    }
   },
   "D5000": {
     "Name": "D5000",
@@ -3087,7 +3189,7 @@
       }
     ]
   },
-  "Z 50_2": {
+  "Z50_2": {
     "Name": "Z50II",
     "Year": 2024,
     "Processor": "EXPEED 7",

@@ -24,9 +24,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public class NikonFocuserNek : BaseINPC, IFocuser {
             public const string sourceFile = @"NEKDrivers\NikonFocuserNEK.cs";
 
-            public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator) {
+            public NikonFocuserNek(IProfileService profileService, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
                 this.profileService = profileService;
                 this.cameraMediator = cameraMediator;
+                this.focuserMediator = focuserMediator;
 
                 StartCalibration = new AsyncRelayCommand(async () => {
                     if (!this.Connected) return;
@@ -34,7 +35,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     await Task.Run(() => this.Calibrate(this._CalibrationToken.Token));
                     if (this._CalibrationToken.IsCancellationRequested) {
                         Logger.Info("Calibration have been canceled.", "Calibrate", sourceFile);
-                        Notification.ShowWarning("NekFocuser: Calibration have been canceled.\nThe Focuser will certainly behave wrongly!", TimeSpan.FromSeconds(5));
+                        Notification.ShowWarning("NekFocuser: Calibration have been canceled.\nThe Focuser will certainly behave wrongly!", TimeSpan.FromSeconds(10));
                         return;
                     }
                 });
@@ -45,6 +46,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
             private readonly IProfileService profileService;
             private readonly ICameraMediator cameraMediator;
+            private readonly IFocuserMediator focuserMediator;
 
             private bool _isConnected = false;
 
@@ -59,9 +61,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public bool HasSetupDialog { get => false; }
             public string Id { get => "NEKLF"; }
             public string Name { get => cameraNek != null ? cameraNek.Name + " Lens" : "NEK Lens Focuser"; }
-            public string DisplayName { get => "Nikon Lens Focuser (NEK Experimental)"; }
+            public string DisplayName { get => "Nikon Lens Focuser (NEK)"; }
             public string Category { get => "Nikon"; }
-            public bool Connected { get => _isConnected && cameraNek != null; }
+            public bool Connected { get => this._isConnected && this.cameraNek != null; }
             public string Description { get => "The lens focus driver of your Nikon Camera !"; }
             public string DriverInfo { get => "Nikon Ekrynox SDK"; }
             public string DriverVersion { get => cameraNek != null ? cameraNek.DriverVersion : ""; }
@@ -72,8 +74,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     Logger.Info("Start connecting to the Lens Focuser for the Camera: " + this.Name, "Connect", sourceFile);
 
                     if (cameraNek == null) {
-                        Logger.Error("No camera are connectd with NEK inside NINA!", "Connect", sourceFile);
-                        Notification.ShowError("No camera are connectd with NEK inside NINA!");
+                        Logger.Error("No camera are connected with NEK inside NINA!", "Connect", sourceFile);
+                        Notification.ShowError("No camera are connected with NEK inside NINA!");
                         return false;
                     }
 
@@ -99,8 +101,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     this._isConnected = true;
                     this._ismoving = false;
 
-                    this.Calibrate(token);
-                    if (token.IsCancellationRequested) {
+                    if (!this.Calibrate(token) || token.IsCancellationRequested || !this.Connected) {
                         this._isConnected = false;
                         this._ismoving = false;
                         return false;
@@ -110,6 +111,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                     Logger.Info("Going to Infinity.", "Connect", sourceFile);
                     Move((int)_nbSteps, token).Wait(); //Go to Inf
+
+                    if (token.IsCancellationRequested || !this.Connected) {
+                        this._isConnected = false;
+                        this._ismoving = false;
+                        return false;
+                    }
+
                     return true;
                 });
             }
@@ -149,13 +157,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public Task Move(int position, CancellationToken ct, int waitInMs = 1000) => this.Move(position, ct, waitInMs, true);
             private Task Move(int position, CancellationToken ct, int waitInMs, bool needInit) { //Manage Errors and the time limit
                 return Task.Run(() => {
-                    if (!Connected) {
-                        Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
-                        Notification.ShowError("Nikon NEK: Camera or Focuser is disconnected in NINA!");
-                        return;
-                    }
-
-                    if (needInit) InitFocusingProcess();
+                    if (!Connected) return;
+                    if (needInit) if (!InitFocusingProcess()) return;
 
                     if (position <= 0) {
                         _position = _nbSteps;
@@ -216,42 +219,40 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public void Halt() => throw new NotImplementedException();
 
 
-            private void InitFocusingProcess() {
-                if (cameraNek == null) return;
-                lock (cameraNek._gateCameraState) {
-                    if (cameraNek._cameraState != CameraStates.Idle) {
-                        return;
+            private bool InitFocusingProcess() {
+                if (this.cameraNek == null) return false;
+                lock (this.cameraNek._gateCameraState) {
+                    if (this.cameraNek._cameraState != CameraStates.Idle) {
+                        Logger.Warning("Could not Init Focusing process because camera is busy.", "InitFocusingProcess", sourceFile);
+                        Notification.ShowWarning("Nikon NEK: Could not Init Focusing process because camera is busy.", TimeSpan.FromSeconds(10));
+                        return false;
                     }
 
-                    cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
-                    cameraNek._cameraState = CameraStates.Waiting;
-                    cameraNek.RaisePropertyChanged(nameof(cameraNek.CameraState));
+                    this.cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
+                    this.cameraNek._cameraState = CameraStates.Waiting;
+                    this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
                 }
-                cameraNek.StartLiveViewBackground();
+                this.cameraNek.StartLiveViewBackground();
                 _ismoving = true;
                 RaisePropertyChanged(nameof(IsMoving));
+                return true;
             }
 
             private void StopFocusingProcess() {
-                if (cameraNek == null) return;
+                if (this.cameraNek == null) return;
                 _ismoving = false;
                 RaisePropertyChanged(nameof(IsMoving));
-                cameraNek.StopLiveViewBackground(5000);
-                lock (cameraNek._gateCameraState) { cameraNek._cameraState = CameraStates.Idle; }
-                if (cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
-                cameraNek.RaisePropertyChanged(nameof(cameraNek.CameraState));
+                this.cameraNek.StopLiveViewBackground(5000);
+                lock (this.cameraNek._gateCameraState) { if (this.cameraNek._cameraState == CameraStates.Waiting) this.cameraNek._cameraState = CameraStates.Idle; }
+                if (this.cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
+                this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
             }
 
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => this.MoveBy(distance, toInf, ct);
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
-                    if (!Connected) {
-                        Logger.Error("Camera or Focuser is disconnected in NINA!", "Move", sourceFile);
-                        Notification.ShowError("Nikon NEK: Camera or Focuser is disconnected in NINA!");
-                        return NikonMtpResponseCode.General_Error;
-                    }
-
-                    if (needInit) InitFocusingProcess();
+                    if (!Connected) return NikonMtpResponseCode.General_Error;
+                    if (needInit) if (!InitFocusingProcess()) return NikonMtpResponseCode.General_Error;
 
                     var parameters = new MtpParams();
                     parameters.addUint32((UInt32)(toInf ? 2 : 1));
@@ -289,9 +290,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
                         case NikonMtpDevicePropCode.LensID:
                         case NikonMtpDevicePropCode.LensSort:
-                            if (cameraNek != null && !cameraNek.isFocusDrivableLens()) {
+                            if (Connected && !this.cameraNek.isFocusDrivableLens()) {
                                 Notification.ShowError("Nikon NEK: The lens have been unmounted!");
-                                cameraNek.focuserMediator.Disconnect();
+                                this.focuserMediator.Disconnect();
                             }
                             break;
                         case NikonMtpDevicePropCode.FocalLength:
@@ -306,18 +307,26 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public ICommand StartCalibration { get; }
             public ICommand CancelCalibration { get; }
 
-            public void Calibrate(CancellationToken token) {
+            public bool Calibrate(CancellationToken token) {
                 this._minStepSize = 32;
                 this._maxStepSize = 32767;
                 this._nbSteps = int.MaxValue;
                 this._position = 0;
+                bool isOk = true;
 
                 Logger.Info("Start detecting the max step.", "Calibrate", sourceFile);
-                DetectMaxStep(token);
-                Logger.Info("Detected max step: " + this._maxStepSize, "Calibrate", sourceFile);
-                if (token.IsCancellationRequested) {
-                    return;
+                isOk = DetectMaxStep(token);
+                if (isOk) Logger.Info("Detected max step: " + this._maxStepSize, "Calibrate", sourceFile);
+                else if (token.IsCancellationRequested) {
+                    Logger.Info("Detected max step after cancellation: " + this._maxStepSize, "Calibrate", sourceFile);
+                    return false;
                 }
+                else if (!isOk) {
+                    Logger.Error("Focuser failed to detect the max step.", "Calibrate", sourceFile);
+                    Notification.ShowError("Nikon NEK: Focuser failed to detect the max step.");
+                    return false;
+                }
+
                 /*Logger.Info("Start detecting the min step.", "Calibrate", sourceFile);
                 DetectMinStep(token);
                 Logger.Info("Detected min step: " + this._minStepSize, "Calibrate", sourceFile);
@@ -326,10 +335,18 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 }*/
                 Logger.Info("Start detecting the number of steps.", "Calibrate", sourceFile);
                 DetectStepsNb(token);
-                Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
-                if (token.IsCancellationRequested) {
-                    return;
+                if (isOk) Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
+                else if (token.IsCancellationRequested) {
+                    Logger.Info("Detected number of steps after cancellation: " + this._nbSteps, "Calibrate", sourceFile);
+                    return false;
                 }
+                else if (!isOk) {
+                    Logger.Error("Focuser failed to detect the number of steps.", "Calibrate", sourceFile);
+                    Notification.ShowError("Nikon NEK: Focuser failed to detect the number of steps.");
+                    return false;
+                }
+
+                return true;
             }
 
 
@@ -364,13 +381,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 StopFocusingProcess();
             }
 
-            public void DetectMaxStep(CancellationToken token) {
-                if (!Connected) return;
+            public bool DetectMaxStep(CancellationToken token) {
+                if (!Connected) return false;
                 UInt32 stepSize = _maxStepSize;
                 UInt32 minStepSize = _minStepSize;
                 bool toInf = true;
+                bool isOk = true;
 
-                InitFocusingProcess();
+                if (!InitFocusingProcess()) return false;
 
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait(CancellationToken.None);
@@ -388,20 +406,25 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         minStepSize = stepSize;
                         stepSize = (UInt32)Math.Floor((_maxStepSize + minStepSize) / 2.0);
                         continue;
+                    } else {
+                        isOk = false;
                     }
                     break;
                 }
 
                 StopFocusingProcess();
+
+                if (token.IsCancellationRequested) return false;
+                return isOk;
             }
 
-            public void DetectStepsNb(CancellationToken token) {
-                if (!Connected) return;
+            public bool DetectStepsNb(CancellationToken token) {
+                if (!Connected) return false;
                 UInt32 nbSteps0 = 0;
                 UInt32 nbStepsInf = 0;
                 UInt32 stepSize = _maxStepSize;
 
-                InitFocusingProcess();
+                if (!InitFocusingProcess()) return false;
 
                 while (stepSize >= 1) {
 
@@ -438,6 +461,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 }
 
                 StopFocusingProcess();
+
+                if (token.IsCancellationRequested) return false;
+                return true;
             }
 
 

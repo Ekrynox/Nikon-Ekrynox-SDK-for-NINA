@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("0.4.0.0")]
-[assembly: AssemblyFileVersion("0.4.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Nikon Ekrynox SDK")]
@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © 2025 Lucas Alias")]
 
 // The minimum Version of N.I.N.A. that this plugin is compatible with
-[assembly: AssemblyMetadata("MinimumApplicationVersion", "3.2.0.2001")]
+[assembly: AssemblyMetadata("MinimumApplicationVersion", "3.2.0.9001")]
 
 // The license your plugin code is using
 [assembly: AssemblyMetadata("License", "MPL-2.0")]
@@ -52,13 +52,31 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("AltScreenshotURL", "https://github.com/Ekrynox/Nikon-Ekrynox-SDK-for-NINA/blob/main/assets/images/Screenshot2.png?raw=true")]
 //[Optional] An in-depth description of your plugin
 [assembly: AssemblyMetadata("LongDescription", @"
-This plugin adds an alternative Nikon camera support.
+This project is a [NINA](https://github.com/isbeorn/nina) plugin that brings a new alternative to the official Nikon SDK.  
+Based on [Nikon Ekrynox SDK (NEK)](https://github.com/Ekrynox/Nikon-Ekrynox-SDK), the plugin doesn't require you to install any custom drivers as it uses Windows Portable Device API for direct PTP/MTP communications.
 
-Directly connecting to the camera through MTP/PTP and Windows Portable Device API, it should allow support for some unsupported cameras (as long as their MTP/PTP API remains similar to that of other cameras).
+## Supported Cameras
+Directly connecting to the camera through MTP/PTP and Windows Portable Device API, it should allow support for some unsupported cameras (as long as their MTP/PTP API remains similar to that of other cameras).  
+**Repported working models:**
+- Nikon D80
+- Nikon D3500
+- Nikon D7100
+- Nikon D7200
+- Nikon Z6 II
+- Nikon Z50 II
 
-This plugin also includes an in-built focuser to control CPU focus drivable lenses.
-For this to work, the camera must be connected with this plugin's implementation and support Liveview!
-")]
+## Features
+- Capture (Bulb: USB only)
+- Live View
+- Focus Control for AF Lenses (Inbuilt NEK Focuser) (Camera must support Liveview)
+- Auto update of Focal Length/Ratio for CPU Lenses
+
+## Known Issues
+The focuser have some difficulties with older models like the D7100/D7200. It has difficulties to accurately detect the focus limit (0 and infinity), and overestimate the step range.
+
+## Special Notes
+Thanks to all the contributors of NINA for the great work done on the main application.  
+Thanks to **LEX** for all the work on testing his cameras and providing feedback.")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
