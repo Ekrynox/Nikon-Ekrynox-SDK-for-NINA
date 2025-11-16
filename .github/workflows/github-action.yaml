@@ -42,14 +42,6 @@ jobs:
         
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
-        
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-            vcpkgJsonGlob: '**/vcpkg.json'
-            
-      - name: Integrate vcpkg
-        run: vcpkg integrate install
 
       - name: Restore NuGet packages
         run: nuget restore "${{ env.PLUGIN_SLN_NAME }}.sln"
@@ -81,7 +73,7 @@ jobs:
           Copy-Item "${{env.PLATFORM}}/${{ env.BUILD_CONFIGURATION }}/NEK.dll" "packages/${{ env.PLUGIN_NAME }}/runtimes/win-${{env.PLATFORM}}/native/NEK.dll" -Force
           Copy-Item "${{env.PLATFORM}}/${{ env.BUILD_CONFIGURATION }}/NEK.pdb" "packages/${{ env.PLUGIN_NAME }}/runtimes/win-${{env.PLATFORM}}/native/NEK.pdb" -Force
           
-          Copy-Item "bin/${{ env.BUILD_CONFIGURATION }}/Database/NikonCameraList.json" "packages/${{ env.PLUGIN_NAME }}/Database/NikonCameraList.json" -Force
+          Copy-Item "bin/${{ env.BUILD_CONFIGURATION }}/Database" "packages/${{ env.PLUGIN_NAME }}/" -Recurse -Force
           
       - name: Create Plugin archives and manifests
         run: |
