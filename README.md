@@ -19,6 +19,8 @@ Directly connecting to the camera through MTP/PTP and Windows Portable Device AP
 - Auto update of Focal Length/Ratio for CPU Lenses
 
 ## Known Issues
+If you encounter an "NEKCS.Wrapper" not found, you need to install [Microsoft VC Redist X64](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+
 The focuser have some difficulties with older models like the D7100/D7200. It has difficulties to accurately detect the focus limit (0 and infinity), and overestimate the step range.
 
 ## Special Notes
