@@ -77,26 +77,29 @@ namespace LucasAlias.NINA.NEK.Drivers {
             return Task.Run(() => {
                 Logger.Info("Start connecting to the Camera: " + this.Name, "Connect", sourceFile);
 
+                //Connect to the Camera
                 try {
                     this.camera = new NEKCS.NikonCamera(devicePath, NEKMediator.Plugin.NbAdditionalThreads);
+                    if (!this.camera.isConnected()) {
+                        this.camera.Dispose();
+                        this.camera = null;
+                        return false;
+                    }
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while connecting to the Camera: " + this.Name, e, "Connect", sourceFile);
                     return false;
                 }
 
-                if (!this.camera.isConnected()) {
-                    this.camera.Dispose();
-                    this.camera = null;
-                    return false;
-                }
 
+                //Check if the camera have been found in the Database
                 if (this.cameraSpec.Year < 0) {
                     Logger.Warning($"\"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", "Connect", sourceFile);
                     Notification.ShowWarning($"Nikon Nek: \"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(10));
                 }
 
+
+                //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                     this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams());
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
@@ -110,8 +113,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     return false;
                 }
 
+
+                //Get device info: Operation, Properties, Events, ... supported + Name, model number, serial, ...
                 try {
-                    //Get device info: Operation, Properties, Events, ... supported + Name, model number, serial, ...
                     this.cameraInfo = this.camera.GetDeviceInfo();
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while requesting Device Info: " + this.Name, e, sourceFile);
@@ -125,9 +129,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     return false;
                 }
 
+
+                //Register the events listeners
                 this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                 this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
 
+
+                //Set the default values for the camera
                 lock (_gateCameraState) {
                     this._cameraState = CameraStates.Idle;
                 }
@@ -141,7 +149,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._liveviewHeaderSize = -1;
                 this._requestedLiveview = 0;
                 this._liveviewEnabled = false;
-                this.sdramHandle = 0xFFFF0001;
+                this.sdramHandle = 0xFFFF0001; //Default SDRAM Handle for the newer Nikon camera
 
                 this._isBitDepthDirty = true;
                 this._isCropDirty = true;
@@ -160,14 +168,17 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._cameraState = CameraStates.NoState;
             }
 
+            //Ensure that the Nikon focuser get disconnected
             if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
                 this.focuserMediator.Disconnect();
             }
 
             if (this.camera != null) {
+                //Unregister the events listeners
                 this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
                 this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
 
+                //Stop all liveview and possible exposures
                 this._requestedLiveview = 0;
                 this._liveviewEnabled = false;
                 this.StopLiveView();
@@ -177,6 +188,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.camera = null;
             }
 
+            //Cancel all Token
             foreach (var i in this._awaitersCameraState) {
                 if (i.Value != null) i.Value.TrySetCanceled();
             }
@@ -1047,21 +1059,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 Task.Run(async () => {
                     await Task.Delay((int)(sequence.ExposureTime * 1000), bulbToken.Token);
                     if (bulbToken.IsCancellationRequested) return;
-                    lock (_gateCameraState) {
-                        if (_cameraState == CameraStates.Exposing) {
-                            if (!Connected) return;
-                            try {
-                                var p = new MtpParams();
-                                p.addUint32(0);
-                                p.addUint32(0);
-                                camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
-                            } catch (MtpDeviceException e) {
-                                Logger.Error(this.Name, e, "StartExposure", sourceFile);
-                            } catch (MtpException e) {
-                                Logger.Error(this.Name, e, "StartExposure", sourceFile);
-                            }
-                        }
-                    }
+                    StopExposure();
                 }, bulbToken.Token);
             }
         }

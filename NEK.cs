@@ -54,6 +54,16 @@ namespace LucasAlias.NINA.NEK {
         }
 
 
+        //Plugin Settings
+        public bool UpdateLensInfo {
+            get {
+                return pluginSettings.GetValueBoolean(nameof(UpdateLensInfo), true);
+            }
+            set {
+                pluginSettings.SetValueBoolean(nameof(UpdateLensInfo), value);
+                RaisePropertyChanged();
+            }
+        }
         public byte NbAdditionalThreads {
             get {
                 return Settings.Default.NbAdditionalThreads;
@@ -61,15 +71,6 @@ namespace LucasAlias.NINA.NEK {
             set {
                 Settings.Default.NbAdditionalThreads = value;
                 CoreUtil.SaveSettings(Settings.Default);
-                RaisePropertyChanged();
-            }
-        }
-        public bool UpdateLensInfo {
-            get {
-                return pluginSettings.GetValueBoolean(nameof(UpdateLensInfo), true);
-            }
-            set {
-                pluginSettings.SetValueBoolean(nameof(UpdateLensInfo), value);
                 RaisePropertyChanged();
             }
         }

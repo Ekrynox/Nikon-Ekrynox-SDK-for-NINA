@@ -11,6 +11,15 @@
                     <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <TextBlock Text="Update Telescope Info if CPU Lens is mounted ?" VerticalAlignment="Center" />
+                <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
+            </Grid>
+
+            <Grid Margin="0,7,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Number of additional Threads:" VerticalAlignment="Center" />
                     <TextBlock Text="Main Thread + Additional Task Threads + Event Thread" VerticalAlignment="Center">
@@ -20,15 +29,6 @@
                     </TextBlock>
                 </StackPanel>
                 <ninactrl:IntStepperControl MinValue="0" MaxValue="256" StepSize="1" Value="{Binding NbAdditionalThreads}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left"/>
-            </Grid>
-
-            <Grid Margin="0,7,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Update Telescope Info if CPU Lens is mounted ?" VerticalAlignment="Center" />
-                <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
             </Grid>
 
         </StackPanel>
