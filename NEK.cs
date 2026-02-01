@@ -55,6 +55,15 @@ namespace LucasAlias.NINA.NEK {
 
 
         //Plugin Settings
+        public bool UseHostMode {
+            get {
+                return pluginSettings.GetValueBoolean(nameof(UseHostMode), false);
+            }
+            set {
+                pluginSettings.SetValueBoolean(nameof(UseHostMode), value);
+                RaisePropertyChanged();
+            }
+        }
         public bool UpdateLensInfo {
             get {
                 return pluginSettings.GetValueBoolean(nameof(UpdateLensInfo), true);

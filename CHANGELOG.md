@@ -1,4 +1,8 @@
-﻿# Nikon Ekrynox SDK
+# Nikon Ekrynox SDK
+
+## 1.2.0.0
+- Add support for HostMode
+
 
 ## 1.1.0.0
 - Generate a Name for CPU Lens

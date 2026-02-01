@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LucasAlias.NINA.NikonEkrynoxSdk.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LucasAlias.NINA.NEK.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="UpdateSettings" Type="System.Boolean" Scope="User">
@@ -7,6 +7,9 @@
     </Setting>
     <Setting Name="NbAdditionalThreads" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="UseHostMode" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

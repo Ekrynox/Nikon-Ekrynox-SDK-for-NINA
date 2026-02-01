@@ -11,6 +11,27 @@
                     <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Use the Host Mode ?" VerticalAlignment="Center" />
+                    <TextBlock Text="Disable the controls (dials, monitor, viewfinder, ...) on the camera." VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                    <TextBlock Text="Enable advanced controls in software (PASM, ...)." VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding UseHostMode}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
+            </Grid>
+
+            <Grid Margin="0,7,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
                 <TextBlock Text="Update Telescope Info if CPU Lens is mounted ?" VerticalAlignment="Center" />
                 <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
             </Grid>

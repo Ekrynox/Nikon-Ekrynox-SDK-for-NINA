@@ -130,6 +130,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 }
 
 
+                //Switch to HostMode if the settings is True
+                if (NEKMediator.Plugin.UseHostMode && this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
+                    try {
+                        MtpParams param = new();
+                        param.addUint32(1);
+                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    }
+                }
+
+
                 //Register the events listeners
                 this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
                 this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
@@ -183,6 +197,21 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._liveviewEnabled = false;
                 this.StopLiveView();
                 this.AbortExposure();
+
+                this.camera.DeviceReadyWhileNot(NikonMtpResponseCode.OK);
+
+                //Switch back to CameraMode
+                if (this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
+                    try {
+                        MtpParams param = new();
+                        param.addUint32(0);
+                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    }
+                }
 
                 this.camera.Dispose();
                 this.camera = null;
