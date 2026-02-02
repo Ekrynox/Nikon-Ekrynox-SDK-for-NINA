@@ -11,6 +11,28 @@
             <Grid Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected with Nikon Ekrynox SDK" />
             </Grid>
+
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding DeviceProperties}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Text="{Binding Key, StringFormat=0x{0:X}}" FontWeight="Light" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

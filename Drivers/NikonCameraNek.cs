@@ -46,9 +46,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         private readonly string devicePath; // WPD device path
-        private NEKCS.NikonCamera camera; // Camera object for operations
-        private NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
-        private Database.NikonCameraSpec cameraSpec;
+        internal NEKCS.NikonCamera camera; // Camera object for operations
+        internal NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
+        internal Database.NikonCameraSpec cameraSpec;
 
         private readonly IProfileService profileService;
         private readonly IExposureDataFactory exposureDataFactory;
