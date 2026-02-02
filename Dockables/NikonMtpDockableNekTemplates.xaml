@@ -3,7 +3,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:LucasAlias.NINA.NEK.Dockables"
-    xmlns:util="clr-namespace:NINA.Core.Utility;assembly=NINA.Core">
+    xmlns:util="clr-namespace:NINA.Core.Utility;assembly=NINA.Core"
+    xmlns:conv="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters">
+
+
+    <conv:GetFieldConverter x:Key="GetFieldConverter" />
+    
 
     <!--  The datatemplae for the dockable is indicated by the fully qualified class name and the postfix _Dockable  -->
     <DataTemplate x:Key="LucasAlias.NINA.NEK.Dockables.NikonMtpDockableNek_Dockable">
@@ -14,22 +19,25 @@
 
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding DeviceProperties}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+                <StackPanel Grid.IsSharedSizeScope="True">
+                    <ItemsControl ItemsSource="{Binding DeviceProperties}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col1" />
+                                        <ColumnDefinition Width="*" SharedSizeGroup="Col2" />
+                                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Text="{Binding Key, StringFormat=0x{0:X}}" FontWeight="Light" />
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                    <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Key, StringFormat=0x{0:X}}" FontWeight="Light" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Value, Converter={StaticResource GetFieldConverter}, ConverterParameter=DataType}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </ScrollViewer>
 
 
