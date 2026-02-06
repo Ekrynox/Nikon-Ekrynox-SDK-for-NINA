@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Nikon Ekrynox SDK")]
@@ -68,10 +68,12 @@ Directly connecting to the camera through MTP/PTP and Windows Portable Device AP
 ## Features
 - Capture (Bulb: USB only)
 - Live View
-- Focus Control for AF Lenses (Inbuilt NEK Focuser) (Camera must support Liveview)
+- Focus Control for AF Lenses (Inbuilt NEK Focuser) (Camera must support Liveview) + Support for LensAF Liveview UI and Focus Point Setting
 - Auto update of Focal Length/Ratio for CPU Lenses
 
 ## Known Issues
+If you encounter an ""NEKCS.Wrapper"" not found, you need to install [Microsoft VC Redist X64](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+
 The focuser have some difficulties with older models like the D7100/D7200. It has difficulties to accurately detect the focus limit (0 and infinity), and overestimate the step range.
 
 ## Special Notes

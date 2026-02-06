@@ -15,7 +15,7 @@ Directly connecting to the camera through MTP/PTP and Windows Portable Device AP
 ## Features
 - Capture (Bulb: USB only)
 - Live View
-- Focus Control for AF Lenses (Inbuilt NEK Focuser) (Camera must support Liveview)
+- Focus Control for AF Lenses (Inbuilt NEK Focuser) (Camera must support Liveview) + Support for LensAF Liveview UI and Focus Point Setting
 - Auto update of Focal Length/Ratio for CPU Lenses
 
 ## Known Issues
