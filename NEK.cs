@@ -25,7 +25,7 @@ namespace LucasAlias.NINA.NEK {
         private readonly IProfileService profileService;
 
         [ImportingConstructor]
-        public NEK(IProfileService profileService, IOptionsVM options) {
+        public NEK(IProfileService profileService, IOptionsVM options, IMessageBroker messageBroker) {
             if (Settings.Default.UpdateSettings) {
                 Settings.Default.Upgrade();
                 Settings.Default.UpdateSettings = false;
@@ -36,9 +36,7 @@ namespace LucasAlias.NINA.NEK {
             this.profileService = profileService;
             profileService.ProfileChanged += ProfileService_ProfileChanged;
 
-            NEKMediator.RegisterPlugin(this);
-
-            NEKMediator.InitDatabase();
+            NEKMediator.InitMediator(this, messageBroker);
         }
 
         public override Task Teardown() {

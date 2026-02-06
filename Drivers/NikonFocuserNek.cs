@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Markup.Localizer;
 using System.Diagnostics.Eventing.Reader;
+using System.Windows;
 
 namespace LucasAlias.NINA.NEK.Drivers {
     public partial class NikonCameraNek {
@@ -40,6 +41,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     }
                 });
                 CancelCalibration = new RelayCommand(() => this._CalibrationToken?.Cancel());
+
+                Integration.LensAF.RegisterFocuser.Send(this.DisplayName);
             }
 
             private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
@@ -101,16 +104,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     this._isConnected = true;
                     this._ismoving = false;
 
-                    if (!this.Calibrate(token) || token.IsCancellationRequested || !this.Connected) {
-                        this._isConnected = false;
-                        this._ismoving = false;
-                        return false;
-                    }
-
                     cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
-
-                    Logger.Info("Going to Infinity.", "Connect", sourceFile);
-                    Move((int)_nbSteps, token).Wait(); //Go to Inf
 
                     if (token.IsCancellationRequested || !this.Connected) {
                         this._isConnected = false;
@@ -118,14 +112,25 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         return false;
                     }
 
+                    this.focuserMediator.Connected += OnConnected;
+
                     return true;
                 });
+            }
+
+            private async Task OnConnected(object arg1, EventArgs args) {
+                if (focuserMediator.GetDevice() == this) {
+                    await Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                        StartCalibration.Execute(null);
+                    }));
+                }
             }
 
             public void Disconnect() {
                 if (!_isConnected) return;
                 Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
+                this.focuserMediator.Connected -= OnConnected;
                 RaiseAllPropertiesChanged();
                 if (cameraNek == null || cameraNek.camera == null) return;
                 cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
@@ -296,6 +301,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             }
                             break;
                         case NikonMtpDevicePropCode.FocalLength:
+                        case NikonMtpDevicePropCode.Fnumber:
                             Notification.ShowWarning("Nikon NEK: The Focal Length or Aperture have changed. We recommended to rerun calibration (disconnect then reconnect the focuser).", TimeSpan.FromSeconds(10));
                             break;
                     }
@@ -316,11 +322,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 Logger.Info("Start detecting the max step.", "Calibrate", sourceFile);
                 isOk = DetectMaxStep(token);
-                if (isOk) Logger.Info("Detected max step: " + this._maxStepSize, "Calibrate", sourceFile);
-                else if (token.IsCancellationRequested) {
+                if (token.IsCancellationRequested) {
                     Logger.Info("Detected max step after cancellation: " + this._maxStepSize, "Calibrate", sourceFile);
                     return false;
                 }
+                if (isOk) Logger.Info("Detected max step: " + this._maxStepSize, "Calibrate", sourceFile);
                 else if (!isOk) {
                     Logger.Error("Focuser failed to detect the max step.", "Calibrate", sourceFile);
                     Notification.ShowError("Nikon NEK: Focuser failed to detect the max step.");
@@ -335,16 +341,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 }*/
                 Logger.Info("Start detecting the number of steps.", "Calibrate", sourceFile);
                 DetectStepsNb(token);
-                if (isOk) Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
-                else if (token.IsCancellationRequested) {
+                if (token.IsCancellationRequested) {
                     Logger.Info("Detected number of steps after cancellation: " + this._nbSteps, "Calibrate", sourceFile);
                     return false;
                 }
+                else if (isOk) Logger.Info("Detected number of steps: " + this._nbSteps, "Calibrate", sourceFile);
                 else if (!isOk) {
                     Logger.Error("Focuser failed to detect the number of steps.", "Calibrate", sourceFile);
                     Notification.ShowError("Nikon NEK: Focuser failed to detect the number of steps.");
                     return false;
                 }
+
+
+                Move((int)_nbSteps, token).Wait(); //Go to Inf
+                Integration.LensAF.GotoFocus.Send();
 
                 return true;
             }
