@@ -15,6 +15,7 @@ using NINA.Profile;
 using NINA.Profile.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -773,9 +774,114 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
             return false;
         }
+        public string LensName {
+            get {
+                if (!isCpuLensMounted()) return "";
+
+                string lensName = "";
+                UInt64 LensType = 1;
+                Double LensFocalMin = 0;
+                Double LensFocalMax = 0;
+                Double LensApatureMin = 0;
+                Double LensApatureMax = 0;
+
+                if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensFocalMin)) {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensFocalMin);
+                    if (!result.TryGetUInteger(out var focal)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensFocalMin on " + this.Name, "LensName", sourceFile);
+                        return "";
+                    }
+                    LensFocalMin = focal / 100.0;
+                }
+                if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensFocalMax)) {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensFocalMax);
+                    if (!result.TryGetUInteger(out var focal)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensFocalMax on " + this.Name, "LensName", sourceFile);
+                        return "";
+                    }
+                    LensFocalMax = focal / 100.0;
+                }
+                if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensApatureMin)) {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensApatureMin);
+                    if (!result.TryGetUInteger(out var fratio)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensApatureMin on " + this.Name, "LensName", sourceFile);
+                        return "";
+                    }
+                    LensApatureMin = fratio / 100.0;
+                }
+                if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensApatureMax)) {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensApatureMax);
+                    if (!result.TryGetUInteger(out var fratio)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensApatureMax on " + this.Name, "LensName", sourceFile);
+                        return "";
+                    }
+                    LensApatureMax = fratio / 100.0;
+                }
+
+                if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeML)) {
+                    var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeML);
+                    if (!result.TryGetUInteger(out LensType)) {
+                        Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensTypeML on " + this.Name, "LensName", sourceFile);
+                        return "";
+                    }
+                }
+
+                if ((LensType & 0b1) == 0) { //Native Z lens
+                    lensName += "Z ";
+
+                    if ((LensType & 0b100000) != 0) lensName += "DX ";
+
+                    if (LensFocalMin == LensFocalMax) lensName += $"{LensFocalMin}mm ";
+                    else lensName += $"{LensFocalMin}-{LensFocalMax}mm ";
+
+                    if(LensApatureMin == LensApatureMax) lensName += $"f/{LensApatureMin}";
+                    else lensName += $"f/{LensApatureMin}-{LensApatureMax}";
+
+                    if ((LensType & 0b10000) != 0) lensName += " VR";
+                    if ((LensType & 0b100000000) != 0) lensName += " PZ";
+                }
+                else { //F mount Lens
+                    LensType = 0;
+                    if (cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.LensTypeF)) {
+                        var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.LensTypeF);
+                        if (!result.TryGetUInteger(out LensType)) {
+                            Logger.Error("Wrong Datatype Uinteger! Expected: " + result.GetType().ToString() + " for LensTypeF on " + this.Name, "LensName", sourceFile);
+                            return "";
+                        }
+                    }
+
+                    if ((LensType & 0b100000000) != 0) lensName += "AF-P ";
+                    else if ((LensType & 0b10000) != 0) lensName += "AF-S ";
+                    else if ((LensType & 0b1) != 0) lensName += "AF-D ";
+
+                    if ((LensType & 0b1000) != 0) lensName += "DX ";
+
+                    if (LensFocalMin == LensFocalMax) lensName += $"{LensFocalMin}mm ";
+                    else lensName += $"{LensFocalMin}-{LensFocalMax}mm ";
+
+                    if (LensApatureMin == LensApatureMax) lensName += $"f/{LensApatureMin}";
+                    else lensName += $"f/{LensApatureMin}-{LensApatureMax}";
+
+                    if ((LensType & 0b10000000) != 0) lensName += "E";
+                    else if ((LensType & 0b10) != 0) lensName += "G";
+
+                    if ((LensType & 0b100) != 0) lensName += " VR";
+                }
+
+                    return lensName;
+            }
+        }
         private void updateLensInfo(bool init = false) {
             if (Connected && NEKMediator.Plugin.UpdateLensInfo) {
                 if (isCpuLensMounted()) {
+                    try {
+                        this.profileService.ActiveProfile.TelescopeSettings.Name = this.LensName;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "updateLensInfo", sourceFile);
+                    }
+
                     try {
                         if (this.cameraInfo.DevicePropertiesSupported.Contains(NikonMtpDevicePropCode.FocalLength)) {
                             var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.FocalLength);
