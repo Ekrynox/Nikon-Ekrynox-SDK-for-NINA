@@ -1,10 +1,16 @@
 ﻿# Nikon Ekrynox SDK
 
+## 1.1.0.0
+- Generate a Name for CPU Lens
+- Add Support to LensAF Focus Position setting
+
+
 ## 1.0.0.0
 - Official Release
 - Complete the Database for D3XXX serie, and fix some errors in Ids
 - Improve Disconnection handling
 - Improve Settings UI, Information Notifications, and Description
+
 
 ## 0.4.0.0
 - First Iteration of Settings UI for the plugin
