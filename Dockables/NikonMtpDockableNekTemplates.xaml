@@ -4,20 +4,114 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:LucasAlias.NINA.NEK.Dockables"
     xmlns:util="clr-namespace:NINA.Core.Utility;assembly=NINA.Core"
-    xmlns:conv="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters">
+    xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary"
+    
+    xmlns:conv="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters"
+    xmlns:convNikonDevicePropDesc="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc">
 
 
     <conv:GetFieldConverter x:Key="GetFieldConverter" />
-    
+    <conv:GreaterThanConverter x:Key="GreaterThanConverter" />
+    <convNikonDevicePropDesc:GetTypeFormConverter x:Key="NikonDevicePropDesc_GetTypeConverter" />
+    <convNikonDevicePropDesc:TryGetConverter x:Key="NikonDevicePropDesc_TryGetConverter" />
 
-    <!--  The datatemplae for the dockable is indicated by the fully qualified class name and the postfix _Dockable  -->
+
+    <DataTemplate x:Key="IntegerTemplate"><!--TODO: Write the data-->
+        <TextBox>
+            <TextBox.IsEnabled>
+                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
+                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
+                    <Binding>
+                        <Binding.Source>0</Binding.Source>
+                    </Binding>
+                </MultiBinding>
+            </TextBox.IsEnabled>
+
+            <TextBox.Text><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></TextBox.Text>
+        </TextBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StringTemplate"><!--TODO: Write the data-->
+        <TextBox>
+            <TextBox.IsEnabled>
+                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
+                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
+                    <Binding>
+                        <Binding.Source>0</Binding.Source>
+                    </Binding>
+                </MultiBinding>
+            </TextBox.IsEnabled>
+
+            <TextBox.Text>
+                <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" />
+            </TextBox.Text>
+        </TextBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ArrayTemplate"><!--TODO: Write the data-->
+        <TextBox>
+            <TextBox.IsEnabled>
+                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
+                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
+                    <Binding>
+                        <Binding.Source>0</Binding.Source>
+                    </Binding>
+                </MultiBinding>
+            </TextBox.IsEnabled>
+
+            <TextBox.Text>
+                <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" />
+            </TextBox.Text>
+        </TextBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="EnumTemplate"><!--TODO: Write the data-->
+        <ComboBox>
+            <ComboBox.IsEnabled>
+                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
+                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
+                    <Binding><Binding.Source>0</Binding.Source></Binding>
+                </MultiBinding>
+            </ComboBox.IsEnabled>
+
+            <ComboBox.SelectedValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></ComboBox.SelectedValue>
+            <ComboBox.ItemsSource><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="EnumFORM" /></ComboBox.ItemsSource>
+        </ComboBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="RangeTemplate"><!--TODO: Write the data-->
+        <ninactrl:IntStepperControl>
+            <ninactrl:IntStepperControl.IsEnabled>
+                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
+                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
+                    <Binding><Binding.Source>0</Binding.Source></Binding>
+                </MultiBinding>
+            </ninactrl:IntStepperControl.IsEnabled>
+
+            <ninactrl:IntStepperControl.Value><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></ninactrl:IntStepperControl.Value>
+            <ninactrl:IntStepperControl.MinValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.min" /></ninactrl:IntStepperControl.MinValue>
+            <ninactrl:IntStepperControl.MaxValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.max" /></ninactrl:IntStepperControl.MaxValue>
+            <ninactrl:IntStepperControl.StepSize><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.step" /></ninactrl:IntStepperControl.StepSize>
+        </ninactrl:IntStepperControl>
+    </DataTemplate>
+
+    <convNikonDevicePropDesc:TypeFormTemplateSelector
+        x:Key="convNikonDevicePropDesc_TypeFormTemplateSelector"
+        IntegerTemplate="{StaticResource IntegerTemplate}"
+        StringTemplate="{StaticResource StringTemplate}"
+        ArrayTemplate="{StaticResource ArrayTemplate}"
+        EnumTemplate="{StaticResource EnumTemplate}"
+        RangeTemplate="{StaticResource RangeTemplate}"
+        />
+
+
+    <!--  The datatemplate for the dockable is indicated by the fully qualified class name and the postfix _Dockable  -->
     <DataTemplate x:Key="LucasAlias.NINA.NEK.Dockables.NikonMtpDockableNek_Dockable">
         <Grid Margin="5">
             <Grid Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected with Nikon Ekrynox SDK" />
             </Grid>
-
-
+            
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Grid.IsSharedSizeScope="True">
                     <ItemsControl ItemsSource="{Binding DeviceProperties}">
@@ -27,12 +121,16 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Col1" />
-                                        <ColumnDefinition Width="*" SharedSizeGroup="Col2" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col2" />
+                                        <ColumnDefinition Width="*" SharedSizeGroup="Col3" />
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold" />
                                     <TextBlock Grid.Column="1" Text="{Binding Key, StringFormat=0x{0:X}}" FontWeight="Light" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Value, Converter={StaticResource GetFieldConverter}, ConverterParameter=DataType}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Value, Converter={StaticResource NikonDevicePropDesc_GetTypeConverter}}" />
+
+                                    <ContentControl Grid.Column="3" Content="{Binding Value, Converter={StaticResource NikonDevicePropDesc_TryGetConverter}}" ContentTemplateSelector="{StaticResource convNikonDevicePropDesc_TypeFormTemplateSelector}" />
+
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

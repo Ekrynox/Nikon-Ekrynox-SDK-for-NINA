@@ -13,15 +13,28 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             if (value == null || parameter is not string fieldName) return null;
 
-            var type = value.GetType();
+            string[] parts = fieldName.Split('.');
 
-            var prop = type.GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance);
-            if (prop != null) return prop.GetValue(value);
+            object current = value;
+            foreach (var part in parts) {
+                var type = current.GetType();
 
-            var field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
-            if (field != null) return field.GetValue(value);
+                var prop = type.GetProperty(part, BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null) {
+                    current = prop.GetValue(current);
+                    continue;
+                }
 
-            return null;
+                var field = type.GetField(part, BindingFlags.Public | BindingFlags.Instance);
+                if (field != null) {
+                    current = field.GetValue(current);
+                    continue;
+                }
+
+                return null; // Not found
+            }
+
+            return current;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
