@@ -294,7 +294,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                                 Database.NikonCameraSpec.CropSubSamplingClass crop = null;
                                 if (cropSize.FormFlag == NikonMtpFormtypeCode.Range) {
                                     List<ulong> cropList = new List<ulong>();
-                                    for (var i = cropSize.RangeFORM.min; i <= cropSize.RangeFORM.max; i += cropSize.RangeFORM.step) {
+                                    for (var i = cropSize.RangeFORM.Min; i <= cropSize.RangeFORM.Max; i += cropSize.RangeFORM.Step) {
                                         cropList.Add(i);
                                     }
                                     crop = this.cameraSpec.CropSubSampling[cropList.IndexOf(cropSize.CurrentValue)];
