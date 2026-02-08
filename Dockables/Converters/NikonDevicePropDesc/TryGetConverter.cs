@@ -13,7 +13,7 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
             if (value is NEKCS.NikonDevicePropDescDS_Variant desc) {
                 if (desc.TryGetInteger(out var intDesc)) return intDesc;
                 else if (desc.TryGetUInteger(out var uintDesc)) return uintDesc;
-                if (desc.TryGetArrayInteger(out var aintDesc)) return aintDesc;
+                else if (desc.TryGetArrayInteger(out var aintDesc)) return aintDesc;
                 else if (desc.TryGetArrayUInteger(out var auintDesc)) return auintDesc;
                 else if (desc.TryGetString(out var stringDesc)) return stringDesc;
             }
