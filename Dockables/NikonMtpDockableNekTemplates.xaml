@@ -10,7 +10,6 @@
     xmlns:convNikonDevicePropDesc="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc">
 
 
-    <conv:GetFieldConverter x:Key="GetFieldConverter" />
     <conv:GreaterThanConverter x:Key="GreaterThanConverter" />
     <convNikonDevicePropDesc:GetTypeFormConverter x:Key="NikonDevicePropDesc_GetTypeConverter" />
     <convNikonDevicePropDesc:TryGetConverter x:Key="NikonDevicePropDesc_TryGetConverter" />
@@ -19,31 +18,23 @@
     <DataTemplate x:Key="IntegerTemplate"><!--TODO: Write the data-->
         <TextBox>
             <TextBox.IsEnabled>
-                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
-                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
-                    <Binding>
-                        <Binding.Source>0</Binding.Source>
-                    </Binding>
-                </MultiBinding>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </TextBox.IsEnabled>
 
-            <TextBox.Text><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></TextBox.Text>
+            <TextBox.Text>
+                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
+            </TextBox.Text>
         </TextBox>
     </DataTemplate>
 
     <DataTemplate x:Key="StringTemplate"><!--TODO: Write the data-->
         <TextBox>
             <TextBox.IsEnabled>
-                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
-                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
-                    <Binding>
-                        <Binding.Source>0</Binding.Source>
-                    </Binding>
-                </MultiBinding>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </TextBox.IsEnabled>
 
             <TextBox.Text>
-                <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" />
+                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
             </TextBox.Text>
         </TextBox>
     </DataTemplate>
@@ -51,16 +42,11 @@
     <DataTemplate x:Key="ArrayTemplate"><!--TODO: Write the data-->
         <TextBox>
             <TextBox.IsEnabled>
-                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
-                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
-                    <Binding>
-                        <Binding.Source>0</Binding.Source>
-                    </Binding>
-                </MultiBinding>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </TextBox.IsEnabled>
 
             <TextBox.Text>
-                <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" />
+                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
             </TextBox.Text>
         </TextBox>
     </DataTemplate>
@@ -68,30 +54,36 @@
     <DataTemplate x:Key="EnumTemplate"><!--TODO: Write the data-->
         <ComboBox>
             <ComboBox.IsEnabled>
-                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
-                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
-                    <Binding><Binding.Source>0</Binding.Source></Binding>
-                </MultiBinding>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </ComboBox.IsEnabled>
 
-            <ComboBox.SelectedValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></ComboBox.SelectedValue>
-            <ComboBox.ItemsSource><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="EnumFORM" /></ComboBox.ItemsSource>
+            <ComboBox.SelectedValue>
+                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
+            </ComboBox.SelectedValue>
+            <ComboBox.ItemsSource>
+                <Binding Path="EnumFORM" />
+            </ComboBox.ItemsSource>
         </ComboBox>
     </DataTemplate>
 
     <DataTemplate x:Key="RangeTemplate"><!--TODO: Write the data-->
         <ninactrl:IntStepperControl>
             <ninactrl:IntStepperControl.IsEnabled>
-                <MultiBinding Converter="{StaticResource GreaterThanConverter}">
-                    <Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="GetSet" />
-                    <Binding><Binding.Source>0</Binding.Source></Binding>
-                </MultiBinding>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </ninactrl:IntStepperControl.IsEnabled>
 
-            <ninactrl:IntStepperControl.Value><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="CurrentValue" Mode="OneWay" /></ninactrl:IntStepperControl.Value>
-            <ninactrl:IntStepperControl.MinValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.min" /></ninactrl:IntStepperControl.MinValue>
-            <ninactrl:IntStepperControl.MaxValue><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.max" /></ninactrl:IntStepperControl.MaxValue>
-            <ninactrl:IntStepperControl.StepSize><Binding Converter="{StaticResource GetFieldConverter}" ConverterParameter="RangeFORM.step" /></ninactrl:IntStepperControl.StepSize>
+            <ninactrl:IntStepperControl.Value>
+                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
+            </ninactrl:IntStepperControl.Value>
+            <ninactrl:IntStepperControl.MinValue>
+                <Binding Path="RangeFORM.Min" />
+            </ninactrl:IntStepperControl.MinValue>
+            <ninactrl:IntStepperControl.MaxValue>
+                <Binding Path="RangeFORM.Max" />
+            </ninactrl:IntStepperControl.MaxValue>
+            <ninactrl:IntStepperControl.StepSize
+                ><Binding Path="RangeFORM.Step" />
+            </ninactrl:IntStepperControl.StepSize>
         </ninactrl:IntStepperControl>
     </DataTemplate>
 

@@ -1,4 +1,5 @@
-﻿using LucasAlias.NINA.NEK.Drivers;
+﻿using CommunityToolkit.Mvvm.Input;
+using LucasAlias.NINA.NEK.Drivers;
 using NEKCS;
 using NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
@@ -14,6 +15,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace LucasAlias.NINA.NEK.Dockables {
@@ -23,6 +25,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
         private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
         private ObservableCollection<KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>> _deviceProperties;
+        public ICommand UpdateDevicePropertyCommand { get; }
 
         private readonly ICameraMediator cameraMediator;
 
@@ -39,6 +42,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
             this.Title = "Nikon MTP Settings (NEK)";
 
             _deviceProperties = new();
+            UpdateDevicePropertyCommand = new AsyncRelayCommand<KeyValuePair<NikonMtpDevicePropCode, NikonDevicePropDescDS_Variant>>(UpdateDeviceProperty);
         }
 
         public void Dispose() {
@@ -91,5 +95,12 @@ namespace LucasAlias.NINA.NEK.Dockables {
             }
             this._connected = false;
         }
+
+
+        private async Task UpdateDeviceProperty(KeyValuePair<NikonMtpDevicePropCode, NikonDevicePropDescDS_Variant> kvp) {
+            Notification.ShowSuccess("LostFocus");
+        }
+
+
+        }
     }
-}
