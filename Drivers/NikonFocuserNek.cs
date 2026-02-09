@@ -104,7 +104,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     this._isConnected = true;
                     this._ismoving = false;
 
-                    cameraNek.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
+                    cameraNek.camera.OnMtpEvent += camPropEvent;
 
                     if (token.IsCancellationRequested || !this.Connected) {
                         this._isConnected = false;
@@ -133,7 +133,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.focuserMediator.Connected -= OnConnected;
                 RaiseAllPropertiesChanged();
                 if (cameraNek == null || cameraNek.camera == null) return;
-                cameraNek.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
+                cameraNek.camera.OnMtpEvent -= camPropEvent;
             }
 
             public void SetupDialog() => throw new NotImplementedException();

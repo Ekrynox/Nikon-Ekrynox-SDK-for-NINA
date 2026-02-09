@@ -144,8 +144,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
                 //Register the events listeners
-                this.camera.OnMtpEvent += new MtpEventHandler(camPropEvent);
-                this.camera.OnMtpEvent += new MtpEventHandler(camStateEvent);
+                this.camera.OnMtpEvent += camPropEvent;
+                this.camera.OnMtpEvent += camStateEvent;
 
 
                 //Set the default values for the camera
@@ -188,8 +188,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
             if (this.camera != null) {
                 //Unregister the events listeners
-                this.camera.OnMtpEvent -= new MtpEventHandler(camPropEvent);
-                this.camera.OnMtpEvent -= new MtpEventHandler(camStateEvent);
+                this.camera.OnMtpEvent -= camPropEvent;
+                this.camera.OnMtpEvent -= camStateEvent;
 
                 //Stop all liveview and possible exposures
                 this._requestedLiveview = 0;
