@@ -32,8 +32,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            return StringTemplate;
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -43,6 +41,11 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
                             return ArrayTemplate;
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return StringTemplate;
                     }
                 }
                 else if (desc.FormFlag == NEKCS.NikonMtpFormtypeCode.Enum) {
@@ -59,8 +62,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            return EnumTemplate;
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -70,6 +71,11 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
                             throw new NotImplementedException("Enum of array are not implemented in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return EnumTemplate;
                     }
                 }
                 else if (desc.FormFlag == NEKCS.NikonMtpFormtypeCode.Range) {
@@ -86,8 +92,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            throw new NotImplementedException("Range of string are not implemented in NEK at the moment");
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -96,7 +100,12 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt32:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
-                            throw new NotImplementedException("Range of array are not implemented in NEK at the moment");
+                            return StringTemplate; // Range of array is not implemented in NEK at the moment, but we can still show it as a string
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return StringTemplate; // Range of string is not implemented in NEK at the moment, but we can still show it as a string
                     }
                 }
             }
@@ -116,8 +125,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            return StringTemplate;
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -127,6 +134,11 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
                             return ArrayTemplate;
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return StringTemplate;
                     }
                 } else if (desc2.FormFlag == NEKCS.NikonMtpFormtypeCode.Enum) {
                     switch (desc2.DataType) {
@@ -142,8 +154,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            return EnumTemplate;
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -153,6 +163,11 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
                             throw new NotImplementedException("Enum of array are not implemented in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return EnumTemplate;
                     }
                 } else if (desc2.FormFlag == NEKCS.NikonMtpFormtypeCode.Range) {
                     switch (desc2.DataType) {
@@ -168,8 +183,6 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.Int128:
                         case NEKCS.NikonMtpDatatypeCode.UInt128:
                             throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
-                        case NEKCS.NikonMtpDatatypeCode.String:
-                            throw new NotImplementedException("Range of string are not implemented in NEK at the moment");
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt8:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt16:
@@ -178,7 +191,12 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt32:
                         case NEKCS.NikonMtpDatatypeCode.ArrayInt64:
                         case NEKCS.NikonMtpDatatypeCode.ArrayUInt64:
-                            throw new NotImplementedException("Range of array are not implemented in NEK at the moment");
+                            return StringTemplate; // Range of array is not implemented in NEK at the moment, but we can still show it as a string
+                        case NEKCS.NikonMtpDatatypeCode.ArrayInt128:
+                        case NEKCS.NikonMtpDatatypeCode.ArrayUInt128:
+                            throw new NotImplementedException("128-bit integers are not supported in NEK at the moment");
+                        case NEKCS.NikonMtpDatatypeCode.String:
+                            return StringTemplate; // Range of string is not implemented in NEK at the moment, but we can still show it as a string
                     }
                 }
             }
