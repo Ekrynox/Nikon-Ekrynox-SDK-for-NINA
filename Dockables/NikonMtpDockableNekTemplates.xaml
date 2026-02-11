@@ -12,30 +12,19 @@
 
 
     <conv:GreaterThanConverter x:Key="GreaterThanConverter" />
+    <conv:StringConverter x:Key="StringConverter" />
     <convNikonDevicePropDesc:GetTypeFormConverter x:Key="NikonDevicePropDesc_GetTypeConverter" />
     <convNikonDevicePropDesc:TryGetConverter x:Key="NikonDevicePropDesc_TryGetConverter" />
 
 
-    <DataTemplate x:Key="IntegerTemplate"><!--TODO: Write the data & switch to stepper or converter-->
+    <DataTemplate x:Key="IntegerTemplate">
         <TextBox>
             <TextBox.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </TextBox.IsEnabled>
 
             <TextBox.Text>
-                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
-            </TextBox.Text>
-        </TextBox>
-    </DataTemplate>
-
-    <DataTemplate x:Key="StringTemplate">
-        <TextBox>
-            <TextBox.IsEnabled>
-                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </TextBox.IsEnabled>
-
-            <TextBox.Text>
-                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
+                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
             </TextBox.Text>
 
             <i:Interaction.Triggers>
@@ -46,15 +35,39 @@
         </TextBox>
     </DataTemplate>
 
-    <DataTemplate x:Key="ArrayTemplate"><!--TODO: Write the data & switch to array friendly-->
+    <DataTemplate x:Key="StringTemplate">
         <TextBox>
             <TextBox.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </TextBox.IsEnabled>
 
             <TextBox.Text>
-                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
+                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
             </TextBox.Text>
+
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="LostFocus">
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ArrayTemplate">
+        <TextBox>
+            <TextBox.IsEnabled>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
+            </TextBox.IsEnabled>
+
+            <TextBox.Text>
+                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
+            </TextBox.Text>
+
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="LostFocus">
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
         </TextBox>
     </DataTemplate>
 
@@ -65,7 +78,7 @@
             </ComboBox.IsEnabled>
 
             <ComboBox.SelectedValue>
-                <Binding Path="CurrentValue" Mode="TwoWay" />
+                <Binding Path="CurrentValue" />
             </ComboBox.SelectedValue>
             <ComboBox.ItemsSource>
                 <Binding Path="EnumFORM" />
@@ -73,14 +86,14 @@
         </ComboBox>
     </DataTemplate>
 
-    <DataTemplate x:Key="RangeTemplate">
-        <ninactrl:IntStepperControl>
+    <DataTemplate x:Key="RangeTemplate"><!--TODO: Write the data-->
+        <ninactrl:IntStepperControl >
             <ninactrl:IntStepperControl.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </ninactrl:IntStepperControl.IsEnabled>
 
             <ninactrl:IntStepperControl.Value>
-                <Binding Path="CurrentValue" Mode="TwoWay" UpdateSourceTrigger="Explicit" />
+                <Binding Path="CurrentValue" />
             </ninactrl:IntStepperControl.Value>
             <ninactrl:IntStepperControl.MinValue>
                 <Binding Path="RangeFORM.Min" />
