@@ -29,7 +29,7 @@
 
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </TextBox>
@@ -47,7 +47,7 @@
 
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </TextBox>
@@ -65,24 +65,30 @@
 
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </TextBox>
     </DataTemplate>
 
-    <DataTemplate x:Key="EnumTemplate"><!--TODO: Write the data-->
+    <DataTemplate x:Key="EnumTemplate">
         <ComboBox>
             <ComboBox.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </ComboBox.IsEnabled>
 
-            <ComboBox.SelectedValue>
-                <Binding Path="CurrentValue" />
-            </ComboBox.SelectedValue>
+            <ComboBox.SelectedItem>
+                <Binding Path="CurrentValue" Mode="TwoWay" />
+            </ComboBox.SelectedItem>
             <ComboBox.ItemsSource>
                 <Binding Path="EnumFORM" />
             </ComboBox.ItemsSource>
+
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
         </ComboBox>
     </DataTemplate>
 
@@ -119,7 +125,7 @@
 
     <!--  The datatemplate for the dockable is indicated by the fully qualified class name and the postfix _Dockable  -->
     <DataTemplate x:Key="LucasAlias.NINA.NEK.Dockables.NikonMtpDockableNek_Dockable">
-        <Grid Margin="5">
+        <Grid x:Name="DockRoot" Margin="5">
             <Grid Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected with Nikon Ekrynox SDK" />
             </Grid>
