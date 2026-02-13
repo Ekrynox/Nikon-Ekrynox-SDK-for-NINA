@@ -15,6 +15,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
@@ -80,7 +81,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
                     }
 
                     //Copy the Result in the ObservableContainer in the DispatcherThread
-                    System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                    Application.Current.Dispatcher.BeginInvoke(() => {
                         this._deviceProperties = new(newDeviceProps);
                         RaisePropertyChanged(nameof(DeviceProperties));
                         if (Connected) {
@@ -111,7 +112,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
             try {
                 var desc = new KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>(code, camera.GetDevicePropDesc(code));
-                System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                Application.Current.Dispatcher.BeginInvoke(() => {
                     if (!Connected) return;
                     try {
                         var i = this.DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.Key == code).idx;
