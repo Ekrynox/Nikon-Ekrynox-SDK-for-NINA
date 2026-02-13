@@ -34,7 +34,7 @@
             IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
             SelectedItem="{Binding CurrentValue, Mode=TwoWay}" ItemsSource="{Binding EnumFORM}">
             <i:Interaction.Triggers>
-                <i:EventTrigger EventName="SelectionChanged">
+                <i:EventTrigger EventName="DropDownClosed">
                     <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
