@@ -8,8 +8,8 @@
     xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary"
     
     xmlns:conv="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters"
-    xmlns:convNikonDevicePropDesc="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc">
-
+    xmlns:convNikonDevicePropDesc="clr-namespace:LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc"
+    xmlns:ctrl="clr-namespace:LucasAlias.NINA.NEK.Dockables.Controls">
 
     <conv:GreaterThanConverter x:Key="GreaterThanConverter" />
     <conv:StringConverter x:Key="StringConverter" />
@@ -17,52 +17,10 @@
     <convNikonDevicePropDesc:TryGetConverter x:Key="NikonDevicePropDesc_TryGetConverter" />
 
 
-    <DataTemplate x:Key="IntegerTemplate">
-        <TextBox>
-            <TextBox.IsEnabled>
-                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </TextBox.IsEnabled>
-
-            <TextBox.Text>
-                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
-            </TextBox.Text>
-
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </TextBox>
-    </DataTemplate>
-
     <DataTemplate x:Key="StringTemplate">
-        <TextBox>
-            <TextBox.IsEnabled>
-                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </TextBox.IsEnabled>
-
-            <TextBox.Text>
-                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
-            </TextBox.Text>
-
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </TextBox>
-    </DataTemplate>
-
-    <DataTemplate x:Key="ArrayTemplate">
-        <TextBox>
-            <TextBox.IsEnabled>
-                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </TextBox.IsEnabled>
-
-            <TextBox.Text>
-                <Binding Path="CurrentValue" Converter="{StaticResource StringConverter}" Mode="TwoWay" UpdateSourceTrigger="LostFocus" />
-            </TextBox.Text>
-
+        <TextBox
+            IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
+            Text="{Binding CurrentValue, Converter={StaticResource StringConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus}">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="LostFocus">
                     <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
@@ -72,18 +30,9 @@
     </DataTemplate>
 
     <DataTemplate x:Key="EnumTemplate">
-        <ComboBox>
-            <ComboBox.IsEnabled>
-                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </ComboBox.IsEnabled>
-
-            <ComboBox.SelectedItem>
-                <Binding Path="CurrentValue" Mode="TwoWay" />
-            </ComboBox.SelectedItem>
-            <ComboBox.ItemsSource>
-                <Binding Path="EnumFORM" />
-            </ComboBox.ItemsSource>
-
+        <ComboBox
+            IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
+            SelectedItem="{Binding CurrentValue, Mode=TwoWay}" ItemsSource="{Binding EnumFORM}">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="SelectionChanged">
                     <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
@@ -92,35 +41,54 @@
         </ComboBox>
     </DataTemplate>
 
-    <DataTemplate x:Key="RangeTemplate"><!--TODO: Write the data-->
-        <ninactrl:IntStepperControl >
-            <ninactrl:IntStepperControl.IsEnabled>
+    <DataTemplate x:Key="IntRangeTemplate"><!--TODO: Write the data-->
+        <ctrl:Int64StepperControl>
+            <ctrl:Int64StepperControl.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
-            </ninactrl:IntStepperControl.IsEnabled>
+            </ctrl:Int64StepperControl.IsEnabled>
 
-            <ninactrl:IntStepperControl.Value>
+            <ctrl:Int64StepperControl.Value>
                 <Binding Path="CurrentValue" />
-            </ninactrl:IntStepperControl.Value>
-            <ninactrl:IntStepperControl.MinValue>
+            </ctrl:Int64StepperControl.Value>
+            <ctrl:Int64StepperControl.MinValue>
                 <Binding Path="RangeFORM.Min" />
-            </ninactrl:IntStepperControl.MinValue>
-            <ninactrl:IntStepperControl.MaxValue>
+            </ctrl:Int64StepperControl.MinValue>
+            <ctrl:Int64StepperControl.MaxValue>
                 <Binding Path="RangeFORM.Max" />
-            </ninactrl:IntStepperControl.MaxValue>
-            <ninactrl:IntStepperControl.StepSize>
+            </ctrl:Int64StepperControl.MaxValue>
+            <ctrl:Int64StepperControl.StepSize>
                 <Binding Path="RangeFORM.Step" />
-            </ninactrl:IntStepperControl.StepSize>
-        </ninactrl:IntStepperControl>
+            </ctrl:Int64StepperControl.StepSize>
+        </ctrl:Int64StepperControl>
+    </DataTemplate>
+
+    <DataTemplate x:Key="UIntRangeTemplate"><!--TODO: Write the data-->
+        <ctrl:UInt64StepperControl >
+            <ctrl:UInt64StepperControl.IsEnabled>
+                <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
+            </ctrl:UInt64StepperControl.IsEnabled>
+
+            <ctrl:UInt64StepperControl.Value>
+                <Binding Path="CurrentValue" />
+            </ctrl:UInt64StepperControl.Value>
+            <ctrl:UInt64StepperControl.MinValue>
+                <Binding Path="RangeFORM.Min" />
+            </ctrl:UInt64StepperControl.MinValue>
+            <ctrl:UInt64StepperControl.MaxValue>
+                <Binding Path="RangeFORM.Max" />
+            </ctrl:UInt64StepperControl.MaxValue>
+            <ctrl:UInt64StepperControl.StepSize>
+                <Binding Path="RangeFORM.Step" />
+            </ctrl:UInt64StepperControl.StepSize>
+        </ctrl:UInt64StepperControl>
     </DataTemplate>
 
     <convNikonDevicePropDesc:TypeFormTemplateSelector
         x:Key="convNikonDevicePropDesc_TypeFormTemplateSelector"
-        IntegerTemplate="{StaticResource IntegerTemplate}"
         StringTemplate="{StaticResource StringTemplate}"
-        ArrayTemplate="{StaticResource ArrayTemplate}"
         EnumTemplate="{StaticResource EnumTemplate}"
-        RangeTemplate="{StaticResource RangeTemplate}"
-        />
+        IntRangeTemplate="{StaticResource IntRangeTemplate}"
+        UIntRangeTemplate="{StaticResource UIntRangeTemplate}" />
 
 
     <!--  The datatemplate for the dockable is indicated by the fully qualified class name and the postfix _Dockable  -->
