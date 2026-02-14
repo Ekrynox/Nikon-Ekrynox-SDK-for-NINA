@@ -1,4 +1,5 @@
 ﻿using Accord.Imaging;
+using Google.Protobuf.WellKnownTypes;
 using NEKCS;
 using Newtonsoft.Json.Linq;
 using NINA.Core.Enum;
@@ -670,21 +671,22 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public double ExposureTime {
             get {
                 if (Connected) {
-                    if (this._isBulb) {
-                        return this._bulbTime;
-                    } else {
-                        try {
-                            var result = this.camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
-                            if (!result.TryGetUInteger(out var exp)) {
-                                Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
-                                return 0;
-                            }
-                            return exp / 10000.0;
-                        } catch (MtpDeviceException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
-                        } catch (MtpException e) {
-                            Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
+                    try {
+                        var result = this.camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
+                        if (!result.TryGetUInteger(out var exp)) {
+                            Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
+                            return 0;
                         }
+
+                        if (exp == 0xFFFFFFFF) this._isBulb = true;
+                        else this._isBulb = false;
+
+                        if (this._isBulb) return this._bulbTime;
+                        return exp / 10000.0;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error(this.Name, e, "ExposureTime -> Getter", sourceFile);
                     }
                 }
                 return 0;
@@ -710,6 +712,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         try {
                             this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             this._isBulb = false;
+                            this._bulbTime = value;
                             RaisePropertyChanged(nameof(ExposureTime));
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "ExposureTime -> Setter: " + value, sourceFile);
@@ -719,6 +722,42 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             throw;
                         }
                     }
+                }
+            }
+        }
+
+        private UInt32 _oldExposureTime;
+        private double _oldBulbTime;
+        public void BackupExposureTime() {
+            if (Connected) {
+                try {
+                    var result = this.camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
+                    if (!result.TryGetUInt32(out var exp)) {
+                        Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + this.Name, "ExposureTime -> Getter", sourceFile);
+                    }
+
+                    this._oldExposureTime = exp;
+                    this._oldBulbTime = this._bulbTime;
+                } catch (MtpDeviceException e) {
+                    Logger.Error(this.Name, e, "BackupExposureTime", sourceFile);
+                } catch (MtpException e) {
+                    Logger.Error(this.Name, e, "BackupExposureTime", sourceFile);
+                }
+            }
+        }
+        public void RestoreExposureTime() {
+            if (Connected) {
+                try {
+                    this.camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(this._oldExposureTime)));
+                    if (this._oldExposureTime == 0xFFFFFFFF) this._isBulb = true;
+                    else this._isBulb = false;
+                    this._bulbTime = this._oldBulbTime;
+                } catch (MtpDeviceException e) {
+                    Logger.Error(this.Name, e, "RestoreExposureTime: " + this._oldExposureTime, sourceFile);
+                    throw;
+                } catch (MtpException e) {
+                    Logger.Error(this.Name, e, "RestoreExposureTime: " + this._oldExposureTime, sourceFile);
+                    throw;
                 }
             }
         }
@@ -963,7 +1002,6 @@ namespace LucasAlias.NINA.NEK.Drivers {
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
         private CancellationTokenSource bulbToken;
-        private double _oldExposureTime;
 
         private MemoryStream _imageStream;
         private NikonObjectInfoDS _imageInfo;
@@ -995,9 +1033,6 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
                     }
 
-                    //Stop the Liveview started to prevent AF (needed for the D7100, ...)
-                    StopLiveViewBackground();
-
                     //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
 
@@ -1006,9 +1041,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
                     _imageStream = new(result.data);
 
-                    try {
-                        this.ExposureTime = _oldExposureTime;
-                    } catch { }
+                    //Stop the Liveview started to prevent AF (needed for the D7100, ...)
+                    StopLiveViewBackground();
+                    RestoreExposureTime();
 
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
                         dl.SetResult(true);
@@ -1039,7 +1074,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._cameraState = CameraStates.Exposing;
             }
 
-            this._oldExposureTime = this.ExposureTime;
+            BackupExposureTime();
             try {
                 this.ExposureTime = sequence.ExposureTime;
                 if (!this.CanSetBulb && (this.ExposureTime != this._oldExposureTime) && (this.ExposureTime > 1)) {
@@ -1059,7 +1094,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             try {
                 NEKCS.MtpParams param = new();
                 MtpResponse result;
-                if (_isBulb) {
+                if (this._isBulb) {
                     param.addUint32(0xFFFFFFFF);
                     param.addUint32(0x0001);
                     result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, param);
