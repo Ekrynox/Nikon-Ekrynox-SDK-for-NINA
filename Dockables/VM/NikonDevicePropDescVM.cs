@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -52,15 +53,34 @@ namespace LucasAlias.NINA.NEK.Dockables.VM {
             this._devicePropDescDS = devicePropDescDS;
         }
 
+        private static bool AreEqual(T a, T b) {
+            if (a is null && b is null) return true;
+            if (a is null || b is null) return false;
+
+            if (a is Array aa && b is Array bb) {
+                if (aa.Length != bb.Length) return false;
+
+                for (int i = 0; i < aa.Length; i++) {
+                    if (!Equals(aa.GetValue(i), bb.GetValue(i))) return false;
+                }
+
+                return true;
+            }
+
+            return EqualityComparer<T>.Default.Equals(a, b);
+        }
+
+
         public NEKCS.NikonMtpDevicePropCode DevicePropertyCode { get => _devicePropDescDS.DevicePropertyCode; }
         public NEKCS.NikonMtpDatatypeCode DataType { get => _devicePropDescDS.DataType; }
         public Byte GetSet { get => _devicePropDescDS.GetSet; }
         public T FactoryDefaultValue { get => _devicePropDescDS.FactoryDefaultValue; }
-        public T CurrentValue {
+        public T CurrentValue { //TODO: add enum and range validation
             get => _devicePropDescDS.CurrentValue;
             set {
-                _devicePropDescDS.CurrentValue = value;
+                if (AreEqual(_devicePropDescDS.CurrentValue, value)) return;
 
+                _devicePropDescDS.CurrentValue = value;
                 RaisePropertyChanged();
                 ValueChanged?.Invoke(this);
             }

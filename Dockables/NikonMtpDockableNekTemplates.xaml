@@ -37,7 +37,7 @@
             </ctrl:Int64StepperControl.IsEnabled>
 
             <ctrl:Int64StepperControl.Value>
-                <Binding Path="CurrentValue" />
+                <Binding Path="CurrentValue" Mode="TwoWay" />
             </ctrl:Int64StepperControl.Value>
             <ctrl:Int64StepperControl.MinValue>
                 <Binding Path="RangeFORM.Min" />
@@ -58,7 +58,7 @@
             </ctrl:UInt64StepperControl.IsEnabled>
 
             <ctrl:UInt64StepperControl.Value>
-                <Binding Path="CurrentValue" />
+                <Binding Path="CurrentValue" Mode="TwoWay" />
             </ctrl:UInt64StepperControl.Value>
             <ctrl:UInt64StepperControl.MinValue>
                 <Binding Path="RangeFORM.Min" />
