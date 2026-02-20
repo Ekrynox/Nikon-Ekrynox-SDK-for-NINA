@@ -110,7 +110,10 @@ namespace LucasAlias.NINA.NEK.Dockables {
             if (ev.eventCode != NEKCS.NikonMtpEventCode.DevicePropChanged) return;
 
             var code = (NEKCS.NikonMtpDevicePropCode)ev.eventParams[0];
-
+            UpdateDeviceProperty(code);
+        }
+        
+        private void UpdateDeviceProperty(NEKCS.NikonMtpDevicePropCode code) {
             try {
                 var desc = INikonDevicePropDescVM.Create(this.cameraNek.camera.GetDevicePropDesc(code));
                 desc.ValueChanged += SetDeviceProperty;
@@ -119,8 +122,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
                     try {
                         var i = this.DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.DevicePropertyCode == code).idx;
                         this._deviceProperties[i] = desc;
-                    }
-                    catch (InvalidOperationException) {
+                    } catch (InvalidOperationException) {
                         this._deviceProperties.Add(desc);
                     }
                     RaisePropertyChanged(nameof(DeviceProperties));
@@ -130,8 +132,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
             } catch (NEKCS.MtpException e) {
                 Logger.Error("Error while trying to get Device Property Description: " + code.ToString(), e, sourceFile);
             }
-        }
-
+        } 
 
         private async void SetDeviceProperty(INikonDevicePropDescVM desc) {
             if (!Connected) return;
@@ -140,9 +141,11 @@ namespace LucasAlias.NINA.NEK.Dockables {
                 this.cameraNek.camera.SetDevicePropValueTypesafe(desc.DevicePropertyCode, desc.CurrentValueVariant);
             } catch (NEKCS.MtpDeviceException e) {
                 Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValueUntyped.ToString()}'" , e, sourceFile);
+                UpdateDeviceProperty(desc.DevicePropertyCode);
             } catch (NEKCS.MtpException e) {
                 Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValueUntyped.ToString()}'", e, sourceFile);
                 Notification.ShowError($"Failed to set {desc.DevicePropertyCode.ToString()} to: '{desc.CurrentValueUntyped.ToString()}'");
+                UpdateDeviceProperty(desc.DevicePropertyCode);
             }
         }
 
