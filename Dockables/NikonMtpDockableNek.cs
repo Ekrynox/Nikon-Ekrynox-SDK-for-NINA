@@ -23,7 +23,7 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace LucasAlias.NINA.NEK.Dockables {
     [Export(typeof(IDockableVM))]
-    class NikonMtpDockableNek : DockableVM, ICameraConsumer {
+    class NikonMtpDockableNek : DockableVM {
         public const string sourceFile = @"NEKDockables\NikonMtpDockableNek.cs";
 
         private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
@@ -37,17 +37,15 @@ namespace LucasAlias.NINA.NEK.Dockables {
         [ImportingConstructor]
         public NikonMtpDockableNek(IProfileService profileService, ICameraMediator cameraMediator) : base(profileService) {
             this.cameraMediator = cameraMediator;
-            this.cameraMediator.RegisterConsumer(this);
             this.cameraMediator.Connected += CameraConnected;
             this.cameraMediator.Disconnected += CameraDisconnected;
 
             this.Title = "Nikon MTP Settings (NEK)";
 
-            _deviceProperties = new();
+            this._deviceProperties = new();
         }
 
         public void Dispose() {
-            this.cameraMediator.RemoveConsumer(this);
             this.cameraMediator.Connected -= CameraConnected;
             this.cameraMediator.Disconnected -= CameraDisconnected;
         }
@@ -56,7 +54,6 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
         public Boolean Connected { get => _connected && cameraNek != null; }
         public ObservableCollection<INikonDevicePropDescVM> DeviceProperties { get => _deviceProperties; }
-        public void UpdateDeviceInfo(CameraInfo deviceInfo) {}
 
         private async Task CameraConnected(object arg1, EventArgs arg2) {
             if (this.cameraNek != null) {
