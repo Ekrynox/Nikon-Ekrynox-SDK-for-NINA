@@ -46,22 +46,14 @@
                                 Stretch="Uniform"
                                 UseLayoutRounding="True" />
                         </Button>
-                        <ContentControl
-                            Name="PART_ContentControl"
-                            Grid.Column="1"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Center"
-                            Content="{Binding InnerContent, RelativeSource={RelativeSource TemplatedParent}}"
-                            Visibility="{Binding InnerContent, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullToVisibilityCollapsedConverter}}" />
                         <ninactrl:UnitTextBox
                             x:Name="PART_Textbox"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            Text="{Binding Value, StringFormat=\{0:0.00\}, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource TemplatedParent}}"
+                            Text="{Binding Value, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource TemplatedParent}}"
                             TextAlignment="Center"
-                            Unit="{Binding Unit, RelativeSource={RelativeSource TemplatedParent}}"
-                            Visibility="{Binding InnerContent, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InverseNullToVisibilityCollapsedConverter}}" />
+                            Unit="{Binding Unit, RelativeSource={RelativeSource TemplatedParent}}" />
                         <Button
                             Name="PART_Increment"
                             Grid.Column="2"

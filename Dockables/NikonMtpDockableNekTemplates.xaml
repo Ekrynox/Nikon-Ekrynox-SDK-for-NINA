@@ -20,7 +20,7 @@
     <DataTemplate x:Key="StringTemplate">
         <TextBox
             IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
-            Text="{Binding CurrentValue, Converter={StaticResource StringConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus}">
+            Text="{Binding CurrentValue, Converter={StaticResource StringConverter}, Mode=TwoWay}">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="LostFocus">
                     <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
@@ -63,7 +63,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="UIntRangeTemplate"><!--TODO: Write the data-->
-        <ctrl:UInt64StepperControl >
+        <ctrl:UInt64StepperControl>
             <ctrl:UInt64StepperControl.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
             </ctrl:UInt64StepperControl.IsEnabled>
