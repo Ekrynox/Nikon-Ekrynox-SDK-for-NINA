@@ -98,10 +98,14 @@ namespace LucasAlias.NINA.NEK.Dockables {
                 if (this.cameraNek != null) {
                     this.cameraNek.camera.OnMtpEvent -= UpdateDeviceProperties;
                 }
-                this._deviceProperties.Clear();
+                //Notify UI immediately
+                this._connected = false;
+                RaiseAllPropertiesChanged();
+
+                await Application.Current.Dispatcher.BeginInvoke(() => {
+                    this._deviceProperties.Clear();
+                });
             }
-            this._connected = false;
-            RaiseAllPropertiesChanged();
         }
 
 

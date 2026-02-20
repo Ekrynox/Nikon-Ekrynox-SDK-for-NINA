@@ -119,7 +119,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
 
             private async Task OnConnected(object arg1, EventArgs args) {
-                if (focuserMediator.GetDevice() == this) {
+                this.focuserMediator.Connected -= OnConnected;
+                if (focuserMediator.GetDevice() == this && Connected) {
                     await Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         StartCalibration.Execute(null);
                     }));
@@ -130,10 +131,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if (!_isConnected) return;
                 Logger.Info("Start diconnecting from the Lens Focuser for the Camera.", "Diconnect", sourceFile);
                 _isConnected = false;
-                this.focuserMediator.Connected -= OnConnected;
                 RaiseAllPropertiesChanged();
-                if (cameraNek == null || cameraNek.camera == null) return;
-                cameraNek.camera.OnMtpEvent -= camPropEvent;
+
+                if (cameraNek != null || cameraNek.camera != null) cameraNek.camera.OnMtpEvent -= camPropEvent;
             }
 
             public void SetupDialog() => throw new NotImplementedException();

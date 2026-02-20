@@ -192,24 +192,26 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.camera.OnMtpEvent -= camPropEvent;
                 this.camera.OnMtpEvent -= camStateEvent;
 
-                //Stop all liveview and possible exposures
-                this._requestedLiveview = 0;
-                this._liveviewEnabled = false;
-                this.StopLiveView();
-                this.AbortExposure();
+                if (Connected) {
+                    //Stop all liveview and possible exposures
+                    this._requestedLiveview = 0;
+                    this._liveviewEnabled = false;
+                    this.StopLiveView();
+                    this.AbortExposure();
 
-                this.camera.DeviceReadyWhileNot(NikonMtpResponseCode.OK);
+                    this.camera.DeviceReadyWhileNot(NikonMtpResponseCode.OK);
 
-                //Switch back to CameraMode
-                if (this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
-                    try {
-                        MtpParams param = new();
-                        param.addUint32(0);
-                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
-                    } catch (MtpDeviceException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    //Switch back to CameraMode
+                    if (this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
+                        try {
+                            MtpParams param = new();
+                            param.addUint32(0);
+                            this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
+                        } catch (MtpDeviceException e) {
+                            Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                        } catch (MtpException e) {
+                            Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                        }
                     }
                 }
 
