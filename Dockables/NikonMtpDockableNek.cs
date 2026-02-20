@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using LucasAlias.NINA.NEK.Dockables.VM;
 using LucasAlias.NINA.NEK.Drivers;
 using NEKCS;
 using NINA.Core.Utility;
@@ -26,8 +27,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
         public const string sourceFile = @"NEKDockables\NikonMtpDockableNek.cs";
 
         private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
-        private ObservableCollection<KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>> _deviceProperties;
-        public ICommand SetDevicePropertyCommand { get; }
+        private ObservableCollection<INikonDevicePropDescVM> _deviceProperties;
 
         private readonly ICameraMediator cameraMediator;
 
@@ -44,7 +44,6 @@ namespace LucasAlias.NINA.NEK.Dockables {
             this.Title = "Nikon MTP Settings (NEK)";
 
             _deviceProperties = new();
-            SetDevicePropertyCommand = new AsyncRelayCommand<object>(SetDeviceProperty);
         }
 
         public void Dispose() {
@@ -56,7 +55,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
 
         public Boolean Connected { get => _connected && cameraNek != null; }
-        public ObservableCollection<KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>> DeviceProperties { get => _deviceProperties; }
+        public ObservableCollection<INikonDevicePropDescVM> DeviceProperties { get => _deviceProperties; }
         public void UpdateDeviceInfo(CameraInfo deviceInfo) {}
 
         private async Task CameraConnected(object arg1, EventArgs arg2) {
@@ -67,12 +66,14 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
                 //Fill the array in background
                 _ = Task.Run(() => {
-                    var newDeviceProps = new List<KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>>();
+                    var newDeviceProps = new List<INikonDevicePropDescVM>();
 
                     foreach (var k in this.cameraNek.cameraInfo.DevicePropertiesSupported) {
                         if (this.cameraNek == null) return;
                         try {
-                            newDeviceProps.Add(new KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>(k, this.cameraNek.camera.GetDevicePropDesc(k)));
+                            var desc = INikonDevicePropDescVM.Create(this.cameraNek.camera.GetDevicePropDesc(k));
+                            desc.ValueChanged += SetDeviceProperty;
+                            newDeviceProps.Add(desc);
                         } catch (NEKCS.MtpDeviceException e) {
                             Logger.Error("Error while trying to get Device Property Description: " + k.ToString(), e, sourceFile);
                         } catch (NEKCS.MtpException e) {
@@ -111,11 +112,12 @@ namespace LucasAlias.NINA.NEK.Dockables {
             var code = (NEKCS.NikonMtpDevicePropCode)ev.eventParams[0];
 
             try {
-                var desc = new KeyValuePair<NEKCS.NikonMtpDevicePropCode, NEKCS.NikonDevicePropDescDS_Variant>(code, camera.GetDevicePropDesc(code));
+                var desc = INikonDevicePropDescVM.Create(this.cameraNek.camera.GetDevicePropDesc(code));
+                desc.ValueChanged += SetDeviceProperty;
                 Application.Current.Dispatcher.BeginInvoke(() => {
                     if (!Connected) return;
                     try {
-                        var i = this.DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.Key == code).idx;
+                        var i = this.DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.DevicePropertyCode == code).idx;
                         this._deviceProperties[i] = desc;
                     }
                     catch (InvalidOperationException) {
@@ -131,23 +133,18 @@ namespace LucasAlias.NINA.NEK.Dockables {
         }
 
 
-        private async Task SetDeviceProperty(object devicePropDesc) {
+        private async void SetDeviceProperty(INikonDevicePropDescVM desc) {
             if (!Connected) return;
 
-            if (devicePropDesc.GetType().IsGenericType && devicePropDesc.GetType().GetGenericTypeDefinition() == typeof(NEKCS.NikonDevicePropDescDS<>)) {
-                dynamic desc = devicePropDesc;
-
-                try {
-                    this.cameraNek.camera.SetDevicePropValueTypesafe(desc.DevicePropertyCode, new MtpDatatypeVariant(desc.CurrentValue));
-                } catch (NEKCS.MtpDeviceException e) {
-                    Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValue.ToString()}'" , e, sourceFile);
-                } catch (NEKCS.MtpException e) {
-                    Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValue.ToString()}'", e, sourceFile);
-                    Notification.ShowError($"Failed to set {desc.DevicePropertyCode.ToString()} to: '{desc.CurrentValue.ToString()}'");
-                }
+            try {
+                this.cameraNek.camera.SetDevicePropValueTypesafe(desc.DevicePropertyCode, desc.CurrentValueVariant);
+            } catch (NEKCS.MtpDeviceException e) {
+                Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValueUntyped.ToString()}'" , e, sourceFile);
+            } catch (NEKCS.MtpException e) {
+                Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValueUntyped.ToString()}'", e, sourceFile);
+                Notification.ShowError($"Failed to set {desc.DevicePropertyCode.ToString()} to: '{desc.CurrentValueUntyped.ToString()}'");
             }
         }
-
 
     }
 }

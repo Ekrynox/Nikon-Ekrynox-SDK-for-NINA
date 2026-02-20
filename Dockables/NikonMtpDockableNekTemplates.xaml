@@ -12,20 +12,14 @@
     xmlns:ctrl="clr-namespace:LucasAlias.NINA.NEK.Dockables.Controls">
 
     <conv:GreaterThanConverter x:Key="GreaterThanConverter" />
-    <conv:StringConverter x:Key="StringConverter" />
+    <conv:StringConverter x:Key="StringConverter" x:Shared="False" />
     <convNikonDevicePropDesc:GetTypeFormConverter x:Key="NikonDevicePropDesc_GetTypeConverter" />
-    <convNikonDevicePropDesc:TryGetConverter x:Key="NikonDevicePropDesc_TryGetConverter" />
 
 
     <DataTemplate x:Key="StringTemplate">
         <TextBox
             IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
             Text="{Binding CurrentValue, Converter={StaticResource StringConverter}, Mode=TwoWay}">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="LostFocus">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
         </TextBox>
     </DataTemplate>
 
@@ -33,15 +27,10 @@
         <ComboBox
             IsEnabled="{Binding GetSet, Converter={StaticResource GreaterThanConverter}, ConverterParameter=0}"
             SelectedItem="{Binding CurrentValue, Mode=TwoWay}" ItemsSource="{Binding EnumFORM}">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="DropDownClosed">
-                    <i:InvokeCommandAction Command="{Binding DataContext.SetDevicePropertyCommand, ElementName=DockRoot}" CommandParameter="{Binding}" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
         </ComboBox>
     </DataTemplate>
 
-    <DataTemplate x:Key="IntRangeTemplate"><!--TODO: Write the data-->
+    <DataTemplate x:Key="IntRangeTemplate">
         <ctrl:Int64StepperControl>
             <ctrl:Int64StepperControl.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
@@ -62,7 +51,7 @@
         </ctrl:Int64StepperControl>
     </DataTemplate>
 
-    <DataTemplate x:Key="UIntRangeTemplate"><!--TODO: Write the data-->
+    <DataTemplate x:Key="UIntRangeTemplate">
         <ctrl:UInt64StepperControl>
             <ctrl:UInt64StepperControl.IsEnabled>
                 <Binding Path="GetSet" Converter="{StaticResource GreaterThanConverter}" ConverterParameter="0" />
@@ -111,11 +100,11 @@
                                         <ColumnDefinition Width="*" SharedSizeGroup="Col3" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Key, StringFormat=0x{0:X}}" FontWeight="Light" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Value, Converter={StaticResource NikonDevicePropDesc_GetTypeConverter}}" />
+                                    <TextBlock Grid.Column="0" Text="{Binding DevicePropertyCode}" FontWeight="Bold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding DevicePropertyCode, StringFormat=0x{0:X}}" FontWeight="Light" />
+                                    <TextBlock Grid.Column="2" Text="{Binding ., Converter={StaticResource NikonDevicePropDesc_GetTypeConverter}}" />
 
-                                    <ContentControl Grid.Column="3" Content="{Binding Value, Converter={StaticResource NikonDevicePropDesc_TryGetConverter}}" ContentTemplateSelector="{StaticResource convNikonDevicePropDesc_TypeFormTemplateSelector}" />
+                                    <ContentControl Grid.Column="3" Content="{Binding .}" ContentTemplateSelector="{StaticResource convNikonDevicePropDesc_TypeFormTemplateSelector}" />
 
                                 </Grid>
                             </DataTemplate>

@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.WellKnownTypes;
+using LucasAlias.NINA.NEK.Dockables.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
-{
+namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc {
     class TypeFormTemplateSelector : DataTemplateSelector {
         public DataTemplate StringTemplate { get; set; }
         public DataTemplate EnumTemplate { get; set; }
@@ -16,8 +16,9 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
         public DataTemplate UIntRangeTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-            if (item.GetType().IsGenericType && item.GetType().GetGenericTypeDefinition() == typeof(NEKCS.NikonDevicePropDescDS<>)) {
-                dynamic desc = item;
+            if (item == null) return null;
+
+            if (item is INikonDevicePropDescVM desc) {
                 if (desc.FormFlag == NEKCS.NikonMtpFormtypeCode.Empty) {
                     switch (desc.DataType) {
                         case NEKCS.NikonMtpDatatypeCode.Int8:
@@ -109,7 +110,7 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters.NikonDevicePropDesc
                 }
             }
 
-            return StringTemplate; // Fallback
+            return null;
         }
     }
 }

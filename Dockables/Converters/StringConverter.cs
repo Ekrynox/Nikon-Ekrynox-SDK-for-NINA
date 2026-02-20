@@ -69,21 +69,21 @@ namespace LucasAlias.NINA.NEK.Dockables.Converters
             } else if (targetType == typeof(UInt64)) {
                 return UInt64.Parse(value as String);
             } else if (targetType == typeof(SByte[])) {
-                return JsonSerializer.Deserialize<SByte[]>(value as String);
+                return JsonSerializer.Deserialize<List<SByte>>(value as String)?.ToArray();
             } else if (targetType == typeof(Byte[])) {
-                return JsonSerializer.Deserialize<Byte[]>(value as String);
+                return JsonSerializer.Deserialize<List<Byte>>(value as String)?.ToArray();
             } else if (targetType == typeof(Int16[])) {
-                return JsonSerializer.Deserialize<Int16[]>(value as String);
+                return JsonSerializer.Deserialize<List<Int16>>(value as String)?.ToArray();
             } else if (targetType == typeof(UInt16[])) {
-                return JsonSerializer.Deserialize<UInt16[]>(value as String);
+                return JsonSerializer.Deserialize<List<UInt16>>(value as String)?.ToArray();
             } else if (targetType == typeof(Int32[])) {
-                return JsonSerializer.Deserialize<Int32[]>(value as String);
+                return JsonSerializer.Deserialize<List<Int32>>(value as String)?.ToArray();
             } else if (targetType == typeof(UInt32[])) {
-                return JsonSerializer.Deserialize<UInt32[]>(value as String);
+                return JsonSerializer.Deserialize<List<UInt32>>(value as String)?.ToArray();
             } else if (targetType == typeof(Int64[])) {
-                return JsonSerializer.Deserialize<Int64[]>(value as String);
+                return JsonSerializer.Deserialize<List<Int64>>(value as String)?.ToArray();
             } else if (targetType == typeof(UInt64[])) {
-                return JsonSerializer.Deserialize<UInt64[]>(value as String);
+                return JsonSerializer.Deserialize<List<UInt64>>(value as String)?.ToArray();
             } else if (targetType == typeof(String)) {
                 return value as String;
             }
