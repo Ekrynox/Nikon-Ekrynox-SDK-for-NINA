@@ -45,7 +45,7 @@ namespace nek {
 			Association = 0x3001,
 			Script = 0x3002,
 			WAV = 0x3008,
-			NEF = 0x3800,
+			UndefinedImage = 0x3800,
 			JPEG = 0x3801,
 			JFIF = 0x3808,
 			MOV = 0x300D,

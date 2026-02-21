@@ -27,6 +27,32 @@ namespace NEKCS {
 	};
 
 
+	public ref struct NikonObjectInfoDS {
+		System::UInt32 StorageID = 0;
+		NikonMtpObjectFormatCode ObjectFormat = (NikonMtpObjectFormatCode)0;
+		System::UInt16 ProtectionStatus = 0;
+		System::UInt32 ObjectCompressedSize = 0;
+		NikonMtpObjectFormatCode ThumbFormat = (NikonMtpObjectFormatCode)0;
+		System::UInt32 ThumbCompressedSize = 0;
+		System::UInt32 ThumbPixWidth = 0;
+		System::UInt32 ThumbPixHeight = 0;
+		System::UInt32 ImagePixWidth = 0;
+		System::UInt32 ImagePixHeight = 0;
+		System::UInt32 ImageBitDepth = 0;
+		System::UInt32 ParentObject = 0;
+		System::UInt16 AssociationType = 0;
+		System::UInt32 AssociationDesc = 0;
+		System::UInt32 SequenceNumber = 0;
+		System::String^ Filename = "";
+		System::String^ CaptureDate = "";
+		System::String^ ModificationDate = "";
+		System::Byte Keywords = 0;
+
+		NikonObjectInfoDS();
+		NikonObjectInfoDS(const nek::mtp::MtpObjectInfoDS& native);
+	};
+
+
 
 	public ref class MtpDatatypeVariant {
 	private:

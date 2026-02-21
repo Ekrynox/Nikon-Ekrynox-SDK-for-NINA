@@ -39,7 +39,7 @@ size_t NikonCamera::countNikonCameras(bool onlyOn) {
 
 
 NikonCamera::NikonCamera(std::wstring devicePath, uint8_t additionalThread) : nek::mtp::MtpDevice::MtpDevice() {
-	devicePath_ = (PWSTR)devicePath.c_str();
+	devicePath_ = devicePath;
 
 	startThreads();
 }
@@ -390,4 +390,48 @@ void NikonCamera::SetDevicePropValue(uint32_t devicePropCode, mtp::MtpDatatypeVa
 	mutexDeviceInfo_.unlock();
 
 	return mtp::MtpDevice::SetDevicePropValue(devicePropCode, data);
+}
+
+
+uint32_t NikonCamera::DeviceReady() {
+	mtp::MtpParams params;
+	return SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+}
+uint32_t NikonCamera::DeviceReady(uint32_t whileResponseCode, size_t sleepTimems) {
+	mtp::MtpParams params;
+	uint32_t responseCode;
+	do {
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	} while (responseCode == whileResponseCode);
+	return responseCode;
+}
+
+
+uint32_t NikonCamera::StartLiveView(bool wait, size_t sleepTimems) {
+	auto lvstate = GetDevicePropValue(NikonMtpDevicePropCode::RemoteLiveViewStatus);
+	if (std::get<uint8_t>(lvstate) == 1) {
+		return NikonMtpResponseCode::OK; //Liveview already On
+	}
+
+	mtp::MtpParams params = mtp::MtpParams();
+	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::StartLiveView, params);
+	if (response.responseCode != NikonMtpResponseCode::OK) {
+		throw new mtp::MtpException(NikonMtpOperationCode::StartLiveView, response.responseCode);
+	}
+
+	if (!wait) return response.responseCode;
+	return DeviceReady(NikonMtpResponseCode::Device_Busy, sleepTimems);
+}
+void NikonCamera::EndLiveView() {
+	auto lvstate = GetDevicePropValue(NikonMtpDevicePropCode::RemoteLiveViewStatus);
+	if (std::get<uint8_t>(lvstate) != 1) {
+		return; //Liveview is not On
+	}
+
+	mtp::MtpParams params = mtp::MtpParams();
+	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::EndLiveView, params);
+	if (response.responseCode != NikonMtpResponseCode::OK) {
+		throw new mtp::MtpException(NikonMtpOperationCode::EndLiveView, response.responseCode);
+	}
 }

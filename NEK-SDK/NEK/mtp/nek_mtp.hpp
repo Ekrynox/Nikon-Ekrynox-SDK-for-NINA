@@ -37,7 +37,7 @@ namespace nek::mtp {
 
 		NEK_API std::map<std::wstring, MtpDeviceInfoDS> listMtpDevices();
 		NEK_API size_t countMtpDevices();
-		NEK_API bool isDeviceConnected(const std::wstring &devicePath);
+		NEK_API bool isDeviceConnected(std::wstring devicePath);
 
 	private:
 		MtpManager& operator= (const MtpManager&) = delete;
@@ -54,7 +54,7 @@ namespace nek::mtp {
 
 	class MtpDevice : protected nek::utils::MultiThreadedClass {
 	public:
-		NEK_API MtpDevice(const PWSTR devicePath, uint8_t additionalThreadsNb = 0);
+		NEK_API MtpDevice(std::wstring devicePath, uint8_t additionalThreadsNb = 0);
 		NEK_API ~MtpDevice();
 
 		NEK_API bool isConnected() const;
@@ -69,6 +69,8 @@ namespace nek::mtp {
 
 
 		NEK_API MtpDeviceInfoDS GetDeviceInfo();
+
+		NEK_API MtpObjectInfoDS GetObjectInfo(uint32_t handle);
 
 		NEK_API MtpDevicePropDescDS GetDevicePropDesc(uint16_t devicePropCode);
 		NEK_API MtpDatatypeVariant GetDevicePropValue(uint16_t devicePropCode);
@@ -88,7 +90,7 @@ namespace nek::mtp {
 		void initDevice();
 		virtual void startThreads();
 
-		PWSTR devicePath_;
+		std::wstring devicePath_;
 		CComPtr<IPortableDeviceValues> deviceClient_;
 		CComPtr<IPortableDevice> device_;
 		std::atomic<bool> connected_;
