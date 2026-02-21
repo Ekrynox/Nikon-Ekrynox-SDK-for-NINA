@@ -631,7 +631,7 @@ MtpResponse MtpDevice::SendCommandAndWrite_(CComPtr<IPortableDevice> device, uin
 
 
 bool MtpDevice::isConnected() const { 
-	return connected_ && running_;
+	return (this != nullptr) && connected_ && running_;
 }
 
 void MtpDevice::initCom() {
@@ -989,221 +989,222 @@ MtpDevicePropDescDSV MtpDevice::GetDevicePropDesc_(MtpResponse& response) {
 
 	//FactoryDefault & CurrentValue
 	switch (result.DataType) {
-	case MtpDatatypeCode::Int8:
-		result.FactoryDefaultValue = *(int8_t*)(response.data.data() + offset);
-		offset += sizeof(int8_t);
-		result.CurrentValue = *(int8_t*)(response.data.data() + offset);
-		offset += sizeof(int8_t);
-		break;
-	case MtpDatatypeCode::UInt8:
-		result.FactoryDefaultValue = *(uint8_t*)(response.data.data() + offset);
-		offset += sizeof(uint8_t);
-		result.CurrentValue = *(uint8_t*)(response.data.data() + offset);
-		offset += sizeof(uint8_t);
-		break;
-	case MtpDatatypeCode::Int16:
-		result.FactoryDefaultValue = *(int16_t*)(response.data.data() + offset);
-		offset += sizeof(int16_t);
-		result.CurrentValue = *(int16_t*)(response.data.data() + offset);
-		offset += sizeof(int16_t);
-		break;
-	case MtpDatatypeCode::UInt16:
-		result.FactoryDefaultValue = *(uint16_t*)(response.data.data() + offset);
-		offset += sizeof(uint16_t);
-		result.CurrentValue = *(uint16_t*)(response.data.data() + offset);
-		offset += sizeof(uint16_t);
-		break;
-	case MtpDatatypeCode::Int32:
-		result.FactoryDefaultValue = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		result.CurrentValue = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		break;
-	case MtpDatatypeCode::UInt32:
-		result.FactoryDefaultValue = *(uint32_t*)(response.data.data() + offset);
-		offset += sizeof(uint32_t);
-		result.CurrentValue = *(uint32_t*)(response.data.data() + offset);
-		offset += sizeof(uint32_t);
-		break;
-	case MtpDatatypeCode::Int64:
-		result.FactoryDefaultValue = *(int64_t*)(response.data.data() + offset);
-		offset += sizeof(int64_t);
-		result.CurrentValue = *(int64_t*)(response.data.data() + offset);
-		offset += sizeof(int64_t);
-		break;
-	case MtpDatatypeCode::UInt64:
-		result.FactoryDefaultValue = *(uint64_t*)(response.data.data() + offset);
-		offset += sizeof(uint64_t);
-		result.CurrentValue = *(uint64_t*)(response.data.data() + offset);
-		offset += sizeof(uint64_t);
-		break;
-	case MtpDatatypeCode::Int128:
-		throw std::runtime_error("int128 Not Implemented");
-		break;
-	case MtpDatatypeCode::UInt128:
-		throw std::runtime_error("uint128 Not Implemented");
-		break;
-	case MtpDatatypeCode::ArrayInt8:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<int8_t>(len);
-		std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
-		offset += sizeof(int8_t) * len;
-		result.FactoryDefaultValue = std::move(data);
+		case MtpDatatypeCode::Int8:
+			result.FactoryDefaultValue = *(int8_t*)(response.data.data() + offset);
+			offset += sizeof(int8_t);
+			result.CurrentValue = *(int8_t*)(response.data.data() + offset);
+			offset += sizeof(int8_t);
+			break;
+		case MtpDatatypeCode::UInt8:
+			result.FactoryDefaultValue = *(uint8_t*)(response.data.data() + offset);
+			offset += sizeof(uint8_t);
+			result.CurrentValue = *(uint8_t*)(response.data.data() + offset);
+			offset += sizeof(uint8_t);
+			break;
+		case MtpDatatypeCode::Int16:
+			result.FactoryDefaultValue = *(int16_t*)(response.data.data() + offset);
+			offset += sizeof(int16_t);
+			result.CurrentValue = *(int16_t*)(response.data.data() + offset);
+			offset += sizeof(int16_t);
+			break;
+		case MtpDatatypeCode::UInt16:
+			result.FactoryDefaultValue = *(uint16_t*)(response.data.data() + offset);
+			offset += sizeof(uint16_t);
+			result.CurrentValue = *(uint16_t*)(response.data.data() + offset);
+			offset += sizeof(uint16_t);
+			break;
+		case MtpDatatypeCode::Int32:
+			result.FactoryDefaultValue = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			result.CurrentValue = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			break;
+		case MtpDatatypeCode::UInt32:
+			result.FactoryDefaultValue = *(uint32_t*)(response.data.data() + offset);
+			offset += sizeof(uint32_t);
+			result.CurrentValue = *(uint32_t*)(response.data.data() + offset);
+			offset += sizeof(uint32_t);
+			break;
+		case MtpDatatypeCode::Int64:
+			result.FactoryDefaultValue = *(int64_t*)(response.data.data() + offset);
+			offset += sizeof(int64_t);
+			result.CurrentValue = *(int64_t*)(response.data.data() + offset);
+			offset += sizeof(int64_t);
+			break;
+		case MtpDatatypeCode::UInt64:
+			result.FactoryDefaultValue = *(uint64_t*)(response.data.data() + offset);
+			offset += sizeof(uint64_t);
+			result.CurrentValue = *(uint64_t*)(response.data.data() + offset);
+			offset += sizeof(uint64_t);
+			break;
+		case MtpDatatypeCode::Int128:
+			throw std::runtime_error("int128 Not Implemented");
+			break;
+		case MtpDatatypeCode::UInt128:
+			throw std::runtime_error("uint128 Not Implemented");
+			break;
+		case MtpDatatypeCode::ArrayInt8:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<int8_t>(len);
+			std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
+			offset += sizeof(int8_t) * len;
+			result.FactoryDefaultValue = std::move(data);
 
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<int8_t>(len);
-		std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
-		offset += sizeof(int8_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt8:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<uint8_t>(len);
-		std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
-		offset += sizeof(uint8_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<uint8_t>(len);
-		std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
-		offset += sizeof(uint8_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt16:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<int16_t>(len);
-		std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
-		offset += sizeof(int16_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<int16_t>(len);
-		std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
-		offset += sizeof(int16_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt16:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<uint16_t>(len);
-		std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
-		offset += sizeof(uint16_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<uint16_t>(len);
-		std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
-		offset += sizeof(uint16_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt32:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<int32_t>(len);
-		std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
-		offset += sizeof(int32_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<int32_t>(len);
-		std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
-		offset += sizeof(int32_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt32:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<uint32_t>(len);
-		std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
-		offset += sizeof(uint32_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<uint32_t>(len);
-		std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
-		offset += sizeof(uint32_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt64:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<int64_t>(len);
-		std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
-		offset += sizeof(int64_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<int64_t>(len);
-		std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
-		offset += sizeof(int64_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt64:
-	{
-		int32_t len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		auto data = std::vector<uint64_t>(len);
-		std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
-		offset += sizeof(uint64_t) * len;
-		result.FactoryDefaultValue = std::move(data);
-
-		len = *(int32_t*)(response.data.data() + offset);
-		offset += sizeof(int32_t);
-		data = std::vector<uint64_t>(len);
-		std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
-		offset += sizeof(uint64_t) * len;
-		result.CurrentValue = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt128:
-		throw std::runtime_error("int128 Not Implemented");
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<int8_t>(len);
+			std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
+			offset += sizeof(int8_t) * len;
+			result.CurrentValue = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::ArrayUInt128:
-		throw std::runtime_error("uint128 Not Implemented");
-		break;
-	case MtpDatatypeCode::String:
-	{
-		auto len = *(uint8_t*)(response.data.data() + offset);
-		offset += sizeof(uint8_t);
-		auto str = std::vector<char16_t>(len);
-		std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
-		offset += sizeof(char16_t) * len;
-		result.FactoryDefaultValue = std::wstring(str.begin(), str.end());
+		case MtpDatatypeCode::ArrayUInt8:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<uint8_t>(len);
+			std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
+			offset += sizeof(uint8_t) * len;
+			result.FactoryDefaultValue = std::move(data);
 
-		len = *(uint8_t*)(response.data.data() + offset);
-		offset += sizeof(uint8_t);
-		str = std::vector<char16_t>(len);
-		std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
-		offset += sizeof(char16_t) * len;
-		result.CurrentValue = std::wstring(str.begin(), str.end());
-	}
-	break;
-	default:
-		return result;
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<uint8_t>(len);
+			std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
+			offset += sizeof(uint8_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt16:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<int16_t>(len);
+			std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+			offset += sizeof(int16_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<int16_t>(len);
+			std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+			offset += sizeof(int16_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt16:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<uint16_t>(len);
+			std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+			offset += sizeof(uint16_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<uint16_t>(len);
+			std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+			offset += sizeof(uint16_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt32:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<int32_t>(len);
+			std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+			offset += sizeof(int32_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<int32_t>(len);
+			std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+			offset += sizeof(int32_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt32:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<uint32_t>(len);
+			std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
+			offset += sizeof(uint32_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<uint32_t>(len);
+			std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
+			offset += sizeof(uint32_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt64:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<int64_t>(len);
+			std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
+			offset += sizeof(int64_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<int64_t>(len);
+			std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
+			offset += sizeof(int64_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt64:
+		{
+			int32_t len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			auto data = std::vector<uint64_t>(len);
+			std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
+			offset += sizeof(uint64_t) * len;
+			result.FactoryDefaultValue = std::move(data);
+
+			len = *(int32_t*)(response.data.data() + offset);
+			offset += sizeof(int32_t);
+			data = std::vector<uint64_t>(len);
+			std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
+			offset += sizeof(uint64_t) * len;
+			result.CurrentValue = std::move(data);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt128:
+			throw std::runtime_error("int128 Not Implemented");
+			break;
+		case MtpDatatypeCode::ArrayUInt128:
+			throw std::runtime_error("uint128 Not Implemented");
+			break;
+		case MtpDatatypeCode::String:
+		{
+			auto len = *(uint8_t*)(response.data.data() + offset);
+			offset += sizeof(uint8_t);
+			auto str = std::vector<char16_t>(len);
+			std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
+			offset += sizeof(char16_t) * len;
+			result.FactoryDefaultValue = std::wstring(str.begin(), str.end());
+
+			len = *(uint8_t*)(response.data.data() + offset);
+			offset += sizeof(uint8_t);
+			str = std::vector<char16_t>(len);
+			std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
+			offset += sizeof(char16_t) * len;
+			result.CurrentValue = std::wstring(str.begin(), str.end());
+		}
+		break;
+		default:
+			throw std::runtime_error("Unknown Type");
+			break;
 	}
 
 	result.FormFlag = *(uint8_t*)(response.data.data() + offset);
@@ -1215,78 +1216,301 @@ MtpDevicePropDescDSV MtpDevice::GetDevicePropDesc_(MtpResponse& response) {
 	else if (result.FormFlag == MtpFormtypeCode::Range) {
 		result.FORM = MtpRangeFormV{};
 		switch (result.DataType) {
-		case MtpDatatypeCode::Int8:
-			std::get<MtpRangeFormV>(result.FORM).min = *(int8_t*)(response.data.data() + offset);
-			offset += sizeof(int8_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(int8_t*)(response.data.data() + offset);
-			offset += sizeof(int8_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(int8_t*)(response.data.data() + offset);
-			offset += sizeof(int8_t);
+			case MtpDatatypeCode::Int8:
+				std::get<MtpRangeFormV>(result.FORM).min = *(int8_t*)(response.data.data() + offset);
+				offset += sizeof(int8_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(int8_t*)(response.data.data() + offset);
+				offset += sizeof(int8_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(int8_t*)(response.data.data() + offset);
+				offset += sizeof(int8_t);
+				break;
+			case MtpDatatypeCode::UInt8:
+				std::get<MtpRangeFormV>(result.FORM).min = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				break;
+			case MtpDatatypeCode::Int16:
+				std::get<MtpRangeFormV>(result.FORM).min = *(int16_t*)(response.data.data() + offset);
+				offset += sizeof(int16_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(int16_t*)(response.data.data() + offset);
+				offset += sizeof(int16_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(int16_t*)(response.data.data() + offset);
+				offset += sizeof(int16_t);
+				break;
+			case MtpDatatypeCode::UInt16:
+				std::get<MtpRangeFormV>(result.FORM).min = *(uint16_t*)(response.data.data() + offset);
+				offset += sizeof(uint16_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(uint16_t*)(response.data.data() + offset);
+				offset += sizeof(uint16_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(uint16_t*)(response.data.data() + offset);
+				offset += sizeof(uint16_t);
+				break;
+			case MtpDatatypeCode::Int32:
+				std::get<MtpRangeFormV>(result.FORM).min = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				break;
+			case MtpDatatypeCode::UInt32:
+				std::get<MtpRangeFormV>(result.FORM).min = *(uint32_t*)(response.data.data() + offset);
+				offset += sizeof(uint32_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(uint32_t*)(response.data.data() + offset);
+				offset += sizeof(uint32_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(uint32_t*)(response.data.data() + offset);
+				offset += sizeof(uint32_t);
+				break;
+			case MtpDatatypeCode::Int64:
+				std::get<MtpRangeFormV>(result.FORM).min = *(int64_t*)(response.data.data() + offset);
+				offset += sizeof(int64_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(int64_t*)(response.data.data() + offset);
+				offset += sizeof(int64_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(int64_t*)(response.data.data() + offset);
+				offset += sizeof(int64_t);
+				break;
+			case MtpDatatypeCode::UInt64:
+				std::get<MtpRangeFormV>(result.FORM).min = *(uint64_t*)(response.data.data() + offset);
+				offset += sizeof(uint64_t);
+				std::get<MtpRangeFormV>(result.FORM).max = *(uint64_t*)(response.data.data() + offset);
+				offset += sizeof(uint64_t);
+				std::get<MtpRangeFormV>(result.FORM).step = *(uint64_t*)(response.data.data() + offset);
+				offset += sizeof(uint64_t);
+				break;
+			case MtpDatatypeCode::Int128:
+				throw std::runtime_error("int128 Not Implemented");
+				break;
+			case MtpDatatypeCode::UInt128:
+				throw std::runtime_error("uint128 Not Implemented");
+				break;
+			case MtpDatatypeCode::ArrayInt8:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int8_t>(len);
+				std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t)* len);
+				offset += sizeof(int8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int8_t>(len);
+				std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t)* len);
+				offset += sizeof(int8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int8_t>(len);
+				std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t)* len);
+				offset += sizeof(int8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::UInt8:
-			std::get<MtpRangeFormV>(result.FORM).min = *(uint8_t*)(response.data.data() + offset);
-			offset += sizeof(uint8_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(uint8_t*)(response.data.data() + offset);
-			offset += sizeof(uint8_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(uint8_t*)(response.data.data() + offset);
-			offset += sizeof(uint8_t);
+			case MtpDatatypeCode::ArrayUInt8:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint8_t>(len);
+				std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t)* len);
+				offset += sizeof(uint8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint8_t>(len);
+				std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t)* len);
+				offset += sizeof(uint8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint8_t>(len);
+				std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t)* len);
+				offset += sizeof(uint8_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::Int16:
-			std::get<MtpRangeFormV>(result.FORM).min = *(int16_t*)(response.data.data() + offset);
-			offset += sizeof(int16_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(int16_t*)(response.data.data() + offset);
-			offset += sizeof(int16_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(int16_t*)(response.data.data() + offset);
-			offset += sizeof(int16_t);
+			case MtpDatatypeCode::ArrayInt16:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int16_t>(len);
+				std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+				offset += sizeof(int16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int16_t>(len);
+				std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+				offset += sizeof(int16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int16_t>(len);
+				std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+				offset += sizeof(int16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::UInt16:
-			std::get<MtpRangeFormV>(result.FORM).min = *(uint16_t*)(response.data.data() + offset);
-			offset += sizeof(uint16_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(uint16_t*)(response.data.data() + offset);
-			offset += sizeof(uint16_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(uint16_t*)(response.data.data() + offset);
-			offset += sizeof(uint16_t);
+			case MtpDatatypeCode::ArrayUInt16:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint16_t>(len);
+				std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+				offset += sizeof(uint16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint16_t>(len);
+				std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+				offset += sizeof(uint16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint16_t>(len);
+				std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+				offset += sizeof(uint16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::Int32:
-			std::get<MtpRangeFormV>(result.FORM).min = *(int32_t*)(response.data.data() + offset);
-			offset += sizeof(int32_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(int32_t*)(response.data.data() + offset);
-			offset += sizeof(int32_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(int32_t*)(response.data.data() + offset);
-			offset += sizeof(int32_t);
+			case MtpDatatypeCode::ArrayInt32:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int32_t>(len);
+				std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+				offset += sizeof(int32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int32_t>(len);
+				std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+				offset += sizeof(int32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int32_t>(len);
+				std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+				offset += sizeof(int32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::UInt32:
-			std::get<MtpRangeFormV>(result.FORM).min = *(uint32_t*)(response.data.data() + offset);
-			offset += sizeof(uint32_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(uint32_t*)(response.data.data() + offset);
-			offset += sizeof(uint32_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(uint32_t*)(response.data.data() + offset);
-			offset += sizeof(uint32_t);
+			case MtpDatatypeCode::ArrayUInt32:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint32_t>(len);
+				std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t)* len);
+				offset += sizeof(uint32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint32_t>(len);
+				std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t)* len);
+				offset += sizeof(uint32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint32_t>(len);
+				std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t)* len);
+				offset += sizeof(uint32_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::Int64:
-			std::get<MtpRangeFormV>(result.FORM).min = *(int64_t*)(response.data.data() + offset);
-			offset += sizeof(int64_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(int64_t*)(response.data.data() + offset);
-			offset += sizeof(int64_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(int64_t*)(response.data.data() + offset);
-			offset += sizeof(int64_t);
+			case MtpDatatypeCode::ArrayInt64:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int64_t>(len);
+				std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t)* len);
+				offset += sizeof(int64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int64_t>(len);
+				std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t)* len);
+				offset += sizeof(int64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<int64_t>(len);
+				std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t)* len);
+				offset += sizeof(int64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::UInt64:
-			std::get<MtpRangeFormV>(result.FORM).min = *(uint64_t*)(response.data.data() + offset);
-			offset += sizeof(uint64_t);
-			std::get<MtpRangeFormV>(result.FORM).max = *(uint64_t*)(response.data.data() + offset);
-			offset += sizeof(uint64_t);
-			std::get<MtpRangeFormV>(result.FORM).step = *(uint64_t*)(response.data.data() + offset);
-			offset += sizeof(uint64_t);
+			case MtpDatatypeCode::ArrayUInt64:
+			{
+				int32_t len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint64_t>(len);
+				std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t)* len);
+				offset += sizeof(uint64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint64_t>(len);
+				std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t)* len);
+				offset += sizeof(uint64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::move(data);
+
+				len = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				data = std::vector<uint64_t>(len);
+				std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t)* len);
+				offset += sizeof(uint64_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::move(data);
+			}
 			break;
-		case MtpDatatypeCode::Int128:
-			throw std::runtime_error("int128 Not Implemented");
+			case MtpDatatypeCode::ArrayInt128:
+				throw std::runtime_error("int128 Not Implemented");
+				break;
+			case MtpDatatypeCode::ArrayUInt128:
+				throw std::runtime_error("uint128 Not Implemented");
+				break;
+			case MtpDatatypeCode::String:
+			{
+				auto len = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				auto str = std::vector<char16_t>(len);
+				std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t)* len);
+				offset += sizeof(char16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).min = std::wstring(str.begin(), str.end());
+
+				len = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				str = std::vector<char16_t>(len);
+				std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t)* len);
+				offset += sizeof(char16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).max = std::wstring(str.begin(), str.end());
+
+				len = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				str = std::vector<char16_t>(len);
+				std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t)* len);
+				offset += sizeof(char16_t) * len;
+				std::get<MtpRangeFormV>(result.FORM).step = std::wstring(str.begin(), str.end());
+			}
 			break;
-		case MtpDatatypeCode::UInt128:
-			throw std::runtime_error("uint128 Not Implemented");
-			break;
-		default:
-			return result;
+			default:
+				throw std::runtime_error("Unknown Type");
+				break;
 		}
 	}
 	else if (result.FormFlag == MtpFormtypeCode::Enum) {
@@ -1380,22 +1604,141 @@ MtpDevicePropDescDSV MtpDevice::GetDevicePropDesc_(MtpResponse& response) {
 		case MtpDatatypeCode::UInt128:
 			throw std::runtime_error("uint128 Not Implemented");
 			break;
-		case MtpDatatypeCode::String:
-			{
-				MtpEnumFormV form(len);
-				for (size_t i = 0; i < len; i++) {
-					auto lenstr = *(uint8_t*)(response.data.data() + offset);
-					offset += sizeof(uint8_t);
-					auto str = std::vector<char16_t>(lenstr);
-					std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * lenstr);
-					offset += sizeof(char16_t) * lenstr;
-					form[i] = MtpDatatypeVariant{ std::wstring(str.begin(), str.end()) };
-				}
-				result.FORM = std::move(form);
+		case MtpDatatypeCode::ArrayInt8:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int8_t>(lenarr);
+				std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * lenarr);
+				offset += sizeof(int8_t) * lenarr;
+				form[i] = std::move(data);
 			}
-			break;
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt8:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint8_t>(lenarr);
+				std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * lenarr);
+				offset += sizeof(uint8_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt16:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int16_t>(lenarr);
+				std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * lenarr);
+				offset += sizeof(int16_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt16:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint16_t>(lenarr);
+				std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * lenarr);
+				offset += sizeof(uint16_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt32:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int32_t>(lenarr);
+				std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * lenarr);
+				offset += sizeof(int32_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt32:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint32_t>(lenarr);
+				std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * lenarr);
+				offset += sizeof(uint32_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt64:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<int64_t>(lenarr);
+				std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * lenarr);
+				offset += sizeof(int64_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayUInt64:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				int32_t lenarr = *(int32_t*)(response.data.data() + offset);
+				offset += sizeof(int32_t);
+				auto data = std::vector<uint64_t>(lenarr);
+				std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * lenarr);
+				offset += sizeof(uint64_t) * lenarr;
+				form[i] = std::move(data);
+			}
+			result.FORM = std::move(form);
+		}
+		break;
+		case MtpDatatypeCode::ArrayInt128:
+			throw std::runtime_error("int128 Not Implemented");
+		break;
+		case MtpDatatypeCode::ArrayUInt128:
+			throw std::runtime_error("uint128 Not Implemented");
+		break;
+		case MtpDatatypeCode::String:
+		{
+			MtpEnumFormV form(len);
+			for (size_t i = 0; i < len; i++) {
+				auto lenstr = *(uint8_t*)(response.data.data() + offset);
+				offset += sizeof(uint8_t);
+				auto str = std::vector<char16_t>(lenstr);
+				std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * lenstr);
+				offset += sizeof(char16_t) * lenstr;
+				form[i] = MtpDatatypeVariant{ std::wstring(str.begin(), str.end()) };
+			}
+			result.FORM = std::move(form);
+		}
+		break;
 		default:
-			return result;
+			throw std::runtime_error("Unknown Type");
+			break;
 		}
 	}
 
@@ -1425,134 +1768,135 @@ MtpDatatypeVariant MtpDevice::GetDevicePropValue_(MtpResponse& response, uint16_
 	MtpDatatypeVariant result;
 	
 	switch (dataType) {
-	case MtpDatatypeCode::Int8:
-		result = *(int8_t*)(response.data.data());
+		case MtpDatatypeCode::Int8:
+			result = *(int8_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::UInt8:
+			result = *(uint8_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::Int16:
+			result = *(int16_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::UInt16:
+			result = *(uint16_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::Int32:
+			result = *(int32_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::UInt32:
+			result = *(uint32_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::Int64:
+			result = *(int64_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::UInt64:
+			result = *(uint64_t*)(response.data.data());
+			break;
+		case MtpDatatypeCode::Int128:
+			throw std::runtime_error("int128 Not Implemented");
+			break;
+		case MtpDatatypeCode::UInt128:
+			throw std::runtime_error("uint128 Not Implemented");
+			break;
+		case MtpDatatypeCode::ArrayInt8:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<int8_t>(len);
+			std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
+			offset += sizeof(int8_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::UInt8:
-		result = *(uint8_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayUInt8:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<uint8_t>(len);
+			std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
+			offset += sizeof(uint8_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::Int16:
-		result = *(int16_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayInt16:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<int16_t>(len);
+			std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
+			offset += sizeof(int16_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::UInt16:
-		result = *(uint16_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayUInt16:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<uint16_t>(len);
+			std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
+			offset += sizeof(uint16_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::Int32:
-		result = *(int32_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayInt32:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<int32_t>(len);
+			std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
+			offset += sizeof(int32_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::UInt32:
-		result = *(uint32_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayUInt32:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<uint32_t>(len);
+			std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
+			offset += sizeof(uint32_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::Int64:
-		result = *(int64_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayInt64:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<int64_t>(len);
+			std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
+			offset += sizeof(int64_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::UInt64:
-		result = *(uint64_t*)(response.data.data());
+		case MtpDatatypeCode::ArrayUInt64:
+		{
+			int32_t len = *(int32_t*)(response.data.data());
+			size_t offset = sizeof(int32_t);
+			auto data = std::vector<uint64_t>(len);
+			std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
+			offset += sizeof(uint64_t) * len;
+			result = std::move(data);
+		}
 		break;
-	case MtpDatatypeCode::Int128:
-		throw std::runtime_error("int128 Not Implemented");
+		case MtpDatatypeCode::ArrayInt128:
+			throw std::runtime_error("int128 Not Implemented");
+			break;
+		case MtpDatatypeCode::ArrayUInt128:
+			throw std::runtime_error("uint128 Not Implemented");
+			break;
+		case MtpDatatypeCode::String:
+		{
+			auto len = *(uint8_t*)(response.data.data());
+			size_t offset = sizeof(uint8_t);
+			auto str = std::vector<char16_t>(len);
+			std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
+			offset += sizeof(char16_t) * len;
+			result = std::wstring(str.begin(), str.end());
+		}
 		break;
-	case MtpDatatypeCode::UInt128:
-		throw std::runtime_error("uint128 Not Implemented");
-		break;
-	case MtpDatatypeCode::ArrayInt8:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<int8_t>(len);
-		std::memcpy(data.data(), (int8_t*)(response.data.data() + offset), sizeof(int8_t) * len);
-		offset += sizeof(int8_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt8:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<uint8_t>(len);
-		std::memcpy(data.data(), (uint8_t*)(response.data.data() + offset), sizeof(uint8_t) * len);
-		offset += sizeof(uint8_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt16:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<int16_t>(len);
-		std::memcpy(data.data(), (int16_t*)(response.data.data() + offset), sizeof(int16_t) * len);
-		offset += sizeof(int16_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt16:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<uint16_t>(len);
-		std::memcpy(data.data(), (uint16_t*)(response.data.data() + offset), sizeof(uint16_t) * len);
-		offset += sizeof(uint16_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt32:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<int32_t>(len);
-		std::memcpy(data.data(), (int32_t*)(response.data.data() + offset), sizeof(int32_t) * len);
-		offset += sizeof(int32_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt32:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<uint32_t>(len);
-		std::memcpy(data.data(), (uint32_t*)(response.data.data() + offset), sizeof(uint32_t) * len);
-		offset += sizeof(uint32_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt64:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<int64_t>(len);
-		std::memcpy(data.data(), (int64_t*)(response.data.data() + offset), sizeof(int64_t) * len);
-		offset += sizeof(int64_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayUInt64:
-	{
-		int32_t len = *(int32_t*)(response.data.data());
-		size_t offset = sizeof(int32_t);
-		auto data = std::vector<uint64_t>(len);
-		std::memcpy(data.data(), (uint64_t*)(response.data.data() + offset), sizeof(uint64_t) * len);
-		offset += sizeof(uint64_t) * len;
-		result = std::move(data);
-	}
-	break;
-	case MtpDatatypeCode::ArrayInt128:
-		throw std::runtime_error("int128 Not Implemented");
-		break;
-	case MtpDatatypeCode::ArrayUInt128:
-		throw std::runtime_error("uint128 Not Implemented");
-		break;
-	case MtpDatatypeCode::String:
-	{
-		auto len = *(uint8_t*)(response.data.data());
-		size_t offset = sizeof(uint8_t);
-		auto str = std::vector<char16_t>(len);
-		std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * len);
-		offset += sizeof(char16_t) * len;
-		result = std::wstring(str.begin(), str.end());
-	}
-	break;
-	default:
-		return result;
+		default:
+			throw std::runtime_error("Unknown Type");
+			break;
 	}
 
 	return result;
@@ -1575,45 +1919,45 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 	auto rawdata = std::vector<uint8_t>();
 
 	switch (data.index()) {
-	case 1:
+	case 1: //int8
 		rawdata.resize(sizeof(int8_t));
 		std::memcpy((int8_t*)rawdata.data(), &std::get<int8_t>(data), sizeof(int8_t));
 		break;
-	case 2:
+	case 2: //uint8
 		rawdata.resize(sizeof(uint8_t));
 		std::memcpy((uint8_t*)rawdata.data(), &std::get<uint8_t>(data), sizeof(uint8_t));
 		break;
-	case 3:
+	case 3: //int16
 		rawdata.resize(sizeof(int16_t));
 		std::memcpy((int16_t*)rawdata.data(), &std::get<int16_t>(data), sizeof(int16_t));
 		break;
-	case 4:
+	case 4: //uint16
 		rawdata.resize(sizeof(uint16_t));
 		std::memcpy((uint16_t*)rawdata.data(), &std::get<uint16_t>(data), sizeof(uint16_t));
 		break;
-	case 5:
+	case 5: //int32
 		rawdata.resize(sizeof(int32_t));
 		std::memcpy((int32_t*)rawdata.data(), &std::get<int32_t>(data), sizeof(int32_t));
 		break;
-	case 6:
+	case 6: //uint32
 		rawdata.resize(sizeof(uint32_t));
 		std::memcpy((uint32_t*)rawdata.data(), &std::get<uint32_t>(data), sizeof(uint32_t));
 		break;
-	case 7:
+	case 7: //int64
 		rawdata.resize(sizeof(int64_t));
 		std::memcpy((int64_t*)rawdata.data(), &std::get<int64_t>(data), sizeof(int32_t));
 		break;
-	case 8:
+	case 8: //uint64
 		rawdata.resize(sizeof(uint64_t));
 		std::memcpy((uint64_t*)rawdata.data(), &std::get<uint64_t>(data), sizeof(uint32_t));
 		break;
-	case 9:
+	case 9: //int128
 		throw std::runtime_error("int128 Not Implemented");
 		break;
-	case 10:
+	case 10: //uint128
 		throw std::runtime_error("uint128 Not Implemented");
 		break;
-	case 11:
+	case 11: //array int8
 	{
 		size_t len = std::get<std::vector<int8_t>>(data).size();
 		size_t size = sizeof(int8_t) * len;
@@ -1621,8 +1965,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((int8_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<int8_t>>(data).data(), size);
 	}
-		break;
-	case 12:
+	break;
+	case 12: //array uint8
 	{
 		size_t len = std::get<std::vector<uint8_t>>(data).size();
 		size_t size = sizeof(uint8_t) * len;
@@ -1630,8 +1974,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((uint8_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<uint8_t>>(data).data(), size);
 	}
-		break;
-	case 13:
+	break;
+	case 13: //array int16
 	{
 		size_t len = std::get<std::vector<int16_t>>(data).size();
 		size_t size = sizeof(int16_t) * len;
@@ -1639,8 +1983,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((int16_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<int16_t>>(data).data(), size);
 	}
-		break;
-	case 14:
+	break;
+	case 14: //array uint16
 	{
 		size_t len = std::get<std::vector<uint16_t>>(data).size();
 		size_t size = sizeof(uint16_t) * len;
@@ -1648,8 +1992,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((uint16_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<uint16_t>>(data).data(), size);
 	}
-		break;
-	case 15:
+	break;
+	case 15: //array int32
 	{
 		size_t len = std::get<std::vector<int32_t>>(data).size();
 		size_t size = sizeof(int32_t) * len;
@@ -1657,8 +2001,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((int32_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<int32_t>>(data).data(), size);
 	}
-		break;
-	case 16:
+	break;
+	case 16: //array uint32
 	{
 		size_t len = std::get<std::vector<uint32_t>>(data).size();
 		size_t size = sizeof(uint32_t) * len;
@@ -1666,8 +2010,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((uint32_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<uint32_t>>(data).data(), size);
 	}
-		break;
-	case 17:
+	break;
+	case 17: //array int64
 	{
 		size_t len = std::get<std::vector<int64_t>>(data).size();
 		size_t size = sizeof(int64_t) * len;
@@ -1675,8 +2019,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((int64_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<int64_t>>(data).data(), size);
 	}
-		break;
-	case 18:
+	break;
+	case 18: //aray uint64
 	{
 		size_t len = std::get<std::vector<uint64_t>>(data).size();
 		size_t size = sizeof(uint64_t) * len;
@@ -1684,14 +2028,14 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 		std::memcpy((uint32_t*)rawdata.data(), (uint32_t*)&len, sizeof(uint32_t));
 		std::memcpy((uint64_t*)(rawdata.data() + sizeof(uint32_t)), std::get<std::vector<uint64_t>>(data).data(), size);
 	}
-		break;
-	case 19:
+	break;
+	case 19: //array int128
 		throw std::runtime_error("int128 Not Implemented");
 		break;
-	case 20:
+	case 20: //array uint128
 		throw std::runtime_error("uint128 Not Implemented");
 		break;
-	case 21:
+	case 21: //string
 	{
 		size_t len = std::get<std::wstring>(data).length() + 1;
 		size_t size = sizeof(char16_t) * len;
@@ -1701,7 +2045,8 @@ std::vector<uint8_t> MtpDevice::SetDevicePropValue_(MtpDatatypeVariant data) {
 	}
 	break;
 	default:
-		return rawdata;
+		throw std::runtime_error("Unknown Type");
+		break;
 	}
 
 	return rawdata;
