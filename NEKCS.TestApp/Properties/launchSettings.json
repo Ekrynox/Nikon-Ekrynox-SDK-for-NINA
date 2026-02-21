@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Nikon Ekrynox SDK for NINA": {
+    "NEKCS.TestApp": {
       "commandName": "Project",
       "nativeDebugging": true
     }
