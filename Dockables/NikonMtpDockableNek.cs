@@ -12,11 +12,13 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
@@ -27,7 +29,6 @@ namespace LucasAlias.NINA.NEK.Dockables {
         public const string sourceFile = @"NEKDockables\NikonMtpDockableNek.cs";
 
         private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
-        private ObservableCollection<INikonDevicePropDescVM> _deviceProperties;
 
         private readonly ICameraMediator cameraMediator;
 
@@ -42,7 +43,13 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
             this.Title = "Nikon MTP Settings (NEK)";
 
-            this._deviceProperties = new();
+
+            Application.Current.Dispatcher.Invoke(() => {
+                DeviceProperties = new ObservableCollection<INikonDevicePropDescVM>();
+                DevicePropertiesView = CollectionViewSource.GetDefaultView(DeviceProperties);
+                //DevicePropertiesView.Filter = e => true;
+            });
+
         }
 
         public void Dispose() {
@@ -53,7 +60,8 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
 
         public Boolean Connected { get => _connected && cameraNek != null; }
-        public ObservableCollection<INikonDevicePropDescVM> DeviceProperties { get => _deviceProperties; }
+        public ObservableCollection<INikonDevicePropDescVM> DeviceProperties { get; private set; }
+        public ICollectionView DevicePropertiesView { get; private set; }
 
         private async Task CameraConnected(object arg1, EventArgs arg2) {
             if (this.cameraNek != null) {
@@ -80,8 +88,10 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
                     //Copy the Result in the ObservableContainer in the DispatcherThread
                     Application.Current.Dispatcher.BeginInvoke(() => {
-                        this._deviceProperties = new(newDeviceProps);
+                        DeviceProperties.Clear();
+                        foreach (var item in newDeviceProps) DeviceProperties.Add(item);
                         RaisePropertyChanged(nameof(DeviceProperties));
+
                         if (Connected) {
                             this.cameraNek.camera.OnMtpEvent += UpdateDeviceProperties;
                         }
@@ -100,7 +110,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
                 RaiseAllPropertiesChanged();
 
                 await Application.Current.Dispatcher.BeginInvoke(() => {
-                    this._deviceProperties.Clear();
+                    DeviceProperties.Clear();
                 });
             }
         }
@@ -121,10 +131,10 @@ namespace LucasAlias.NINA.NEK.Dockables {
                 Application.Current.Dispatcher.BeginInvoke(() => {
                     if (!Connected) return;
                     try {
-                        var i = this.DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.DevicePropertyCode == code).idx;
-                        this._deviceProperties[i] = desc;
+                        var i = DeviceProperties.Select((item, idx) => new { item, idx }).First(x => x.item.DevicePropertyCode == code).idx;
+                        DeviceProperties[i] = desc;
                     } catch (InvalidOperationException) {
-                        this._deviceProperties.Add(desc);
+                        DeviceProperties.Add(desc);
                     }
                     RaisePropertyChanged(nameof(DeviceProperties));
                 });

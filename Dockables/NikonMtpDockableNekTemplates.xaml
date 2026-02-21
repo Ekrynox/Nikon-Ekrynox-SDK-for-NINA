@@ -86,34 +86,34 @@
             <Grid Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected with Nikon Ekrynox SDK" />
             </Grid>
-            
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Grid.IsSharedSizeScope="True">
-                    <ItemsControl ItemsSource="{Binding DeviceProperties}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="5">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col1" />
-                                        <ColumnDefinition Width="Auto" SharedSizeGroup="Col2" />
-                                        <ColumnDefinition Width="*" SharedSizeGroup="Col3" />
-                                    </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="{Binding DevicePropertyCode}" FontWeight="Bold" />
-                                    <TextBlock Grid.Column="1" Text="{Binding DevicePropertyCode, StringFormat=0x{0:X}}" FontWeight="Light" />
-                                    <TextBlock Grid.Column="2" Text="{Binding ., Converter={StaticResource NikonDevicePropDesc_GetTypeConverter}}" />
+            <Grid Visibility="{Binding Connected, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}">
+                <ListView ItemsSource="{Binding DevicePropertiesView}" IsEnabled="{Binding Connected}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Property" DisplayMemberBinding="{Binding DevicePropertyCode}"></GridViewColumn>
 
-                                    <ContentControl Grid.Column="3" Content="{Binding .}" ContentTemplateSelector="{StaticResource convNikonDevicePropDesc_TypeFormTemplateSelector}" />
+                            <GridViewColumn Header="Code" DisplayMemberBinding="{Binding DevicePropertyCode, StringFormat=0x{0:X}}"></GridViewColumn>
 
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
+                            <GridViewColumn Header="Type" DisplayMemberBinding="{Binding ., Converter={StaticResource NikonDevicePropDesc_GetTypeConverter}}"></GridViewColumn>
 
-
+                            <GridViewColumn Header="Value">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ContentControl Content="{Binding .}" ContentTemplateSelector="{StaticResource convNikonDevicePropDesc_TypeFormTemplateSelector}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>
