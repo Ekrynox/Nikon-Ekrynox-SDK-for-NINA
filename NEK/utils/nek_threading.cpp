@@ -7,26 +7,27 @@ using namespace nek::utils;
 
 
 //ThreadedClassBase
-ThreadedClassBase::ThreadedClassBase() {
-	running_ = true;
-}
+std::future<void> ThreadedClassBase::sendTaskAsync(std::function<void()> task) {
+	auto p = std::make_shared<std::promise<void>>();
+	auto f = p->get_future();
 
-void ThreadedClassBase::sendTaskAsync(std::function<void()> task) {
-	mutexTasks_.lock();
-
-	tasks_.push_back(task);
-
-	mutexTasks_.unlock();
+	std::lock_guard<std::mutex> lock(mutexTasks_);
+	tasks_.push_back([task = std::move(task), p] {
+		try {
+			task();
+			p->set_value();
+		}
+		catch (...) {
+			p->set_exception(std::current_exception());
+		}
+		});
 	cvTasks_.notify_one();
+
+	return f;
 }
 
 void ThreadedClassBase::sendTask(std::function<void()> task) {
-	std::promise<void> p;
-	auto f = p.get_future();
-
-	sendTaskAsync([&] { p.set_value(); task(); });
-
-	f.get();
+	return sendTaskAsync(std::move(task)).get();
 }
 
 void ThreadedClassBase::threadTask() {
@@ -56,6 +57,7 @@ ThreadedClass::~ThreadedClass() {
 }
 
 void ThreadedClass::startThread() {
+	running_ = true;
 	mutexThread_.lock();
 	thread_ = std::thread([this] { this->threadTask(); });
 	mutexThread_.unlock();
@@ -63,11 +65,13 @@ void ThreadedClass::startThread() {
 
 void ThreadedClass::stopThread() {
 	running_ = false;
+	mutexThread_.lock();
 	cvTasks_.notify_all();
-	if (thread_.joinable()) {
+	if (std::this_thread::get_id() != thread_.get_id() && thread_.joinable()) {
 		thread_.join();
+		thread_.~thread();
 	}
-	thread_.~thread();
+	mutexThread_.unlock();
 }
 
 
@@ -79,6 +83,7 @@ MultiThreadedClass::~MultiThreadedClass() {
 
 void MultiThreadedClass::startThread() {
 	mutexThreads_.lock();
+	running_ = true;
 	threads_.push_back(std::thread([this] { this->threadTask(); }));
 	mutexThreads_.unlock();
 }

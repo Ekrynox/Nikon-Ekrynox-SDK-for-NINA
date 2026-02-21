@@ -91,14 +91,32 @@ int main() {
 			data.resize(sizeof(uint16_t));
 			uint16_t fnum = 1100;
 			memcpy(data.data(), &fnum, sizeof(uint16_t));
-			nek::mtp::MtpResponse result = camera->SendCommandAndWrite(nek::NikonMtpOperationCode::SetDevicePropValue, params, data);
+			nek::mtp::MtpResponse result;
+			try {
+				result = camera->SendCommandAndWrite(nek::NikonMtpOperationCode::SetDevicePropValue, params, data);
+			}
+			catch (const nek::mtp::MtpDeviceException& e) {
+				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
+					break;
+				}
+				throw;
+			}
 			cout << std::hex << "Response code: " << result.responseCode << endl;
 		}
 
 		{
 			auto params = nek::mtp::MtpParams();
 			params.addUint32(0xFFFFFFFF);
-			nek::mtp::MtpResponse result = camera->SendCommand(nek::NikonMtpOperationCode::InitiateCaptureRecInSdram, params);
+			nek::mtp::MtpResponse result;
+			try {
+				result = camera->SendCommand(nek::NikonMtpOperationCode::InitiateCaptureRecInSdram, params);
+			}
+			catch (const nek::mtp::MtpDeviceException& e) {
+				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
+					break;
+				}
+				throw;
+			}
 			cout << std::hex << "Response code: " << result.responseCode << endl;
 		}
 	}
