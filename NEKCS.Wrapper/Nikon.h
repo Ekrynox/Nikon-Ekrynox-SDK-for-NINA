@@ -71,9 +71,25 @@ namespace NEKCS {
 		void SetDevicePropValue(NikonMtpDevicePropCode devicePropCode, MtpDatatypeVariant^ data);
 
 		NikonMtpResponseCode DeviceReady();
-		NikonMtpResponseCode DeviceReady(NikonMtpResponseCode whileResponseCode, System::UInt32 sleepTimems);
-		NikonMtpResponseCode DeviceReady(NikonMtpResponseCode whileResponseCode);
+		NikonMtpResponseCode DeviceReadyWhile(NikonMtpResponseCode whileResponseCode, System::Threading::CancellationToken stopToken, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhile(NikonMtpResponseCode whileResponseCode, System::Threading::CancellationToken stopToken);
+		NikonMtpResponseCode DeviceReadyWhile(NikonMtpResponseCode whileResponseCode, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhile(NikonMtpResponseCode whileResponseCode);
+		NikonMtpResponseCode DeviceReadyWhile(System::Collections::Generic::List<NikonMtpResponseCode>^ whileResponseCodes, System::Threading::CancellationToken stopToken, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhile(System::Collections::Generic::List<NikonMtpResponseCode>^ whileResponseCodes, System::Threading::CancellationToken stopToken);
+		NikonMtpResponseCode DeviceReadyWhile(System::Collections::Generic::List<NikonMtpResponseCode>^ whileResponseCodes, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhile(System::Collections::Generic::List<NikonMtpResponseCode>^ whileResponseCodes);
+		NikonMtpResponseCode DeviceReadyWhileNot(NikonMtpResponseCode whileNotResponseCode, System::Threading::CancellationToken stopToken, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhileNot(NikonMtpResponseCode whileNotResponseCode, System::Threading::CancellationToken stopToken);
+		NikonMtpResponseCode DeviceReadyWhileNot(NikonMtpResponseCode whileNotResponseCode, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhileNot(NikonMtpResponseCode whileNotResponseCode);
+		NikonMtpResponseCode DeviceReadyWhileNot(System::Collections::Generic::List<NikonMtpResponseCode>^ whileNotResponseCodes, System::Threading::CancellationToken stopToken, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhileNot(System::Collections::Generic::List<NikonMtpResponseCode>^ whileNotResponseCodes, System::Threading::CancellationToken stopToken);
+		NikonMtpResponseCode DeviceReadyWhileNot(System::Collections::Generic::List<NikonMtpResponseCode>^ whileNotResponseCodes, System::UInt32 sleepTimems);
+		NikonMtpResponseCode DeviceReadyWhileNot(System::Collections::Generic::List<NikonMtpResponseCode>^ whileNotResponseCodes);
 
+		NikonMtpResponseCode StartLiveView(System::Boolean wait, System::Threading::CancellationToken stopToken, System::UInt32 sleepTimems);
+		NikonMtpResponseCode StartLiveView(System::Boolean wait, System::Threading::CancellationToken stopToken);
 		NikonMtpResponseCode StartLiveView(System::Boolean wait, System::UInt32 sleepTimems);
 		NikonMtpResponseCode StartLiveView(System::Boolean wait);
 		NikonMtpResponseCode StartLiveView();

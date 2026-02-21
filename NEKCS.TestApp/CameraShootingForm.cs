@@ -31,8 +31,7 @@ namespace NEKCS.TestApp
             param.addUint32(0);
             NEKCS.MtpResponse result = camera.SendCommandAndRead(NEKCS.NikonMtpOperationCode.DeleteImagesInSdram, param);
 
-            byte lvstatus = 0;
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(ref lvstatus);
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
             if (lvstatus == 1) camera.EndLiveView();
 
         }
@@ -81,15 +80,14 @@ namespace NEKCS.TestApp
             param.addUint32(0xFFFFFFFF);
             NEKCS.MtpResponse result = camera.SendCommand(NEKCS.NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
 
-            camera.DeviceReady(NikonMtpResponseCode.Device_Busy);
+            camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy);
 
             this.capture.Enabled = true;
         }
 
         private void liveview_Click(object sender, EventArgs e)
         {
-            byte lvstatus = 0;
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(ref lvstatus);
+            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
             if (lvstatus == 0)
             {
                 var res = camera.StartLiveView();

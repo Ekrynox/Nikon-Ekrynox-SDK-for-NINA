@@ -3,6 +3,9 @@
 #include "Nikon_Enum.h"
 
 
+using namespace System::Runtime::InteropServices;
+
+
 
 namespace NEKCS {
 
@@ -60,71 +63,57 @@ namespace NEKCS {
 		Object^ m_value;
 
 	public:
-		MtpDatatypeVariant(System::SByte data);
-		MtpDatatypeVariant(System::Byte data);
-		MtpDatatypeVariant(System::Int16 data);
-		MtpDatatypeVariant(System::UInt16 data);
-		MtpDatatypeVariant(System::Int32 data);
-		MtpDatatypeVariant(System::UInt32 data);
-		MtpDatatypeVariant(System::Int64 data);
-		MtpDatatypeVariant(System::UInt64 data);
-
-		MtpDatatypeVariant(array<System::SByte>^ data);
-		MtpDatatypeVariant(array<System::Byte>^ data);
-		MtpDatatypeVariant(array<System::Int16>^ data);
-		MtpDatatypeVariant(array<System::UInt16>^ data);
-		MtpDatatypeVariant(array<System::Int32>^ data);
-		MtpDatatypeVariant(array<System::UInt32>^ data);
-		MtpDatatypeVariant(array<System::Int64>^ data);
-		MtpDatatypeVariant(array<System::UInt64>^ data);
-
-		MtpDatatypeVariant(System::String^ data);
+		MtpDatatypeVariant(System::SByte data) { SetManaged(data); };
+		MtpDatatypeVariant(System::Byte data) { SetManaged(data); };
+		MtpDatatypeVariant(System::Int16 data) { SetManaged(data); };
+		MtpDatatypeVariant(System::UInt16 data) { SetManaged(data); };
+		MtpDatatypeVariant(System::Int32 data) { SetManaged(data); };
+		MtpDatatypeVariant(System::UInt32 data) { SetManaged(data); };
+		MtpDatatypeVariant(System::Int64 data) { SetManaged(data); };
+		MtpDatatypeVariant(System::UInt64 data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::SByte>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::Byte>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::Int16>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::UInt16>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::Int32>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::UInt32>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::Int64>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(array<System::UInt64>^ data) { SetManaged(data); };
+		MtpDatatypeVariant(System::String^ data) { SetManaged(data); };
 
 		MtpDatatypeVariant(const nek::mtp::MtpDatatypeVariant& data);
 
-		System::Boolean TryGetInt8(System::SByte% data);
-		System::Boolean TryGetUInt8(System::Byte% data);
-		System::Boolean TryGetInt16(System::Int16% data);
-		System::Boolean TryGetUInt16(System::UInt16% data);
-		System::Boolean TryGetInt32(System::Int32% data);
-		System::Boolean TryGetUInt32(System::UInt32% data);
-		System::Boolean TryGetInt64(System::Int64% data);
-		System::Boolean TryGetUInt64(System::UInt64% data);
-
-		System::Boolean TryGetArrayInt8(array<System::SByte>^% data);
-		System::Boolean TryGetArrayUInt8(array<System::Byte>^% data);
-		System::Boolean TryGetArrayInt16(array<System::Int16>^% data);
-		System::Boolean TryGetArrayUInt16(array<System::UInt16>^% data);
-		System::Boolean TryGetArrayInt32(array<System::Int32>^% data);
-		System::Boolean TryGetArrayUInt32(array<System::UInt32>^% data);
-		System::Boolean TryGetArrayInt64(array<System::Int64>^% data);
-		System::Boolean TryGetArrayUInt64(array<System::UInt64>^% data);
-
-		System::Boolean TryGetString(System::String^% data);
+		System::Boolean TryGetInt8([Out] System::SByte% data) { return TryGet(data); };
+		System::Boolean TryGetUInt8([Out] System::Byte% data) { return TryGet(data); };
+		System::Boolean TryGetInt16([Out] System::Int16% data) { return TryGet(data); };
+		System::Boolean TryGetUInt16([Out] System::UInt16% data) { return TryGet(data); };
+		System::Boolean TryGetInt32([Out] System::Int32% data) { return TryGet(data); };
+		System::Boolean TryGetUInt32([Out] System::UInt32% data) { return TryGet(data); };
+		System::Boolean TryGetInt64([Out] System::Int64% data) { return TryGet(data); };
+		System::Boolean TryGetUInt64([Out] System::UInt64% data) { return TryGet(data); };
+		System::Boolean TryGetArrayInt8([Out] array<System::SByte>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayUInt8([Out] array<System::Byte>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayInt16([Out] array<System::Int16>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayUInt16([Out] array<System::UInt16>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayInt32([Out] array<System::Int32>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayUInt32([Out] array<System::UInt32>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayInt64([Out] array<System::Int64>^% data) { return TryGet(data); };
+		System::Boolean TryGetArrayUInt64([Out] array<System::UInt64>^% data) { return TryGet(data); };
+		System::Boolean TryGetString([Out] System::String^% data) { return TryGet(data); };
 
 	internal:
 		nek::mtp::MtpDatatypeVariant getVariant();
+		static NikonMtpDatatypeCode GetCodeFromType(System::Type^ t);
 
-	private:
-		void SetInt8(int8_t data);
-		void SetUInt8(uint8_t data);
-		void SetInt16(int16_t data);
-		void SetUInt16(uint16_t data);
-		void SetInt32(int32_t data);
-		void SetUInt32(uint32_t data);
-		void SetInt64(int64_t data);
-		void SetUInt64(uint64_t data);
+		template<typename T> void SetManaged(T data);
+		template<typename T> void SetManaged(array<T>^ data);
+		template<typename T> void SetNative(const T& data);
+		template<typename T> void SetNative(const std::vector<T>& data);
+		template<> void SetNative(const std::wstring& data);
 
-		void SetArrayInt8(const std::vector<int8_t>& data);
-		void SetArrayUInt8(const std::vector<uint8_t>& data);
-		void SetArrayInt16(const std::vector<int16_t>& data);
-		void SetArrayUInt16(const std::vector<uint16_t>& data);
-		void SetArrayInt32(const std::vector<int32_t>& data);
-		void SetArrayUInt32(const std::vector<uint32_t>& data);
-		void SetArrayInt64(const std::vector<int64_t>& data);
-		void SetArrayUInt64(const std::vector<uint64_t>& data);
-
-		void SetString(const std::wstring& data);
+		template<typename T> System::Boolean TryGet([Out] T% data);
+		template<typename T> System::Boolean TryGet([Out] array<T>^% data);
+		template<> System::Boolean TryGet([Out] System::String^% data);
 	};
 
 
@@ -153,24 +142,26 @@ namespace NEKCS {
 	public ref struct NikonDevicePropDescDS_Variant : NikonDevicePropDescDS<MtpDatatypeVariant^> {
 		NikonDevicePropDescDS_Variant(const nek::mtp::MtpDevicePropDescDS& desc);
 
-		System::Boolean TryGetInt8(NikonDevicePropDescDS<System::SByte>^% desc);
-		System::Boolean TryGetUInt8(NikonDevicePropDescDS<System::Byte>^% desc);
-		System::Boolean TryGetInt16(NikonDevicePropDescDS<System::Int16>^% desc);
-		System::Boolean TryGetUInt16(NikonDevicePropDescDS<System::UInt16>^% desc);
-		System::Boolean TryGetInt32(NikonDevicePropDescDS<System::Int32>^% desc);
-		System::Boolean TryGetUInt32(NikonDevicePropDescDS<System::UInt32>^% desc);
-		System::Boolean TryGetInt64(NikonDevicePropDescDS<System::Int64>^% desc);
-		System::Boolean TryGetUInt64(NikonDevicePropDescDS<System::UInt64>^% desc);
+		template<typename T> System::Boolean TryGet([Out] NikonDevicePropDescDS<T>^% desc);
 
-		System::Boolean TryGetArrayInt8(NikonDevicePropDescDS<array<System::SByte>^>^% desc);
-		System::Boolean TryGetArrayUInt8(NikonDevicePropDescDS<array<System::Byte>^>^% desc);
-		System::Boolean TryGetArrayInt16(NikonDevicePropDescDS<array<System::Int16>^>^% desc);
-		System::Boolean TryGetArrayUInt16(NikonDevicePropDescDS<array<System::UInt16>^>^% desc);
-		System::Boolean TryGetArrayInt32(NikonDevicePropDescDS<array<System::Int32>^>^% desc);
-		System::Boolean TryGetArrayUInt32(NikonDevicePropDescDS<array<System::UInt32>^>^% desc);
-		System::Boolean TryGetArrayInt64(NikonDevicePropDescDS<array<System::Int64>^>^% desc);
-		System::Boolean TryGetArrayUInt64(NikonDevicePropDescDS<array<System::UInt64>^>^% desc);
+		System::Boolean TryGetInt8([Out] NikonDevicePropDescDS<System::SByte>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetUInt8([Out] NikonDevicePropDescDS<System::Byte>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetInt16([Out] NikonDevicePropDescDS<System::Int16>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetUInt16([Out] NikonDevicePropDescDS<System::UInt16>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetInt32([Out] NikonDevicePropDescDS<System::Int32>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetUInt32([Out] NikonDevicePropDescDS<System::UInt32>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetInt64([Out] NikonDevicePropDescDS<System::Int64>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetUInt64([Out] NikonDevicePropDescDS<System::UInt64>^% desc) { return TryGet(desc); };
 
-		System::Boolean TryGetString(NikonDevicePropDescDS<System::String^>^% desc);
+		System::Boolean TryGetArrayInt8([Out] NikonDevicePropDescDS<array<System::SByte>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayUInt8([Out] NikonDevicePropDescDS<array<System::Byte>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayInt16([Out] NikonDevicePropDescDS<array<System::Int16>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayUInt16([Out] NikonDevicePropDescDS<array<System::UInt16>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayInt32([Out] NikonDevicePropDescDS<array<System::Int32>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayUInt32([Out] NikonDevicePropDescDS<array<System::UInt32>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayInt64([Out] NikonDevicePropDescDS<array<System::Int64>^>^% desc) { return TryGet(desc); };
+		System::Boolean TryGetArrayUInt64([Out] NikonDevicePropDescDS<array<System::UInt64>^>^% desc) { return TryGet(desc); };
+
+		System::Boolean TryGetString([Out] NikonDevicePropDescDS<System::String^>^% desc) { return TryGet(desc); };
 	};
 }
