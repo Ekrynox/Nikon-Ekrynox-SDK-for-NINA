@@ -18,6 +18,9 @@ namespace nek {
 		NEK_API NikonCamera(std::wstring devicePath, uint8_t additionalThread = 0);
 
 
+		NEK_API mtp::MtpDeviceInfoDS GetDeviceInfo();
+
+
 		NEK_API mtp::MtpDevicePropDescDS GetDevicePropDesc(uint32_t devicePropCode);
 		NEK_API mtp::MtpDatatypeVariant GetDevicePropValue(uint32_t devicePropCode);
 		NEK_API void SetDevicePropValue(uint32_t devicePropCode, mtp::MtpDatatypeVariant data);

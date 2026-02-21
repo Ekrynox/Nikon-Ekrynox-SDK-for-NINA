@@ -241,6 +241,84 @@ void NikonCamera::startThreads() {
 
 
 
+mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
+	auto deviceInfo = mtp::MtpDevice::GetDeviceInfo();
+
+	//Additional VendorCodes
+	if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::GetVendorPropCodes) != deviceInfo.OperationsSupported.end()) {
+		mtp::MtpParams params = mtp::MtpParams();
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, params);
+
+		if (response.responseCode != NikonMtpResponseCode::OK) {
+			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorPropCodes, response.responseCode);
+		}
+
+		uint32_t len = *(uint32_t*)response.data.data();
+		size_t offset = sizeof(uint32_t);
+		uint16_t code;
+
+		for (uint32_t i = 0; i < len; i++) {
+			code = *(uint16_t*)(response.data.data() + offset);
+			offset += sizeof(uint16_t);
+
+			if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
+				deviceInfo.DevicePropertiesSupported.push_back(code);
+			}
+		}
+	}
+	if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::GetVendorCodes) != deviceInfo.OperationsSupported.end()) {
+		//OpCode
+		mtp::MtpParams params = mtp::MtpParams();
+		params.addUint32(0x09);
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
+
+		if (response.responseCode != NikonMtpResponseCode::OK) {
+			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
+		}
+
+		uint32_t len = *(uint32_t*)response.data.data();
+		size_t offset = sizeof(uint32_t);
+		uint32_t code;
+
+		for (uint32_t i = 0; i < len; i++) {
+			code = *(uint32_t*)(response.data.data() + offset);
+			offset += sizeof(uint32_t);
+
+			if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), code) == deviceInfo.OperationsSupported.end()) {
+				deviceInfo.OperationsSupported.push_back(code);
+			}
+		}
+		
+		//PropCode
+		params = mtp::MtpParams();
+		params.addUint32(0x0D);
+		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
+
+		if (response.responseCode != NikonMtpResponseCode::OK) {
+			throw new mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
+		}
+
+		len = *(uint32_t*)response.data.data();
+		offset = sizeof(uint32_t);
+
+		for (uint32_t i = 0; i < len; i++) {
+			code = *(uint32_t*)(response.data.data() + offset);
+			offset += sizeof(uint32_t);
+
+			if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
+				deviceInfo.DevicePropertiesSupported.push_back(code);
+			}
+		}
+	}
+
+
+	mutexDeviceInfo_.lock();
+	deviceInfo_ = deviceInfo;
+	mutexDeviceInfo_.unlock();
+	return deviceInfo;
+}
+
+
 mtp::MtpDevicePropDescDS NikonCamera::GetDevicePropDesc(uint32_t devicePropCode) {
 	mutexDeviceInfo_.lock();
 	if (std::find(deviceInfo_.OperationsSupported.begin(), deviceInfo_.OperationsSupported.end(), NikonMtpOperationCode::GetDevicePropDescEx) != deviceInfo_.OperationsSupported.end()) {
