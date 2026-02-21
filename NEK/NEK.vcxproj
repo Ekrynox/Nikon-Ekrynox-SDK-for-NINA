@@ -92,6 +92,7 @@
     <ClInclude Include="nek.hpp" />
     <ClInclude Include="nikon.hpp" />
     <ClInclude Include="nikon_enum.hpp" />
+    <ClInclude Include="nikon_struct.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="utils\nek_int128.hpp" />
     <ClInclude Include="utils\nek_threading.hpp" />

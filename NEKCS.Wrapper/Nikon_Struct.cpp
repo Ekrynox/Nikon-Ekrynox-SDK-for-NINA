@@ -29,7 +29,7 @@ NikonDeviceInfoDS::NikonDeviceInfoDS() {
 	SerialNumber = gcnew System::String("");
 };
 
-NikonDeviceInfoDS::NikonDeviceInfoDS(const nek::mtp::MtpDeviceInfoDS& native) {
+NikonDeviceInfoDS::NikonDeviceInfoDS(const nek::NikonDeviceInfoDS& native) {
 	StandardVersion = native.StandardVersion;
 	VendorExtensionID = native.VendorExtensionID;
 	VendorExtensionVersion = native.VendorExtensionVersion;

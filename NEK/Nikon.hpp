@@ -2,6 +2,7 @@
 #include "nek.hpp"
 #include "mtp/nek_mtp.hpp"
 #include "nikon_enum.hpp"
+#include "nikon_struct.hpp"
 
 #include <string>
 #include <vector>
@@ -18,7 +19,7 @@ namespace nek {
 		NEK_API NikonCamera(std::wstring devicePath, uint8_t additionalThread = 0);
 
 
-		NEK_API mtp::MtpDeviceInfoDS GetDeviceInfo();
+		NEK_API NikonDeviceInfoDS GetDeviceInfo();
 
 
 		NEK_API mtp::MtpDevicePropDescDSV GetDevicePropDesc(uint32_t devicePropCode);
@@ -44,6 +45,8 @@ namespace nek {
 		void eventThreadTask();
 
 		virtual void startThreads() override;
+
+		NikonDeviceInfoDS deviceInfo_;
 
 		std::deque<std::function<void()>> tasksEvent_;
 	};
