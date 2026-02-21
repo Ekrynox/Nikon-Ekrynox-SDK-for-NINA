@@ -193,14 +193,14 @@ void NikonCamera::threadTask() {
 	while (running_) {
 		mutexTasks_.lock();
 		if (tasksEvent_.size() > 0) {
-			auto task = tasksEvent_.front();
+			std::function<void ()> task = tasksEvent_.front();
 			tasksEvent_.pop_front();
 			mutexTasks_.unlock();
 
 			task();
 		}
 		else if (tasks_.size() > 0) {
-			auto task = tasks_.front();
+			std::function<void ()> task = tasks_.front();
 			tasks_.pop_front();
 			mutexTasks_.unlock();
 
@@ -320,7 +320,7 @@ mtp::MtpDeviceInfoDS NikonCamera::GetDeviceInfo() {
 }
 
 
-mtp::MtpDevicePropDescDS NikonCamera::GetDevicePropDesc(uint32_t devicePropCode) {
+mtp::MtpDevicePropDescDSV NikonCamera::GetDevicePropDesc(uint32_t devicePropCode) {
 	mutexDeviceInfo_.lock();
 	if (std::find(deviceInfo_.OperationsSupported.begin(), deviceInfo_.OperationsSupported.end(), NikonMtpOperationCode::GetDevicePropDescEx) != deviceInfo_.OperationsSupported.end()) {
 		mutexDeviceInfo_.unlock();
@@ -333,7 +333,7 @@ mtp::MtpDevicePropDescDS NikonCamera::GetDevicePropDesc(uint32_t devicePropCode)
 			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropDescEx, response.responseCode);
 		}
 
-		mtp::MtpDevicePropDescDS result = GetDevicePropDesc_(response);
+		mtp::MtpDevicePropDescDSV result = GetDevicePropDesc_(response);
 		mutexDeviceInfo_.lock();
 		if (devicePropDataType_.find(result.DevicePropertyCode) == devicePropDataType_.end()) {
 			devicePropDataType_.insert(std::pair<uint32_t, uint16_t>(result.DevicePropertyCode, result.DataType)); //Register Type for futur use in Get Value
@@ -390,6 +390,29 @@ void NikonCamera::SetDevicePropValue(uint32_t devicePropCode, mtp::MtpDatatypeVa
 	mutexDeviceInfo_.unlock();
 
 	return mtp::MtpDevice::SetDevicePropValue(devicePropCode, data);
+}
+void NikonCamera::SetDevicePropValueTypesafe(uint32_t devicePropCode, mtp::MtpDatatypeVariant data) {
+	uint16_t dataType = mtp::MtpDatatypeCode::Undefined;
+	mutexDeviceInfo_.lock();
+	if (devicePropDataType_.find(devicePropCode) == devicePropDataType_.end()) {
+		mutexDeviceInfo_.unlock();
+		dataType = GetDevicePropDesc(devicePropCode).DataType;
+	}
+	else {
+		dataType = devicePropDataType_[devicePropCode];
+		mutexDeviceInfo_.unlock();
+	}
+
+	mtp::MtpDatatypeVariant newdata;
+	if (SetDevicePropValueTypesafe_(dataType, data, newdata)) return SetDevicePropValue(devicePropCode, newdata);
+
+	mutexDeviceInfo_.lock();
+	if (std::find(deviceInfo_.OperationsSupported.begin(), deviceInfo_.OperationsSupported.end(), NikonMtpOperationCode::SetDevicePropValueEx) != deviceInfo_.OperationsSupported.end()) {
+		mutexDeviceInfo_.unlock();
+		throw mtp::MtpException(NikonMtpOperationCode::SetDevicePropValueEx, NikonMtpResponseCode::Invalid_DeviceProp_Format);
+	}
+	mutexDeviceInfo_.unlock();
+	throw mtp::MtpException(NikonMtpOperationCode::SetDevicePropValue, NikonMtpResponseCode::Invalid_DeviceProp_Format);
 }
 
 
