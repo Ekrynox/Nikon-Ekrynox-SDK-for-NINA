@@ -9,6 +9,9 @@ using namespace std;
 static nek::NikonCamera *camera;
 
 
+
+uint32_t handle = 0xFFFF0001;
+
 void eventFunc (nek::mtp::MtpEvent event) {
 	cout << "event: " << std::hex << event.eventCode << " [ ";
 	for (uint32_t p : event.eventParams) {
@@ -17,31 +20,19 @@ void eventFunc (nek::mtp::MtpEvent event) {
 	cout << "]" << std::endl;
 
 	if (event.eventCode == nek::NikonMtpEventCode::ObjectAddedInSdram) {
-		auto params = nek::mtp::MtpParams();
 		if (event.eventParams.size() > 0 && event.eventParams[0] != 0) {
-			params.addUint32(event.eventParams[0]);
+			handle = event.eventParams[0];
 		}
-		else {
-			params.addUint32(0xFFFF0001);
-		}
-		//nek::mtp::MtpResponse result = camera->SendCommandAndRead(nek::NikonMtpOperationCode::GetObjectInfo, params);
-		//result = camera->SendCommandAndRead(nek::NikonMtpOperationCode::GetThumb, params);
+
+		auto info = camera->GetObjectInfo(handle);
+
+		auto params = nek::mtp::MtpParams();
+		params.addUint32(handle);
 		nek::mtp::MtpResponse result = camera->SendCommandAndRead(nek::NikonMtpOperationCode::GetObject, params);
 		if (result.responseCode == nek::NikonMtpResponseCode::OK) {
 			ofstream MyFile("image.NEF", ios::out | ios::binary);
 			MyFile.write((char*)result.data.data(), result.data.size());
 			MyFile.close();
-		}
-
-		{
-			auto params = nek::mtp::MtpParams();
-			params.addUint32(nek::NikonMtpDevicePropCode::Fnumber);
-			vector<BYTE> data;
-			data.resize(sizeof(uint16_t));
-			uint16_t fnum = 450;
-			memcpy(data.data(), &fnum, sizeof(uint16_t));
-			nek::mtp::MtpResponse result = camera->SendCommandAndWrite(nek::NikonMtpOperationCode::SetDevicePropValue, params, data);
-			cout << std::hex << "Response code: " << result.responseCode << endl;
 		}
 	}
 
@@ -65,17 +56,23 @@ int main() {
 	{
 		auto params = nek::mtp::MtpParams();
 		params.addUint32(0);
+		camera->SendCommand(nek::NikonMtpOperationCode::ChangeCameraMode, params);
+	}
+
+	{
+		auto params = nek::mtp::MtpParams();
+		params.addUint32(0);
 		camera->SendCommand(nek::NikonMtpOperationCode::DeleteImagesInSdram, params);
 	}
 
 	auto propdesc = camera->GetDevicePropDesc(nek::NikonMtpDevicePropCode::ExposureIndex);
 
-	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)1250);
+	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)1600);
 	auto propvalue1 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
 	auto propvalue2 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
-	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)100);
+	camera->SetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex, (uint16_t)400);
 	auto propvalue3 = camera->GetDevicePropValue(nek::NikonMtpDevicePropCode::ExposureIndex);
 
 
@@ -84,41 +81,21 @@ int main() {
 		cin >> wait;
 		if (wait == 0) break;
 
-		{
-			auto params = nek::mtp::MtpParams();
-			params.addUint32(nek::NikonMtpDevicePropCode::Fnumber);
-			vector<BYTE> data;
-			data.resize(sizeof(uint16_t));
-			uint16_t fnum = 1100;
-			memcpy(data.data(), &fnum, sizeof(uint16_t));
-			nek::mtp::MtpResponse result;
-			try {
-				result = camera->SendCommandAndWrite(nek::NikonMtpOperationCode::SetDevicePropValue, params, data);
-			}
-			catch (const nek::mtp::MtpDeviceException& e) {
-				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-					break;
-				}
-				throw;
-			}
-			cout << std::hex << "Response code: " << result.responseCode << endl;
+		
+		auto params = nek::mtp::MtpParams();
+		params.addUint32(0xFFFFFFFF);
+		nek::mtp::MtpResponse result;
+		try {
+			result = camera->SendCommand(nek::NikonMtpOperationCode::InitiateCaptureRecInSdram, params);
 		}
-
-		{
-			auto params = nek::mtp::MtpParams();
-			params.addUint32(0xFFFFFFFF);
-			nek::mtp::MtpResponse result;
-			try {
-				result = camera->SendCommand(nek::NikonMtpOperationCode::InitiateCaptureRecInSdram, params);
+		catch (const nek::mtp::MtpDeviceException& e) {
+			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
+				break;
 			}
-			catch (const nek::mtp::MtpDeviceException& e) {
-				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-					break;
-				}
-				throw;
-			}
-			cout << std::hex << "Response code: " << result.responseCode << endl;
+			throw;
 		}
+		cout << std::hex << "Response code: " << result.responseCode << endl;
+		
 	}
 
 	delete camera;

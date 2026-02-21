@@ -111,8 +111,8 @@ std::map<std::wstring, MtpDeviceInfoDS> MtpManager::listMtpDevices() {
 		});
 }
 
-bool MtpManager::isDeviceConnected(const std::wstring &devicePath) {
-	return sendTaskWithResult<bool>([this, &devicePath] {
+bool MtpManager::isDeviceConnected(std::wstring devicePath) {
+	return sendTaskWithResult<bool>([this, devicePath] {
 		DWORD devicesNb = 0;
 		PWSTR* devices = nullptr;
 		HRESULT hr;
@@ -165,7 +165,7 @@ size_t MtpManager::countMtpDevices() {
 
 
 //MtpDevice
-MtpDevice::MtpDevice(const PWSTR devicePath, uint8_t additionalThreadsNb) {
+MtpDevice::MtpDevice(std::wstring devicePath, uint8_t additionalThreadsNb) {
 	devicePath_ = devicePath;
 	connected_ = false;
 	eventCookie_ = nullptr;
@@ -390,7 +390,11 @@ MtpResponse MtpDevice::SendCommandAndRead_(CComPtr<IPortableDevice> device, WORD
 				CoTaskMemFree(b);
 				b = nullptr;
 				if (retry >= 10) {
-					break;
+					result.responseCode = MtpResponseCode::Incomplete_Transfer;
+					CoTaskMemFree(context);
+					command.Release();
+					commandResult.Release();
+					return result;
 				}
 			}
 		}
@@ -610,7 +614,7 @@ void MtpDevice::initDevice() {
 		throw MtpDeviceException(MtpExPhase::DEVICE_INIT, hr);
 	}
 
-	hr = device_->Open(devicePath_, deviceClient_);
+	hr = device_->Open(devicePath_.c_str(), deviceClient_);
 	if (FAILED(hr)) {
 		device_.Release();
 		throw MtpDeviceException(MtpExPhase::DEVICE_INIT, hr);
@@ -661,7 +665,7 @@ MtpResponse MtpDevice::SendCommand(WORD operationCode, MtpParams params) {
 		}
 		catch (MtpDeviceException& e) {
 			this->mutexDevice_.unlock();
-			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(devicePath_)) {
+			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(this->devicePath_)) {
 				Disconnect();
 			}
 			throw;
@@ -691,7 +695,7 @@ MtpResponse MtpDevice::SendCommandAndRead(WORD operationCode, MtpParams params) 
 		}
 		catch (MtpDeviceException& e) {
 			this->mutexDevice_.unlock();
-			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(devicePath_)) {
+			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(this->devicePath_)) {
 				Disconnect();
 			}
 			throw;
@@ -720,7 +724,7 @@ MtpResponse MtpDevice::SendCommandAndWrite(WORD operationCode, MtpParams params,
 		}
 		catch (MtpDeviceException& e) {
 			this->mutexDevice_.unlock();
-			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(devicePath_)) {
+			if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED || !isConnected() || !MtpManager::Instance().isDeviceConnected(this->devicePath_)) {
 				Disconnect();
 			}
 			throw;
@@ -830,6 +834,75 @@ MtpDeviceInfoDS MtpDevice::GetDeviceInfo() {
 	deviceInfo_ = deviceInfo;
 	mutexDeviceInfo_.unlock();
 	return deviceInfo;
+}
+
+
+MtpObjectInfoDS MtpDevice::GetObjectInfo(uint32_t handle) {
+	MtpParams params;
+	params.addUint32(handle);
+	MtpResponse response = SendCommandAndRead(MtpOperationCode::GetObjectInfo, params);
+
+	if (response.responseCode != MtpResponseCode::OK) {
+		throw new MtpException(MtpOperationCode::GetDeviceInfo, response.responseCode);
+	}
+
+	MtpObjectInfoDS objectInfo;
+	size_t offset = 0;
+	uint32_t len;
+
+	objectInfo.StorageID = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ObjectFormat = *(uint16_t*)(response.data.data() + offset);
+	offset += sizeof(uint16_t);
+	objectInfo.ProtectionStatus = *(uint16_t*)(response.data.data() + offset);
+	offset += sizeof(uint16_t);
+	objectInfo.ObjectCompressedSize = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ThumbFormat = *(uint16_t*)(response.data.data() + offset);
+	offset += sizeof(uint16_t);
+	objectInfo.ThumbCompressedSize = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ThumbPixWidth = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ThumbPixHeight = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ImagePixWidth = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ImagePixHeight = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ImageBitDepth = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.ParentObject = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.AssociationType = *(uint16_t*)(response.data.data() + offset);
+	offset += sizeof(uint16_t);
+	objectInfo.AssociationDesc = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+	objectInfo.SequenceNumber = *(uint32_t*)(response.data.data() + offset);
+	offset += sizeof(uint32_t);
+
+	len = *(uint8_t*)(response.data.data() + offset);
+	offset += sizeof(uint8_t);
+	objectInfo.Filename.resize(len);
+	std::memcpy(objectInfo.Filename.data(), response.data.data() + offset, sizeof(uint16_t) * len);
+	offset += sizeof(char16_t) * len;
+
+	len = *(uint8_t*)(response.data.data() + offset);
+	offset += sizeof(uint8_t);
+	objectInfo.CaptureDate.resize(len);
+	std::memcpy(objectInfo.CaptureDate.data(), response.data.data() + offset, sizeof(uint16_t) * len);
+	offset += sizeof(char16_t) * len;
+
+	len = *(uint8_t*)(response.data.data() + offset);
+	offset += sizeof(uint8_t);
+	objectInfo.ModificationDate.resize(len);
+	std::memcpy(objectInfo.ModificationDate.data(), response.data.data() + offset, sizeof(uint16_t) * len);
+	offset += sizeof(char16_t) * len;
+
+	objectInfo.Keywords = *(uint8_t*)(response.data.data() + offset);
+	offset += sizeof(uint8_t);
+
+	return objectInfo;
 }
 
 

@@ -62,6 +62,54 @@ NikonDeviceInfoDS::NikonDeviceInfoDS(const nek::mtp::MtpDeviceInfoDS& native) {
 
 
 
+//NikonObjectInfoDS
+NikonObjectInfoDS::NikonObjectInfoDS() {
+	StorageID = 0;
+	ObjectFormat = (NikonMtpObjectFormatCode)0;
+	ProtectionStatus = 0;
+	ObjectCompressedSize = 0;
+	ThumbFormat = (NikonMtpObjectFormatCode)0;
+	ThumbCompressedSize = 0;
+	ThumbPixWidth = 0;
+	ThumbPixHeight = 0;
+	ImagePixWidth = 0;
+	ImagePixHeight = 0;
+	ImageBitDepth = 0;
+	ParentObject = 0;
+	AssociationType = 0;
+	AssociationDesc = 0;
+	SequenceNumber = 0;
+	Filename = "";
+	CaptureDate = "";
+	ModificationDate = "";
+	Keywords = 0;
+};
+
+NikonObjectInfoDS::NikonObjectInfoDS(const nek::mtp::MtpObjectInfoDS& native) {
+	StorageID = native.StorageID;
+	ObjectFormat = (NikonMtpObjectFormatCode)native.ObjectFormat;
+	ProtectionStatus = native.ProtectionStatus;
+	ObjectCompressedSize = native.ObjectCompressedSize;
+	ThumbFormat = (NikonMtpObjectFormatCode)native.ThumbFormat;
+	ThumbCompressedSize = native.ThumbCompressedSize;
+	ThumbPixWidth = native.ThumbPixWidth;
+	ThumbPixHeight = native.ThumbPixHeight;
+	ImagePixWidth = native.ImagePixWidth;
+	ImagePixHeight = native.ImagePixHeight;
+	ImageBitDepth = native.ImageBitDepth;
+	ParentObject = native.ParentObject;
+	AssociationType = native.AssociationType;
+	AssociationDesc = native.AssociationDesc;
+	SequenceNumber = native.SequenceNumber;
+	Filename = gcnew System::String(native.Filename.c_str());
+	CaptureDate = gcnew System::String(native.CaptureDate.c_str());
+	ModificationDate = gcnew System::String(native.ModificationDate.c_str());
+	Keywords = native.Keywords;
+};
+
+
+
+
 //MtpDatatypeVariant
 MtpDatatypeVariant::MtpDatatypeVariant(System::SByte data) {
 	m_type = NikonMtpDatatypeCode::Int8;

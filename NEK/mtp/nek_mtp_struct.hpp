@@ -50,6 +50,30 @@ namespace nek::mtp {
 	typedef struct MtpDeviceInfoDS_ MtpDeviceInfoDS;
 
 
+	struct MtpObjectInfoDS_ {
+		uint32_t StorageID = 0;
+		uint16_t ObjectFormat = 0;
+		uint16_t ProtectionStatus = 0;
+		uint32_t ObjectCompressedSize = 0;
+		uint16_t ThumbFormat = 0;
+		uint32_t ThumbCompressedSize = 0;
+		uint32_t ThumbPixWidth = 0;
+		uint32_t ThumbPixHeight = 0;
+		uint32_t ImagePixWidth = 0;
+		uint32_t ImagePixHeight = 0;
+		uint32_t ImageBitDepth = 0;
+		uint32_t ParentObject = 0;
+		uint16_t AssociationType = 0;
+		uint32_t AssociationDesc = 0;
+		uint32_t SequenceNumber = 0;
+		std::wstring Filename;
+		std::wstring CaptureDate;
+		std::wstring ModificationDate;
+		uint8_t Keywords = 0;
+	};
+	typedef struct MtpObjectInfoDS_ MtpObjectInfoDS;
+
+
 
 
 	using MtpDatatypeVariant = std::variant<std::monostate, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, int128, uint128, std::vector<int8_t>, std::vector<uint8_t>, std::vector<int16_t>, std::vector<uint16_t>, std::vector<int32_t>, std::vector<uint32_t>, std::vector<int64_t>, std::vector<uint64_t>, std::vector<int128>, std::vector<uint128>, std::wstring>;

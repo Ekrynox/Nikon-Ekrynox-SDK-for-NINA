@@ -30,6 +30,7 @@
         {
             PictureBox = new PictureBox();
             capture = new Button();
+            liveview = new Button();
             ((System.ComponentModel.ISupportInitialize)PictureBox).BeginInit();
             SuspendLayout();
             // 
@@ -54,11 +55,23 @@
             capture.UseVisualStyleBackColor = true;
             capture.Click += capture_Click;
             // 
+            // liveview
+            // 
+            liveview.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            liveview.Location = new Point(546, 41);
+            liveview.Name = "liveview";
+            liveview.Size = new Size(131, 23);
+            liveview.TabIndex = 2;
+            liveview.Text = "Start Liveview";
+            liveview.UseVisualStyleBackColor = true;
+            liveview.Click += liveview_Click;
+            // 
             // CameraShootingForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(688, 450);
+            Controls.Add(liveview);
             Controls.Add(capture);
             Controls.Add(PictureBox);
             Name = "CameraShootingForm";
@@ -71,5 +84,6 @@
 
         private PictureBox PictureBox;
         private Button capture;
+        private Button liveview;
     }
 }
