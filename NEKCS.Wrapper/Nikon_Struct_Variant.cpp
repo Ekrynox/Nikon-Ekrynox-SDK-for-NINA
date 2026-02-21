@@ -388,9 +388,13 @@ nek::mtp::MtpDatatypeVariant MtpDatatypeVariant::getVariant() {
 	}
 	else if (m_type == NikonMtpDatatypeCode::String) {
 		auto str = static_cast<System::String^>(m_value)->ToCharArray();
-		pin_ptr<wchar_t> prstr = &str[0];
-		auto native = std::wstring(prstr);
-		nek::mtp::MtpDatatypeVariant v = native;
+		if (str->Length > 0) {
+			pin_ptr<wchar_t> prstr = &str[0];
+			auto native = std::wstring(prstr);
+			nek::mtp::MtpDatatypeVariant v = native;
+			return v;
+		}
+		nek::mtp::MtpDatatypeVariant v = std::wstring();
 		return v;
 	}
 
