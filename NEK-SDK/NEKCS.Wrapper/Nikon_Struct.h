@@ -11,20 +11,79 @@ using namespace System::Runtime::InteropServices;
 namespace NEKCS {
 
 	public ref struct NikonDeviceInfoDS {
-		System::UInt16 StandardVersion = 0;
-		System::UInt32 VendorExtensionID = 0;
-		System::UInt16 VendorExtensionVersion = 0;
-		System::String^ VendorExtensionDesc = "";
-		System::UInt16 FunctionalMode = 0;
-		System::Collections::Generic::List<NikonMtpOperationCode>^ OperationsSupported;
-		System::Collections::Generic::List<NikonMtpEventCode>^ EventsSupported;
-		System::Collections::Generic::List<NikonMtpDevicePropCode>^ DevicePropertiesSupported;
-		System::Collections::Generic::List<System::UInt16>^ CaptureFormats;
-		System::Collections::Generic::List<System::UInt16>^ ImageFormats;
-		System::String^ Manufacture = "";
-		System::String^ Model = "";
-		System::String^ DeviceVersion = "";
-		System::String^ SerialNumber = "";
+	private:
+		System::UInt16 _standardVersion = 0;
+		System::UInt32 _vendorExtensionID = 0;
+		System::UInt16 _vendorExtensionVersion = 0;
+		System::String^ _vendorExtensionDesc = "";
+		System::UInt16 _functionalMode = 0;
+		System::Collections::Generic::List<NikonMtpOperationCode>^ _operationsSupported;
+		System::Collections::Generic::List<NikonMtpEventCode>^ _eventsSupported;
+		System::Collections::Generic::List<NikonMtpDevicePropCode>^ _devicePropertiesSupported;
+		System::Collections::Generic::List<System::UInt16>^ _captureFormats;
+		System::Collections::Generic::List<System::UInt16>^ _imageFormats;
+		System::String^ _manufacture = "";
+		System::String^ _model = "";
+		System::String^ _deviceVersion = "";
+		System::String^ _serialNumber = "";
+
+	public:
+		property System::UInt16 StandardVersion{
+			System::UInt16 get() { return _standardVersion; }
+			void set(System::UInt16 value) { _standardVersion = value; }
+		}
+		property System::UInt32 VendorExtensionID{
+			System::UInt32 get() { return _vendorExtensionID; }
+			void set(System::UInt32 value) { _vendorExtensionID = value; }
+		}
+		property System::UInt16 VendorExtensionVersion{
+			System::UInt16 get() { return _vendorExtensionVersion; }
+			void set(System::UInt16 value) { _vendorExtensionVersion = value; }
+		}
+		property System::String^ VendorExtensionDesc{
+			System::String ^ get() { return _vendorExtensionDesc; }
+			void set(System::String ^ value) { _vendorExtensionDesc = value; }
+		}
+		property System::UInt16 FunctionalMode {
+			System::UInt16 get() { return _functionalMode; }
+			void set(System::UInt16 value) { _functionalMode = value; }
+		}
+		property System::Collections::Generic::List<NikonMtpOperationCode>^ OperationsSupported {
+			System::Collections::Generic::List<NikonMtpOperationCode>^ get() { return _operationsSupported; }
+			void set(System::Collections::Generic::List<NikonMtpOperationCode>^ value) { _operationsSupported = value; }
+		}
+		property System::Collections::Generic::List<NikonMtpEventCode>^ EventsSupported {
+			System::Collections::Generic::List<NikonMtpEventCode>^ get() { return _eventsSupported; }
+			void set(System::Collections::Generic::List<NikonMtpEventCode>^ value) { _eventsSupported = value; }
+		}
+		property System::Collections::Generic::List<NikonMtpDevicePropCode>^ DevicePropertiesSupported {
+			System::Collections::Generic::List<NikonMtpDevicePropCode>^ get() { return _devicePropertiesSupported; }
+			void set(System::Collections::Generic::List<NikonMtpDevicePropCode>^ value) { _devicePropertiesSupported = value; }
+		}
+		property System::Collections::Generic::List<System::UInt16>^ CaptureFormats {
+			System::Collections::Generic::List<System::UInt16>^ get() { return _captureFormats; }
+			void set(System::Collections::Generic::List<System::UInt16>^ value) { _captureFormats = value; }
+		}
+		property System::Collections::Generic::List<System::UInt16>^ ImageFormats {
+			System::Collections::Generic::List<System::UInt16>^ get() { return _imageFormats; }
+			void set(System::Collections::Generic::List<System::UInt16>^ value) { _imageFormats = value; }
+		}
+		property System::String^ Manufacture {
+			System::String^ get() { return _manufacture; }
+			void set(System::String^ value) { _manufacture = value; }
+		}
+		property System::String^ Model {
+			System::String^ get() { return _model; }
+			void set(System::String^ value) { _model = value; }
+		}
+		property System::String^ DeviceVersion {
+			System::String^ get() { return _deviceVersion; }
+			void set(System::String^ value) { _deviceVersion = value; }
+		}
+		property System::String^ SerialNumber {
+			System::String^ get() { return _serialNumber; }
+			void set(System::String^ value) { _serialNumber = value; }
+		}
 
 		NikonDeviceInfoDS();
 		NikonDeviceInfoDS(const nek::NikonDeviceInfoDS& native);
@@ -32,25 +91,104 @@ namespace NEKCS {
 
 
 	public ref struct NikonObjectInfoDS {
-		System::UInt32 StorageID = 0;
-		NikonMtpObjectFormatCode ObjectFormat = (NikonMtpObjectFormatCode)0;
-		System::UInt16 ProtectionStatus = 0;
-		System::UInt32 ObjectCompressedSize = 0;
-		NikonMtpObjectFormatCode ThumbFormat = (NikonMtpObjectFormatCode)0;
-		System::UInt32 ThumbCompressedSize = 0;
-		System::UInt32 ThumbPixWidth = 0;
-		System::UInt32 ThumbPixHeight = 0;
-		System::UInt32 ImagePixWidth = 0;
-		System::UInt32 ImagePixHeight = 0;
-		System::UInt32 ImageBitDepth = 0;
-		System::UInt32 ParentObject = 0;
-		System::UInt16 AssociationType = 0;
-		System::UInt32 AssociationDesc = 0;
-		System::UInt32 SequenceNumber = 0;
-		System::String^ Filename = "";
-		System::String^ CaptureDate = "";
-		System::String^ ModificationDate = "";
-		System::Byte Keywords = 0;
+	private:
+		System::UInt32 _storageID = 0;
+		NikonMtpObjectFormatCode _objectFormat = (NikonMtpObjectFormatCode)0;
+		System::UInt16 _protectionStatus = 0;
+		System::UInt32 _objectCompressedSize = 0;
+		NikonMtpObjectFormatCode _thumbFormat = (NikonMtpObjectFormatCode)0;
+		System::UInt32 _thumbCompressedSize = 0;
+		System::UInt32 _thumbPixWidth = 0;
+		System::UInt32 _thumbPixHeight = 0;
+		System::UInt32 _imagePixWidth = 0;
+		System::UInt32 _imagePixHeight = 0;
+		System::UInt32 _imageBitDepth = 0;
+		System::UInt32 _parentObject = 0;
+		System::UInt16 _associationType = 0;
+		System::UInt32 _associationDesc = 0;
+		System::UInt32 _sequenceNumber = 0;
+		System::String^ _filename = "";
+		System::String^ _captureDate = "";
+		System::String^ _modificationDate = "";
+		System::Byte _keywords = 0;
+
+	public:
+		property System::UInt32 StorageID {
+			System::UInt32 get() { return _storageID; }
+			void set(System::UInt32 value) { _storageID = value; }
+		}
+		property NikonMtpObjectFormatCode ObjectFormat {
+			NikonMtpObjectFormatCode get() { return _objectFormat; }
+			void set(NikonMtpObjectFormatCode value) { _objectFormat = value; }
+		}
+		property System::UInt16 ProtectionStatus {
+			System::UInt16 get() { return _protectionStatus; }
+			void set(System::UInt16 value) { _protectionStatus = value; }
+		}
+		property System::UInt32 ObjectCompressedSize {
+			System::UInt32 get() { return _objectCompressedSize; }
+			void set(System::UInt32 value) { _objectCompressedSize = value; }
+		}
+		property NikonMtpObjectFormatCode ThumbFormat {
+			NikonMtpObjectFormatCode get() { return _thumbFormat; }
+			void set(NikonMtpObjectFormatCode value) { _thumbFormat = value; }
+		}
+		property System::UInt32 ThumbCompressedSize {
+			System::UInt32 get() { return _thumbCompressedSize; }
+			void set(System::UInt32 value) { _thumbCompressedSize = value; }
+		}
+		property System::UInt32 ThumbPixWidth {
+			System::UInt32 get() { return _thumbPixWidth; }
+			void set(System::UInt32 value) { _thumbPixWidth = value; }
+		}
+		property System::UInt32 ThumbPixHeight {
+			System::UInt32 get() { return _thumbPixHeight; }
+			void set(System::UInt32 value) { _thumbPixHeight = value; }
+		}
+		property System::UInt32 ImagePixWidth {
+			System::UInt32 get() { return _imagePixWidth; }
+			void set(System::UInt32 value) { _imagePixWidth = value; }
+		}
+		property System::UInt32 ImagePixHeight {
+			System::UInt32 get() { return _imagePixHeight; }
+			void set(System::UInt32 value) { _imagePixHeight = value; }
+		}
+		property System::UInt32 ImageBitDepth {
+			System::UInt32 get() { return _imageBitDepth; }
+			void set(System::UInt32 value) { _imageBitDepth = value; }
+		}
+		property System::UInt32 ParentObject {
+			System::UInt32 get() { return _parentObject; }
+			void set(System::UInt32 value) { _parentObject = value; }
+		}
+		property System::UInt16 AssociationType {
+			System::UInt16 get() { return _associationType; }
+			void set(System::UInt16 value) { _associationType = value; }
+		}
+		property System::UInt32 AssociationDesc {
+			System::UInt32 get() { return _associationDesc; }
+			void set(System::UInt32 value) { _associationDesc = value; }
+		}
+		property System::UInt32 SequenceNumber {
+			System::UInt32 get() { return _sequenceNumber; }
+			void set(System::UInt32 value) { _sequenceNumber = value; }
+		}
+		property System::String^ Filename {
+			System::String^ get() { return _filename; }
+			void set(System::String^ value) { _filename = value; }
+		}
+		property System::String^ CaptureDate {
+			System::String^ get() { return _captureDate; }
+			void set(System::String^ value) { _captureDate = value; }
+		}
+		property System::String^ ModificationDate {
+			System::String^ get() { return _modificationDate; }
+			void set(System::String^ value) { _modificationDate = value; }
+		}
+		property System::Byte Keywords {
+			System::Byte get() { return _keywords; }
+			void set(System::Byte value) { _keywords = value; }
+		}
 
 		NikonObjectInfoDS();
 		NikonObjectInfoDS(const nek::mtp::MtpObjectInfoDS& native);
@@ -127,23 +265,76 @@ namespace NEKCS {
 
 	generic<typename T>
 	public ref struct NikonMtpRangeForm {
-		T min;
-		T max;
-		T step;
+	internal:
+		T _min;
+		T _max;
+		T _step;
+
+	public:
+		property T Min {
+			T get() { return _min; }
+			void set(T value) { _min = value; }
+		}
+		property T Max {
+			T get() { return _max; }
+			void set(T value) { _max = value; }
+		}
+		property T Step {
+			T get() { return _step; }
+			void set(T value) { _step = value; }
+		}
+		NikonMtpRangeForm() {};
 	};
 
 	generic<typename T>
 	public ref struct NikonDevicePropDescDS {
-		NikonMtpDevicePropCode DevicePropertyCode = (NikonMtpDevicePropCode)0;
-		NikonMtpDatatypeCode DataType = NikonMtpDatatypeCode::Undefined;
-		System::Byte GetSet = 0;
+	internal:
+		NikonMtpDevicePropCode _devicePropertyCode = (NikonMtpDevicePropCode)0;
+		NikonMtpDatatypeCode _dataType = NikonMtpDatatypeCode::Undefined;
+		System::Byte _getSet = 0;
 
-		T FactoryDefaultValue;
-		T CurrentValue;
-		NikonMtpFormtypeCode FormFlag = NikonMtpFormtypeCode::Empty;
+		T _factoryDefaultValue;
+		T _currentValue;
+		NikonMtpFormtypeCode _formFlag = NikonMtpFormtypeCode::Empty;
 
-		NikonMtpRangeForm<T>^ RangeFORM = nullptr;
-		array<T>^ EnumFORM = nullptr;
+		NikonMtpRangeForm<T>^ _rangeFORM = nullptr;
+		array<T>^ _enumFORM = nullptr;
+
+	public:
+		property NikonMtpDevicePropCode DevicePropertyCode {
+			NikonMtpDevicePropCode get() { return _devicePropertyCode; }
+			void set(NikonMtpDevicePropCode value) { _devicePropertyCode = value; }
+		}
+		property NikonMtpDatatypeCode DataType {
+			NikonMtpDatatypeCode get() { return _dataType; }
+			void set(NikonMtpDatatypeCode value) { _dataType = value; }
+		}
+		property System::Byte GetSet {
+			System::Byte get() { return _getSet; }
+			void set(System::Byte value) { _getSet = value; }
+		}
+
+		property T FactoryDefaultValue {
+			T get() { return _factoryDefaultValue; }
+			void set(T value) { _factoryDefaultValue = value; }
+		}
+		property T CurrentValue {
+			T get() { return _currentValue; }
+			void set(T value) { _currentValue = value; }
+		}
+		property NikonMtpFormtypeCode FormFlag {
+			NikonMtpFormtypeCode get() { return _formFlag; }
+			void set(NikonMtpFormtypeCode value) { _formFlag = value; }
+		}
+
+		property NikonMtpRangeForm<T>^ RangeFORM {
+			NikonMtpRangeForm<T>^ get() { return _rangeFORM; }
+			void set(NikonMtpRangeForm<T>^ value) { _rangeFORM = value; }
+		}
+		property array<T>^ EnumFORM {
+			array<T>^ get() { return _enumFORM; }
+			void set(array<T>^ value) { _enumFORM = value; }
+		}
 
 		NikonDevicePropDescDS() {};
 	};
