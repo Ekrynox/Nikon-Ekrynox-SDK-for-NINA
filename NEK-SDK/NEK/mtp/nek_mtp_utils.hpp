@@ -81,6 +81,7 @@ namespace nek::mtp {
 	class MtpEventCallback : public IPortableDeviceEventCallback {
 	public:
 		MtpEventCallback();
+		~MtpEventCallback();
 
 		HRESULT STDMETHODCALLTYPE OnEvent(IPortableDeviceValues* pEventParameters);
 		HRESULT STDMETHODCALLTYPE OnEvent(MtpEvent event);
@@ -96,7 +97,7 @@ namespace nek::mtp {
 
 		std::mutex mutex_;
 		size_t nextId;
-		std::vector<std::pair<size_t, std::function<void(MtpEvent)>>> callbacks_;
+		std::vector<std::pair<size_t, std::function<void(MtpEvent)>>>* callbacks_;
 	};
 
 }
