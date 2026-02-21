@@ -63,6 +63,7 @@ NikonCamera::!NikonCamera() {
 
 
 System::Boolean NikonCamera::isConnected() {
+	if (m_nativeClass == nullptr) return false;
 	return m_nativeClass->isConnected();
 };
 

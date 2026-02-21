@@ -1380,6 +1380,20 @@ MtpDevicePropDescDSV MtpDevice::GetDevicePropDesc_(MtpResponse& response) {
 		case MtpDatatypeCode::UInt128:
 			throw std::runtime_error("uint128 Not Implemented");
 			break;
+		case MtpDatatypeCode::String:
+			{
+				MtpEnumFormV form(len);
+				for (size_t i = 0; i < len; i++) {
+					auto lenstr = *(uint8_t*)(response.data.data() + offset);
+					offset += sizeof(uint8_t);
+					auto str = std::vector<char16_t>(lenstr);
+					std::memcpy(str.data(), (char16_t*)(response.data.data() + offset), sizeof(char16_t) * lenstr);
+					offset += sizeof(char16_t) * lenstr;
+					form[i] = MtpDatatypeVariant{ std::wstring(str.begin(), str.end()) };
+				}
+				result.FORM = std::move(form);
+			}
+			break;
 		default:
 			return result;
 		}
