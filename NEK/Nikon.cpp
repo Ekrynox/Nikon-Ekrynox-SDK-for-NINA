@@ -333,7 +333,13 @@ mtp::MtpDevicePropDescDSV NikonCamera::GetDevicePropDesc(uint32_t devicePropCode
 			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropDescEx, response.responseCode);
 		}
 
+		//PropCode is 4 bytes instead of 2 for the standard command
+		uint32_t devicePropCodeReturned = *(uint32_t*)(response.data.data());
+		response.data.erase(response.data.begin(), response.data.begin() + 2);
+
 		mtp::MtpDevicePropDescDSV result = GetDevicePropDesc_(response);
+		result.DevicePropertyCode = devicePropCodeReturned;
+
 		mutexDeviceInfo_.lock();
 		if (devicePropDataType_.find(result.DevicePropertyCode) == devicePropDataType_.end()) {
 			devicePropDataType_.insert(std::pair<uint32_t, uint16_t>(result.DevicePropertyCode, result.DataType)); //Register Type for futur use in Get Value
