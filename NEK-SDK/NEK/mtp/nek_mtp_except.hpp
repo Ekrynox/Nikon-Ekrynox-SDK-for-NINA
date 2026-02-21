@@ -57,6 +57,7 @@ namespace nek::mtp {
 	class MtpDeviceException : public std::exception {
 	public:
 		NEK_API MtpDeviceException(MtpExPhase phase, HRESULT hr);
+		NEK_API MtpDeviceException(MtpExPhase phase, MtpExCode code);
 		NEK_API const char* what() const noexcept override;
 
 		const MtpExPhase phase;

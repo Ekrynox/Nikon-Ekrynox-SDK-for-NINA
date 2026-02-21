@@ -13,18 +13,26 @@ namespace nek::utils {
 
 	class ThreadedClassBase {
 	public:
-		NEK_API ThreadedClassBase();
-
 		NEK_API virtual void startThread() = 0;
 		NEK_API virtual void stopThread() = 0;
 
-		NEK_API void sendTaskAsync(std::function<void()> task);
+		NEK_API std::future<void> sendTaskAsync(std::function<void()> task);
 		NEK_API void sendTask(std::function<void()> task);
 		template<typename T> T sendTaskWithResult(std::function<T()> task) {
-			std::promise<T> p;
+			auto p = std::promise<T>();
 			auto f = p.get_future();
 
-			sendTaskAsync([&] { p.set_value(task()); });
+			mutexTasks_.lock();
+			tasks_.push_back([task, &p] {
+				try {
+					p.set_value(task());
+				}
+				catch (...) {
+					p.set_exception(std::current_exception());
+				}
+				});
+			mutexTasks_.unlock();
+			cvTasks_.notify_one();
 
 			return f.get();
 		}

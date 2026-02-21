@@ -37,6 +37,7 @@ namespace nek::mtp {
 
 		NEK_API std::map<std::wstring, MtpDeviceInfoDS> listMtpDevices();
 		NEK_API size_t countMtpDevices();
+		NEK_API bool isDeviceConnected(const std::wstring &devicePath);
 
 	private:
 		MtpManager& operator= (const MtpManager&) = delete;
@@ -56,7 +57,8 @@ namespace nek::mtp {
 		NEK_API MtpDevice(const PWSTR devicePath, uint8_t additionalThreadsNb = 0);
 		NEK_API ~MtpDevice();
 
-		NEK_API bool isConnected() const { return connected_ && running_; }
+		NEK_API bool isConnected() const;
+		NEK_API void Disconnect();
 
 		NEK_API MtpResponse SendCommand(WORD operationCode, MtpParams params);
 		NEK_API MtpResponse SendCommandAndRead(WORD operationCode, MtpParams params);
@@ -83,8 +85,7 @@ namespace nek::mtp {
 		static MtpResponse SendCommandAndWrite_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params, std::vector<uint8_t> data);
 
 		void initCom();
-		void connect();
-		void disconnect();
+		void initDevice();
 		virtual void startThreads();
 
 		PWSTR devicePath_;
