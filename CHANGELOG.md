@@ -8,14 +8,14 @@
 
 ## 1.1.0.0
 - Add Support to LensAF Focus Position setting
-- - Generate a Name for CPU Lens
+- Generate a Name for CPU Lens
 
 
 ## 1.0.0.0
 - Complete the Database for D3XXX serie, and fix some errors in Ids
 - Improve Disconnection handling
 - Improve Settings UI, Information Notifications, and Description
-- - Official Release
+- Official Release
 
 
 ## 0.4.0.0
