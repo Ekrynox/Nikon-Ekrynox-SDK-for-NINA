@@ -140,8 +140,8 @@ NikonDevicePropDescDS_Variant::NikonDevicePropDescDS_Variant(const nek::mtp::Mtp
 }
 
 template<typename T> System::Boolean NikonDevicePropDescDS_Variant::TryGet([Out] NikonDevicePropDescDS<T>^% desc) {
+	desc = gcnew NikonDevicePropDescDS<T>();
 	if (DataType != MtpDatatypeVariant::GetCodeFromType(T::typeid)) {
-		desc = gcnew NikonDevicePropDescDS<T>();
 		return false;
 	}
 	System::Boolean res = true;
