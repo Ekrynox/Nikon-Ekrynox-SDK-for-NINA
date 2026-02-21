@@ -35,6 +35,7 @@ namespace nek::mtp {
 	public:
 		NEK_API static MtpManager& Instance();
 
+		NEK_API std::vector<std::wstring> listMtpDevicesPath();
 		NEK_API std::map<std::wstring, MtpDeviceInfoDS> listMtpDevices();
 		NEK_API size_t countMtpDevices();
 		NEK_API bool isDeviceConnected(std::wstring devicePath);
@@ -60,9 +61,9 @@ namespace nek::mtp {
 		NEK_API bool isConnected() const;
 		NEK_API void Disconnect();
 
-		NEK_API MtpResponse SendCommand(WORD operationCode, MtpParams params);
-		NEK_API MtpResponse SendCommandAndRead(WORD operationCode, MtpParams params);
-		NEK_API MtpResponse SendCommandAndWrite(WORD operationCode, MtpParams params, std::vector<uint8_t> data);
+		NEK_API MtpResponse SendCommand(uint16_t operationCode, MtpParams params);
+		NEK_API MtpResponse SendCommandAndRead(uint16_t operationCode, MtpParams params);
+		NEK_API MtpResponse SendCommandAndWrite(uint16_t operationCode, MtpParams params, std::vector<uint8_t> data);
 
 		NEK_API size_t RegisterCallback(std::function<void(MtpEvent)> callback);
 		NEK_API void UnregisterCallback(size_t id);
@@ -83,9 +84,9 @@ namespace nek::mtp {
 		virtual void mainThreadTask();
 		virtual void additionalThreadsTask();
 
-		static MtpResponse SendCommand_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params);
-		static MtpResponse SendCommandAndRead_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params);
-		static MtpResponse SendCommandAndWrite_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params, std::vector<uint8_t> data);
+		static MtpResponse SendCommand_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params);
+		static MtpResponse SendCommandAndRead_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params);
+		static MtpResponse SendCommandAndWrite_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params, std::vector<uint8_t> data);
 
 		void initCom();
 		void initDevice();

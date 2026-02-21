@@ -64,9 +64,9 @@ void MtpManager::threadTask() {
 	throw MtpDeviceException(MtpExPhase::COM_INIT, hr);
 }
 
-std::map<std::wstring, MtpDeviceInfoDS> MtpManager::listMtpDevices() {
-	return sendTaskWithResult<std::map<std::wstring, MtpDeviceInfoDS>>([this] {
-		std::map<std::wstring, MtpDeviceInfoDS> nikonCameras;
+std::vector<std::wstring> MtpManager::listMtpDevicesPath() {
+	return sendTaskWithResult<std::vector<std::wstring>>([this] {
+		std::vector<std::wstring> wpdDevices;
 
 		DWORD devicesNb = 0;
 		PWSTR* devices = nullptr;
@@ -98,7 +98,7 @@ std::map<std::wstring, MtpDeviceInfoDS> MtpManager::listMtpDevices() {
 
 			for (DWORD i = 0; i < devicesNb; i++) {
 				if (devices[i] != 0) {
-					nikonCameras.insert(std::pair(std::wstring(devices[i]), MtpDevice(devices[i]).GetDeviceInfo()));
+					wpdDevices.push_back(std::wstring(devices[i]));
 					CoTaskMemFree(devices[i]);
 				}
 			}
@@ -109,7 +109,56 @@ std::map<std::wstring, MtpDeviceInfoDS> MtpManager::listMtpDevices() {
 			mutexDevice_.unlock();
 		}
 
-		return nikonCameras;
+		return wpdDevices;
+		});
+}
+
+std::map<std::wstring, MtpDeviceInfoDS> MtpManager::listMtpDevices() {
+	return sendTaskWithResult<std::map<std::wstring, MtpDeviceInfoDS>>([this] {
+		std::map<std::wstring, MtpDeviceInfoDS> wpdDevices;
+
+		DWORD devicesNb = 0;
+		PWSTR* devices = nullptr;
+		HRESULT hr;
+
+		mutexDevice_.lock();
+
+		//Update WPD devices list
+		deviceManager_->RefreshDeviceList();
+
+		//Get the number of WPD devices
+		hr = deviceManager_->GetDevices(NULL, &devicesNb);
+		if (FAILED(hr)) {
+			mutexDevice_.unlock();
+			throw MtpDeviceException(MtpExPhase::MANAGER_DEVICELIST, hr);
+		}
+
+		//At least one device
+		if (devicesNb > 0) {
+			devices = new PWSTR[devicesNb]();
+			HRESULT hr = deviceManager_->GetDevices(devices, &devicesNb);
+			if (FAILED(hr)) {
+				mutexDevice_.unlock();
+				delete[] devices;
+				throw MtpDeviceException(MtpExPhase::MANAGER_DEVICELIST, hr);
+			}
+
+			mutexDevice_.unlock();
+
+			for (DWORD i = 0; i < devicesNb; i++) {
+				if (devices[i] != 0) {
+					wpdDevices.insert(std::pair(std::wstring(devices[i]), MtpDevice(devices[i]).GetDeviceInfo()));
+					CoTaskMemFree(devices[i]);
+				}
+			}
+
+			delete[] devices;
+		}
+		else {
+			mutexDevice_.unlock();
+		}
+
+		return wpdDevices;
 		});
 }
 
@@ -243,7 +292,7 @@ void MtpDevice::additionalThreadsTask() {
 
 
 
-MtpResponse MtpDevice::SendCommand_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params) {
+MtpResponse MtpDevice::SendCommand_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params) {
 	MtpResponse result = MtpResponse();
 	HRESULT hr;
 
@@ -296,7 +345,7 @@ MtpResponse MtpDevice::SendCommand_(CComPtr<IPortableDevice> device, WORD operat
 	return result;
 }
 
-MtpResponse MtpDevice::SendCommandAndRead_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params) {
+MtpResponse MtpDevice::SendCommandAndRead_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params) {
 	MtpResponse result = MtpResponse();
 	HRESULT hr;
 
@@ -451,7 +500,7 @@ MtpResponse MtpDevice::SendCommandAndRead_(CComPtr<IPortableDevice> device, WORD
 	return result;
 }
 
-MtpResponse MtpDevice::SendCommandAndWrite_(CComPtr<IPortableDevice> device, WORD operationCode, MtpParams params, std::vector<uint8_t> data) {
+MtpResponse MtpDevice::SendCommandAndWrite_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params, std::vector<uint8_t> data) {
 	MtpResponse result = MtpResponse();
 	HRESULT hr;
 
@@ -655,7 +704,7 @@ void MtpDevice::startThreads() {
 }
 
 
-MtpResponse MtpDevice::SendCommand(WORD operationCode, MtpParams params) {
+MtpResponse MtpDevice::SendCommand(uint16_t operationCode, MtpParams params) {
 	if (!isConnected()) {
 		throw MtpDeviceException(MtpExPhase::DEVICE_NOT_CONNECTED, MtpExCode::DEVICE_DISCONNECTED);
 	}
@@ -684,7 +733,7 @@ MtpResponse MtpDevice::SendCommand(WORD operationCode, MtpParams params) {
 	}
 	return sendTaskWithResult<MtpResponse>(func);
 }
-MtpResponse MtpDevice::SendCommandAndRead(WORD operationCode, MtpParams params) {
+MtpResponse MtpDevice::SendCommandAndRead(uint16_t operationCode, MtpParams params) {
 	if (!isConnected()) {
 		throw MtpDeviceException(MtpExPhase::DEVICE_NOT_CONNECTED, MtpExCode::DEVICE_DISCONNECTED);
 	}
@@ -714,7 +763,7 @@ MtpResponse MtpDevice::SendCommandAndRead(WORD operationCode, MtpParams params) 
 	}
 	return sendTaskWithResult<MtpResponse>(func);
 }
-MtpResponse MtpDevice::SendCommandAndWrite(WORD operationCode, MtpParams params, std::vector<uint8_t> data) {
+MtpResponse MtpDevice::SendCommandAndWrite(uint16_t operationCode, MtpParams params, std::vector<uint8_t> data) {
 	if (!isConnected()) {
 		throw MtpDeviceException(MtpExPhase::DEVICE_NOT_CONNECTED, MtpExCode::DEVICE_DISCONNECTED);
 	}
