@@ -34,29 +34,5 @@ namespace LucasAlias.NINA.NEK.Properties {
                 this["UpdateSettings"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public byte NbAdditionalThreads {
-            get {
-                return ((byte)(this["NbAdditionalThreads"]));
-            }
-            set {
-                this["NbAdditionalThreads"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool UseHostMode {
-            get {
-                return ((bool)(this["UseHostMode"]));
-            }
-            set {
-                this["UseHostMode"] = value;
-            }
-        }
     }
 }

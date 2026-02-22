@@ -75,11 +75,10 @@ namespace LucasAlias.NINA.NEK {
         }
         public byte NbAdditionalThreads {
             get {
-                return Settings.Default.NbAdditionalThreads;
+                return pluginSettings.GetValueByte(nameof(NbAdditionalThreads), 2);
             }
             set {
-                Settings.Default.NbAdditionalThreads = value;
-                CoreUtil.SaveSettings(Settings.Default);
+                pluginSettings.SetValueByte(nameof(NbAdditionalThreads), value);
                 RaisePropertyChanged();
             }
         }
