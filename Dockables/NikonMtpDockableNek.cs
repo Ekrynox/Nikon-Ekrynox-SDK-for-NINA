@@ -109,8 +109,8 @@ namespace LucasAlias.NINA.NEK.Dockables {
                 this._connected = false;
                 RaiseAllPropertiesChanged();
 
-                await Application.Current.Dispatcher.BeginInvoke(() => {
-                    DeviceProperties.Clear();
+                _= Application.Current.Dispatcher.BeginInvoke(() => {
+                    DeviceProperties?.Clear();
                 });
             }
         }
