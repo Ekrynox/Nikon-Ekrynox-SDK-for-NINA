@@ -118,9 +118,9 @@ namespace LucasAlias.NINA.NEK.Dockables {
 
         private void UpdateDeviceProperties(NEKCS.NikonCamera camera, MtpEvent ev) {
             if (!Connected) return;
-            if (ev.eventCode != NEKCS.NikonMtpEventCode.DevicePropChanged) return;
+            if (ev.EventCode != NEKCS.NikonMtpEventCode.DevicePropChanged) return;
 
-            var code = (NEKCS.NikonMtpDevicePropCode)ev.eventParams[0];
+            var code = (NEKCS.NikonMtpDevicePropCode)ev.Parameters[0];
             UpdateDeviceProperty(code);
         }
         

@@ -73,14 +73,5 @@ namespace LucasAlias.NINA.NEK {
                 RaisePropertyChanged();
             }
         }
-        public byte NbAdditionalThreads {
-            get {
-                return pluginSettings.GetValueByte(nameof(NbAdditionalThreads), 2);
-            }
-            set {
-                pluginSettings.SetValueByte(nameof(NbAdditionalThreads), value);
-                RaisePropertyChanged();
-            }
-        }
     }
 }

@@ -259,24 +259,21 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (!Connected) return NikonMtpResponseCode.General_Error;
                     if (needInit) if (!InitFocusingProcess()) return NikonMtpResponseCode.General_Error;
 
-                    var parameters = new MtpParams();
-                    parameters.addUint32((UInt32)(toInf ? 2 : 1));
-                    parameters.addUint32(distance);
-                    var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, parameters);
+                    var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, [(UInt32)(toInf ? 2 : 1), distance]);
                     var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 20);
 
-                    if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                    if (response.ResponseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
                         _position = toInf ? _nbSteps : 0;
-                    } else if (response.responseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
+                    } else if (response.ResponseCode == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_End) {
                         result = NikonMtpResponseCode.MfDrive_Step_End;
                         _position = toInf ? _nbSteps : 0;
-                    } else if (response.responseCode == NikonMtpResponseCode.OK && result == NikonMtpResponseCode.OK) {
+                    } else if (response.ResponseCode == NikonMtpResponseCode.OK && result == NikonMtpResponseCode.OK) {
                         result = NikonMtpResponseCode.OK;
                         _position += toInf ? distance : 0;
                         _position -= toInf ? 0 : distance;
                     } else {
-                        var e = new MtpException(NikonMtpOperationCode.MfDrive, response.responseCode);
+                        var e = new MtpException(NikonMtpOperationCode.MfDrive, response.ResponseCode);
                         Logger.Error(e, "MoveBy", sourceFile);
                         if (needInit) StopFocusingProcess();
                         throw e;
@@ -291,8 +288,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
             private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
-                if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
-                    switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
+                if (e.EventCode == NikonMtpEventCode.DevicePropChanged) {
+                    switch ((NikonMtpDevicePropCode)e.Parameters[0]) {
                         case NikonMtpDevicePropCode.LensID:
                         case NikonMtpDevicePropCode.LensSort:
                             if (Connected && !this.cameraNek.isFocusDrivableLens()) {

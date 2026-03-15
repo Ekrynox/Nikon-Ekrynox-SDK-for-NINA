@@ -3,6 +3,11 @@
     "Nikon Ekrynox SDK for NINA": {
       "commandName": "Project",
       "nativeDebugging": true
+    },
+    "NINA.exe": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Appli\\N.I.N.A. - Nighttime Imaging 'N' Astronomy\\NINA.exe",
+      "nativeDebugging": true
     }
   }
 }

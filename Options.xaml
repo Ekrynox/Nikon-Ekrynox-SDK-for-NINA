@@ -52,30 +52,6 @@
                 <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
             </Grid>
 
-            <!--Number of additional Threads-->
-            <Grid Margin="0,7,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Vertical">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Number of additional Threads" VerticalAlignment="Center" />
-                        <TextBlock Text=" (Require reconnect)" Foreground="Red" VerticalAlignment="Center">
-                            <TextBlock.LayoutTransform>
-                                <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
-                            </TextBlock.LayoutTransform>
-                        </TextBlock>
-                    </StackPanel>
-                    <TextBlock Text="Main Thread + Additional Task Threads + Event Thread" VerticalAlignment="Center">
-                        <TextBlock.LayoutTransform>
-                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
-                        </TextBlock.LayoutTransform>
-                    </TextBlock>
-                </StackPanel>
-                <ninactrl:IntStepperControl MinValue="0" MaxValue="256" StepSize="1" Value="{Binding NbAdditionalThreads}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left"/>
-            </Grid>
-
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

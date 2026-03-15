@@ -28,8 +28,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
     public partial class NikonCameraNek : BaseINPC, ICamera {
         public const string sourceFile = @"NEKDrivers\NikonCameraNEK.cs";
 
-        public NikonCameraNek(string devicePath, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
-            this.devicePath = devicePath;
+        public NikonCameraNek(NEKCS.MtpConnectionInfo connectInfo, NEKCS.NikonDeviceInfoDS cameraInfo, IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
+            this.connectInfo = connectInfo;
             this.cameraInfo = cameraInfo;
 
             if (NEKMediator.CameraList.ContainsKey(this.cameraInfo.Model)) this.cameraSpec = NEKMediator.CameraList[this.cameraInfo.Model];
@@ -45,7 +45,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             this.focuserMediator = focuserMediator;
         }
 
-        private readonly string devicePath; // WPD device path
+        private readonly NEKCS.MtpConnectionInfo connectInfo;
         internal NEKCS.NikonCamera camera; // Camera object for operations
         internal NEKCS.NikonDeviceInfoDS cameraInfo; // GetDeviceInfo
         internal Database.NikonCameraSpec cameraSpec;
@@ -79,7 +79,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 //Connect to the Camera
                 try {
-                    this.camera = new NEKCS.NikonCamera(devicePath, NEKMediator.Plugin.NbAdditionalThreads);
+                    this.camera = new NEKCS.NikonCamera(connectInfo);
                     if (!this.camera.isConnected()) {
                         this.camera.Dispose();
                         this.camera = null;
@@ -100,7 +100,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, new NEKCS.MtpParams());
+                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []);
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
                     this.camera.Dispose();
@@ -133,9 +133,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 //Switch to HostMode if the settings is True
                 if (NEKMediator.Plugin.UseHostMode && this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
                     try {
-                        MtpParams param = new();
-                        param.addUint32(1);
-                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
+                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
                     } catch (MtpDeviceException e) {
                         Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
                     } catch (MtpException e) {
@@ -204,9 +202,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     //Switch back to CameraMode
                     if (this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
                         try {
-                            MtpParams param = new();
-                            param.addUint32(0);
-                            this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, param);
+                            this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [0]);
                         } catch (MtpDeviceException e) {
                             Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
                         } catch (MtpException e) {
@@ -766,7 +762,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
         private void camPropEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
-            if (e.eventCode == NikonMtpEventCode.DeviceInfoChanged) {
+            if (e.EventCode == NikonMtpEventCode.DeviceInfoChanged) {
                 if (Connected) {
                     this.cameraInfo = this.camera.GetDeviceInfo();
                     RaiseAllPropertiesChanged();
@@ -774,8 +770,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     Notification.ShowError("Nikon NEK: The camera have been brutally disconnected!");
                     this.cameraMediator.Disconnect();
                 }
-            } else if (e.eventCode == NikonMtpEventCode.DevicePropChanged) {
-                switch ((NikonMtpDevicePropCode)e.eventParams[0]) {
+            } else if (e.EventCode == NikonMtpEventCode.DevicePropChanged) {
+                switch ((NikonMtpDevicePropCode)e.Parameters[0]) {
                     case NikonMtpDevicePropCode.BatteryLevel:
                         RaisePropertyChanged(nameof(BatteryLevel));
                         break;
@@ -1020,7 +1016,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
         private void camStateEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
-            if (e.eventCode == NikonMtpEventCode.ObjectAddedInSdram) {
+            if (e.EventCode == NikonMtpEventCode.ObjectAddedInSdram) {
                 lock (_gateCameraState) {
                     _cameraState = CameraStates.Download;
                 }
@@ -1031,17 +1027,15 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 RaisePropertyChanged(nameof(CameraState));
 
                 try {
-                    if (e.eventParams.Length > 0) {
-                        sdramHandle = e.eventParams[0] == 0 ? 0xFFFF0001 : e.eventParams[0];
+                    if (e.Parameters.Length > 0) {
+                        sdramHandle = e.Parameters[0] == 0 ? 0xFFFF0001 : e.Parameters[0];
                     }
 
                     //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
 
-                    NEKCS.MtpParams param = new();
-                    param.addUint32(sdramHandle);
-                    NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, param);
-                    _imageStream = new(result.data);
+                    NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, [sdramHandle]);
+                    _imageStream = new(result.Data);
 
                     //Stop the Liveview started to prevent AF (needed for the D7100, ...)
                     StopLiveViewBackground();
@@ -1094,20 +1088,16 @@ namespace LucasAlias.NINA.NEK.Drivers {
             StartLiveViewBackground();
 
             try {
-                NEKCS.MtpParams param = new();
                 MtpResponse result;
                 if (this._isBulb) {
-                    param.addUint32(0xFFFFFFFF);
-                    param.addUint32(0x0001);
-                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, param);
+                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, [0xFFFFFFFF, 0x0001]);
                     RaisePropertyChanged(nameof(CameraState));
                 } else {
-                    param.addUint32(0xFFFFFFFF);
-                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
+                    result = this.camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, [0xFFFFFFFF]);
                     RaisePropertyChanged(nameof(CameraState));
                 }
-                if (result.responseCode != NikonMtpResponseCode.OK) {
-                    throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.responseCode);
+                if (result.ResponseCode != NikonMtpResponseCode.OK) {
+                    throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.ResponseCode);
                 }
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StartExposure", sourceFile);
@@ -1150,10 +1140,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (_cameraState == CameraStates.Exposing) {
                         bulbToken.Cancel();
                         try {
-                            var p = new MtpParams();
-                            p.addUint32(0);
-                            p.addUint32(0);
-                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "StopExposure", sourceFile);
                         } catch (MtpException e) {
@@ -1172,10 +1159,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (_cameraState == CameraStates.Exposing) {
                         bulbToken.Cancel();
                         try {
-                            var p = new MtpParams();
-                            p.addUint32(0);
-                            p.addUint32(0);
-                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, p);
+                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "AbortExposure", sourceFile);
                         } catch (MtpException e) {
@@ -1258,15 +1242,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (!Connected) return null;
 
             return Task.Run<IExposureData>(() => {
-                NEKCS.MtpParams parameters = new();
                 NEKCS.MtpResponse response;
                 try {
                     if (cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImageEx)) {
-                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImageEx, parameters);
+                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImageEx, []);
                     } else {
-                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
+                        response = camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, []);
                     }
-                    if (response.responseCode != NikonMtpResponseCode.OK) {
+                    if (response.ResponseCode != NikonMtpResponseCode.OK) {
                         return null;
                     }
                 } catch (Exception e) {
@@ -1276,14 +1259,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 if (_liveviewHeaderSize < 0) {
                     _liveviewHeaderSize = 0;
-                    for (int i = 1; i < response.data.Length; i++) {
-                        if (response.data[i] == 0xD8 && response.data[i - 1] == 0xFF) {
+                    for (int i = 1; i < response.Data.Length; i++) {
+                        if (response.Data[i] == 0xD8 && response.Data[i - 1] == 0xFF) {
                             _liveviewHeaderSize = i - 1;
                         }
                     }
                 }
 
-                var imageStream = new MemoryStream(response.data.Skip(_liveviewHeaderSize).ToArray());
+                var imageStream = new MemoryStream(response.Data.Skip(_liveviewHeaderSize).ToArray());
                 JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
 
                 FormatConvertedBitmap bitmap = new FormatConvertedBitmap();

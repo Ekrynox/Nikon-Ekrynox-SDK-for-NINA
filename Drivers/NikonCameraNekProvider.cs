@@ -37,7 +37,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 			var nekCameraList = NEKCS.NikonCamera.listNikonCameras();
 			foreach (var camera in nekCameraList) {
-			    devices.Add(new NikonCameraNek(camera.Key, camera.Value, profileService, exposureDataFactory, cameraMediator, focuserMediator));
+			    devices.Add(new NikonCameraNek(camera.Item1, camera.Item2, profileService, exposureDataFactory, cameraMediator, focuserMediator));
 			}
 
 			return devices;
