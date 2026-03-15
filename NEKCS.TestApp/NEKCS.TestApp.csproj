@@ -21,4 +21,8 @@
     <ProjectReference Include="..\NEKCS.Wrapper\NEKCS.Wrapper.vcxproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="CameraCapabilitiesForm.cs" />
+  </ItemGroup>
+
 </Project>

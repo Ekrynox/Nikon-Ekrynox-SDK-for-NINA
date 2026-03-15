@@ -2,6 +2,7 @@
 #include "mtp/nek_mtp_except.hpp"
 
 #include <chrono>
+#include <future>
 #include <time.h>
 #include <stdexcept>
 
@@ -11,27 +12,52 @@ using namespace nek;
 
 
 
-std::map<std::wstring, mtp::MtpDeviceInfoDS> NikonCamera::listNikonCameras(bool onlyOn) {
-	mtp::MtpManager* deviceManager = &nek::mtp::MtpManager::Instance();
-	auto wpdDevices = deviceManager->listMtpDevicesPath();
-	std::map<std::wstring, mtp::MtpDeviceInfoDS> nikonCameras;
+std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> NikonCamera::listNikonCameras(bool onlyOn) {
+	std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> result;
 
-	for (auto & wpdDevice : wpdDevices) {
-		//Check if Nikon
-		std::wstring id(wpdDevice);
-		std::transform(id.begin(), id.end(), id.begin(), ::towlower);
-		if (id.find(L"vid_04b0") != std::wstring::npos) {
-			auto deviceInfo = NikonCamera(wpdDevice).GetDeviceInfo();
-			if (onlyOn == false) {
-				nikonCameras.insert(std::pair(wpdDevice, deviceInfo));
-			}
-			else if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::InitiateCaptureRecInSdram) != deviceInfo.OperationsSupported.end()) {
-				nikonCameras.insert(std::pair(wpdDevice, deviceInfo));
+	mtp::MtpManager manager;
+	auto devices = manager.listAllDevices();
+
+	for (auto& d : devices) {
+		if (d.first.usbPath.has_value()) {
+			std::wstring id = d.first.usbPath.value();
+			std::transform(id.begin(), id.end(), id.begin(), ::towupper);
+			if (id.find(L"VID_04B0") != std::wstring::npos) {
+				auto cam = NikonCamera(std::move(d.second));
+				auto info = cam.GetDeviceInfo();
+
+				if (!onlyOn || std::find_if(info.OperationsSupported.begin(), info.OperationsSupported.end(), [](const uint32_t& x) { return x == NikonMtpOperationCode::InitiateCapture || x == NikonMtpOperationCode::InitiateCaptureRecInSdram || x == NikonMtpOperationCode::InitiateCaptureRecInMedia; }) != info.OperationsSupported.end()) {
+					result.push_back(std::make_pair(std::move(d.first), std::move(info)));
+				}
 			}
 		}
 	}
 
-	return nikonCameras;
+	return result;
+}
+
+std::vector<std::pair<NikonCamera, mtp::MtpDeviceInfoDS>> NikonCamera::getNikonCameras(bool onlyOn) {
+	std::vector<std::pair<NikonCamera, mtp::MtpDeviceInfoDS>> result;
+
+	mtp::MtpManager manager;
+	auto devices = manager.listAllDevices();
+
+	for (auto& d : devices) {
+		if (d.first.usbPath.has_value()) {
+			std::wstring id = d.first.usbPath.value();
+			std::transform(id.begin(), id.end(), id.begin(), ::towupper);
+			if (id.find(L"VID_04B0") != std::wstring::npos) {
+				auto cam = NikonCamera(std::move(d.second));
+				auto info = cam.GetDeviceInfo();
+
+				if (!onlyOn || std::find_if(info.OperationsSupported.begin(), info.OperationsSupported.end(), [](const uint32_t& x) { return x == NikonMtpOperationCode::InitiateCapture || x == NikonMtpOperationCode::InitiateCaptureRecInSdram || x == NikonMtpOperationCode::InitiateCaptureRecInMedia; }) != info.OperationsSupported.end()) {
+					result.push_back(std::make_pair(NikonCamera(std::move(d.first), false), std::move(info)));
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 size_t NikonCamera::countNikonCameras(bool onlyOn) {
@@ -39,206 +65,91 @@ size_t NikonCamera::countNikonCameras(bool onlyOn) {
 }
 
 
-NikonCamera::NikonCamera(std::wstring devicePath, uint8_t additionalThread) : nek::mtp::MtpDevice::MtpDevice() {
-	devicePath_ = devicePath;
-
-	startThreads();
+NikonCamera::NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(std::move(backend), false) {
+	if (autoConnect) Connect();
+}
+NikonCamera::NikonCamera(mtp::backend::MtpConnectionInfo connectionInfo, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(connectionInfo, false) {
+	if (autoConnect) Connect();
 }
 
 
-void NikonCamera::mainThreadTask() {
-	mutexTasks_.lock();
-	mutexDevice_.lock();
+void NikonCamera::Connect() {
+	if (!backend_->isConnected()) backend_->connect();
+	if (backendCallbackId_.has_value() || eventPolling.joinable()) return; //Event acquisition already initialized
 
-	//Init & Connect
-	try {
-		initCom();
-		initDevice();
-	}
-	catch (...) {
-		mutexDevice_.unlock();
-		mutexTasks_.unlock();
-		throw;
-	}
-
-	mutexDevice_.unlock();
-	mutexTasks_.unlock();
-	GetDeviceInfo();
-	cvTasks_.notify_all();
-
-	//Thread Loop
-	threadTask();
-
-	//Uninit
-	mutexTasks_.lock();
-	mutexDevice_.lock();
-
-	if (eventCookie_ != nullptr) {
-		device_->Unadvise(eventCookie_);
-	}
-	device_.Release();
-	device_.p = nullptr;
-	CoUninitialize();
-
-	mutexDevice_.unlock();
-	mutexTasks_.unlock();
-	cvTasks_.notify_all();
-}
-
-void NikonCamera::eventThreadTask() {
-	initCom();
-
-	//Event Handler Detection
 	mtp::MtpDeviceInfoDS info = GetDeviceInfo();
-	if (std::find(info.OperationsSupported.begin(), info.OperationsSupported.end(), NikonMtpOperationCode::GetEventEx) != info.OperationsSupported.end()) { //GetEventEX
-		cvTasks_.notify_all();
+	std::vector<mtp::MtpEvent> events;
+	bool canGetEventEx = std::find(info.OperationsSupported.begin(), info.OperationsSupported.end(), NikonMtpOperationCode::GetEventEx) != info.OperationsSupported.end();
+	if (!canGetEventEx) { //Enforce testing as some camera does not correctly repport their capabilities (D3200, ...)
+		try {
+			events = GetEventEx();
+			canGetEventEx = true;
+			for (const auto& e : events) OnEvent(e);
+		}
+		catch (...) {}
+	}
 
-		//Event Loop
-		nek::mtp::MtpParams params = nek::mtp::MtpParams();
-		size_t offset;
-		uint32_t count;
-		uint16_t count_params;
-		uint16_t eventCode;
-		std::vector<uint32_t> eventParams;
-		while (running_) {
-			mutexDevice_.lock();
-			nek::mtp::MtpResponse result;
-			try {
-				result = SendCommandAndRead_(device_, NikonMtpOperationCode::GetEventEx, params);
-				mutexDevice_.unlock();
-			}
-			catch (const nek::mtp::MtpDeviceException& e) {
-				mutexDevice_.unlock();
-				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-					Disconnect();
-					CoUninitialize();
-					return;
+	bool canGetEvent = std::find(info.OperationsSupported.begin(), info.OperationsSupported.end(), NikonMtpOperationCode::GetEvent) != info.OperationsSupported.end();
+	if (canGetEventEx && !canGetEvent) { //Enforce testing as some camera does not correctly repport their capabilities (D3200, ...)
+		try {
+			events = GetEvent();
+			canGetEvent = true;
+			for (const auto& e : events) OnEvent(e);
+		}
+		catch (...) {}
+	}
+
+	if (canGetEventEx) {
+		eventPolling = std::jthread([this](std::stop_token stop_token) {
+			while (!stop_token.stop_requested() && this->isConnected()) {
+				try {
+					for (const auto& e : GetEventEx()) OnEvent(e);
 				}
-				result.responseCode = NikonMtpResponseCode::General_Error;
-			}
-
-			if (result.responseCode == NikonMtpResponseCode::OK) {
-				count = *(uint32_t*)(result.data.data());
-				offset = sizeof(uint32_t);
-				for (uint32_t i = 0; i < count; i++) {
-					eventCode = *(uint16_t*)(result.data.data() + offset);
-					offset += sizeof(uint16_t);
-					count_params = *(uint16_t*)(result.data.data() + offset);
-					offset += sizeof(uint16_t);
-					eventParams.clear();
-					for (uint32_t j = 0; j < count_params; j++) {
-						eventParams.push_back(*(uint32_t*)(result.data.data() + offset));
-						offset += sizeof(uint32_t);
+				catch (const mtp::MtpDeviceException& e) {
+					if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
+						std::async(std::launch::async, [this]() { this->Disconnect(); });
+						return;
 					}
-					mutexTasks_.lock();
-					tasksEvent_.push_back([this, eventCode, eventParams] { eventCallback_->OnEvent(nek::mtp::MtpEvent(eventCode, eventParams)); });
-					mutexTasks_.unlock();
-					cvTasks_.notify_one();
 				}
+				catch (...) {}
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+			});
 	}
-	else if (std::find(info.OperationsSupported.begin(), info.OperationsSupported.end(), NikonMtpOperationCode::GetEvent) != info.OperationsSupported.end()) { //GetEvent
-		cvTasks_.notify_all();
-
-		//Event Loop
-		nek::mtp::MtpParams params = nek::mtp::MtpParams();
-		uint16_t count;
-		uint16_t eventCode;
-		uint32_t eventParam;
-		while (running_) {
-			nek::mtp::MtpResponse result;
-			mutexDevice_.lock();
-			try {
-				result = SendCommandAndRead_(device_, NikonMtpOperationCode::GetEvent, params);
-				mutexDevice_.unlock();
-			}
-			catch (const nek::mtp::MtpDeviceException& e) {
-				mutexDevice_.unlock();
-				if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-					Disconnect();
-					CoUninitialize();
-					return;
+	else if (canGetEvent) {
+		eventPolling = std::jthread([this](std::stop_token stop_token) {
+			while (!stop_token.stop_requested() && this->isConnected()) {
+				try {
+					for (const auto& e : GetEvent()) OnEvent(e);
 				}
-				result.responseCode = NikonMtpResponseCode::General_Error;
-			}
-
-			if (result.responseCode == NikonMtpResponseCode::OK) {
-				count = *(uint16_t*)(result.data.data());
-				for (uint16_t i = 0; i < count; i++) {
-					eventCode = *(uint16_t*)(result.data.data() + 2 + i * 6);
-					eventParam = *(uint32_t*)(result.data.data() + 4 + i * 6);
-					mutexTasks_.lock();
-					tasksEvent_.push_back([this, eventCode, eventParam] { eventCallback_->OnEvent(nek::mtp::MtpEvent(eventCode, eventParam)); });
-					mutexTasks_.unlock();
-					cvTasks_.notify_one();
+				catch (const mtp::MtpDeviceException& e) {
+					if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
+						std::async(std::launch::async, [this]() { this->Disconnect(); });
+						return;
+					}
 				}
+				catch (...) {}
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+			});
 	}
-	else { //Default Mtp event system (Incomplete: missing event code, ...)
-		mutexDevice_.lock();
-
-		device_->Advise(0, this->eventCallback_, nullptr, &this->eventCookie_);
-
-		mutexDevice_.unlock();
-		cvTasks_.notify_all();
-	}
-
-	CoUninitialize();
+	else backendCallbackId_ = backend_->subscribe([this](const mtp::MtpEvent& event) { return this->OnEvent(event); });
 }
 
-void NikonCamera::threadTask() {
-	while (running_) {
-		mutexTasks_.lock();
-		if (tasksEvent_.size() > 0) {
-			std::function<void ()> task = tasksEvent_.front();
-			tasksEvent_.pop_front();
-			mutexTasks_.unlock();
-
-			task();
-		}
-		else if (tasks_.size() > 0) {
-			std::function<void ()> task = tasks_.front();
-			tasks_.pop_front();
-			mutexTasks_.unlock();
-
-			task();
-		}
-		else {
-			mutexTasks_.unlock();
-
-			std::unique_lock lk(mutexTasks_);
-			cvTasks_.wait(lk, [this] { return !this->running_ || (this->tasks_.size() + tasksEvent_.size() > 0); });
-			lk.unlock();
-		}
+void NikonCamera::Disconnect() {
+	bool connected = isConnected();
+	if (backend_) {
+		if (backendCallbackId_.has_value()) backend_->unsubscribe(backendCallbackId_.value());
+		backendCallbackId_ = std::nullopt;
+		backend_->disconnect();
 	}
-}
 
-
-void NikonCamera::startThreads() {
-	running_ = true;
-	//Start main thread
-	mutexThreads_.lock();
-	threads_.push_back(std::thread([this] { this->mainThreadTask(); }));
-	mutexThreads_.unlock();
-	std::unique_lock lk(mutexTasks_);
-	cvTasks_.wait(lk);
-
-	//Event Thread
-	mutexThreads_.lock();
-	threads_.push_back(std::thread([this] { this->eventThreadTask(); }));
-	mutexThreads_.unlock();
-	cvTasks_.wait(lk);
-
-	//Additional Threads
-	for (uint8_t i = 0; i < additionalThreadsNb_; i++) {
-		mutexThreads_.lock();
-		threads_.push_back(std::thread([this] { this->additionalThreadsTask(); }));
-		mutexThreads_.unlock();
+	if (eventPolling.joinable()) {
+		eventPolling.request_stop();
+		if(std::this_thread::get_id() != eventPolling.get_id()) eventPolling.join();
 	}
+
+	if (connected) OnEvent(nek::mtp::MtpEvent(NikonMtpEventCode::DeviceInfoChanged)); // Notify Disconnection: DeviceInfoChanged
 }
 
 
@@ -247,9 +158,8 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 	NikonDeviceInfoDS deviceInfo = mtp::MtpDevice::GetDeviceInfo();
 
 	//Additional VendorCodes
-	if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::GetVendorPropCodes) != deviceInfo.OperationsSupported.end()) {
-		mtp::MtpParams params = mtp::MtpParams();
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, params);
+	try {
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, {});
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::GetVendorPropCodes, response.responseCode);
@@ -268,11 +178,11 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 			}
 		}
 	}
-	if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), NikonMtpOperationCode::GetVendorCodes) != deviceInfo.OperationsSupported.end()) {
+	catch (...) {}
+
+	try {
 		//OpCode
-		mtp::MtpParams params = mtp::MtpParams();
-		params.addUint32(0x09);
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x09 });
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
@@ -290,18 +200,20 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 				deviceInfo.OperationsSupported.push_back(code);
 			}
 		}
-		
+	}
+	catch (...) {}
+	
+	try {
 		//PropCode
-		params = mtp::MtpParams();
-		params.addUint32(0x0D);
-		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, params);
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x0D });
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
 		}
 
-		len = *(uint32_t*)response.data.data();
-		offset = sizeof(uint32_t);
+		uint32_t len = *(uint32_t*)response.data.data();
+		size_t offset = sizeof(uint32_t);
+		uint32_t code;
 
 		for (uint32_t i = 0; i < len; i++) {
 			code = *(uint32_t*)(response.data.data() + offset);
@@ -312,6 +224,7 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 			}
 		}
 	}
+	catch (...) {}
 
 
 	mutexDeviceInfo_.lock();
@@ -320,15 +233,62 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 	return deviceInfo;
 }
 
+std::vector<mtp::MtpEvent> NikonCamera::GetEvent() {
+	nek::mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetEvent, {});
+	if (response.responseCode != NikonMtpResponseCode::OK) {
+		throw mtp::MtpException(NikonMtpOperationCode::GetEvent, response.responseCode);
+	}
+
+	std::vector<mtp::MtpEvent> events;
+
+	uint16_t eventCode;
+	uint32_t eventParam;
+	uint16_t count = *(uint16_t*)(response.data.data());
+	for (uint16_t i = 0; i < count; i++) {
+		eventCode = *(uint16_t*)(response.data.data() + 2 + i * 6);
+		eventParam = *(uint32_t*)(response.data.data() + 4 + i * 6);
+		events.push_back(nek::mtp::MtpEvent(eventCode, { eventParam }));
+	}
+
+	return events;
+}
+std::vector<mtp::MtpEvent> NikonCamera::GetEventEx() {
+	nek::mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetEventEx, {});
+	if (response.responseCode != NikonMtpResponseCode::OK) {
+		throw mtp::MtpException(NikonMtpOperationCode::GetEventEx, response.responseCode);
+	}
+
+	std::vector<mtp::MtpEvent> events;
+
+	uint16_t count_params;
+	uint16_t eventCode;
+	std::vector<uint32_t> eventParams;
+
+	uint32_t count = *(uint32_t*)(response.data.data());
+	size_t offset = sizeof(uint32_t);
+	for (uint32_t i = 0; i < count; i++) {
+		eventCode = *(uint16_t*)(response.data.data() + offset);
+		offset += sizeof(uint16_t);
+		count_params = *(uint16_t*)(response.data.data() + offset);
+		offset += sizeof(uint16_t);
+		eventParams.clear();
+		for (uint32_t j = 0; j < count_params; j++) {
+			eventParams.push_back(*(uint32_t*)(response.data.data() + offset));
+			offset += sizeof(uint32_t);
+		}
+		events.push_back(nek::mtp::MtpEvent(eventCode, eventParams));
+	}
+
+	return events;
+}
+
 
 mtp::MtpDevicePropDescDSV NikonCamera::GetDevicePropDesc(uint32_t devicePropCode) {
 	mutexDeviceInfo_.lock();
 	if (std::find(deviceInfo_.OperationsSupported.begin(), deviceInfo_.OperationsSupported.end(), NikonMtpOperationCode::GetDevicePropDescEx) != deviceInfo_.OperationsSupported.end()) {
 		mutexDeviceInfo_.unlock();
 
-		mtp::MtpParams params;
-		params.addUint32(devicePropCode);
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropDescEx, params);
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropDescEx, { devicePropCode });
 
 		if (response.responseCode != NikonMtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropDescEx, response.responseCode);
@@ -364,9 +324,7 @@ mtp::MtpDatatypeVariant NikonCamera::GetDevicePropValue(uint32_t devicePropCode)
 		uint16_t dataType = devicePropDataType_[devicePropCode];
 		mutexDeviceInfo_.unlock();
 
-		mtp::MtpParams params;
-		params.addUint32(devicePropCode);
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropValueEx, params);
+		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetDevicePropValueEx, { devicePropCode });
 
 		if (response.responseCode != mtp::MtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::GetDevicePropValueEx, response.responseCode);
@@ -384,9 +342,7 @@ void NikonCamera::SetDevicePropValue(uint32_t devicePropCode, mtp::MtpDatatypeVa
 		mutexDeviceInfo_.unlock();
 		std::vector<uint8_t> rawdata = SetDevicePropValue_(data);
 
-		mtp::MtpParams params;
-		params.addUint32(devicePropCode);
-		mtp::MtpResponse response = SendCommandAndWrite(NikonMtpOperationCode::SetDevicePropValueEx, params, rawdata);
+		mtp::MtpResponse response = SendCommandAndWrite(NikonMtpOperationCode::SetDevicePropValueEx, { devicePropCode }, rawdata);
 
 		if (response.responseCode != mtp::MtpResponseCode::OK) {
 			throw mtp::MtpException(NikonMtpOperationCode::SetDevicePropValueEx, response.responseCode);
@@ -424,42 +380,37 @@ void NikonCamera::SetDevicePropValueTypesafe(uint32_t devicePropCode, mtp::MtpDa
 
 
 uint32_t NikonCamera::DeviceReady() {
-	mtp::MtpParams params;
-	return SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	return SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(uint32_t whileResponseCode, std::stop_token stopToken, size_t sleepTimems) {
-	mtp::MtpParams params;
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	while ((responseCode == whileResponseCode) && !stopToken.stop_requested()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	}
 	return responseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(std::vector<uint32_t> whileResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
-	mtp::MtpParams params;
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	while ((std::find(whileResponseCodes.begin(), whileResponseCodes.end(), responseCode) != whileResponseCodes.end()) && !stopToken.stop_requested()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	}
 	return responseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(uint32_t whileNotResponseCode, std::stop_token stopToken, size_t sleepTimems) {
-	mtp::MtpParams params;
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	while ((responseCode != whileNotResponseCode) && !stopToken.stop_requested()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	}
 	return responseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(std::vector<uint32_t> whileNotResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
-	mtp::MtpParams params;
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	while ((std::find(whileNotResponseCodes.begin(), whileNotResponseCodes.end(), responseCode) == whileNotResponseCodes.end()) && !stopToken.stop_requested()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, params).responseCode;
+		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
 	}
 	return responseCode;
 }
@@ -471,8 +422,7 @@ uint32_t NikonCamera::StartLiveView(bool wait, std::stop_token stopToken, size_t
 		return NikonMtpResponseCode::OK; //Liveview already On
 	}
 
-	mtp::MtpParams params = mtp::MtpParams();
-	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::StartLiveView, params);
+	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::StartLiveView, {});
 	if (response.responseCode != NikonMtpResponseCode::OK) {
 		throw mtp::MtpException(NikonMtpOperationCode::StartLiveView, response.responseCode);
 	}
@@ -486,8 +436,7 @@ void NikonCamera::EndLiveView() {
 		return; //Liveview is not On
 	}
 
-	mtp::MtpParams params = mtp::MtpParams();
-	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::EndLiveView, params);
+	mtp::MtpResponse response = SendCommand(NikonMtpOperationCode::EndLiveView, {});
 	if (response.responseCode != NikonMtpResponseCode::OK) {
 		throw mtp::MtpException(NikonMtpOperationCode::EndLiveView, response.responseCode);
 	}

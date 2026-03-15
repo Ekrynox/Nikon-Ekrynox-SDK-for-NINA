@@ -27,23 +27,24 @@ namespace NEKCS.TestApp
             this.camera = camera;
             camera.OnMtpEvent += new NEKCS.MtpEventHandler(cameraEvent);
 
-            NEKCS.MtpParams param = new NEKCS.MtpParams();
-            param.addUint32(0);
-            NEKCS.MtpResponse result = camera.SendCommandAndRead(NEKCS.NikonMtpOperationCode.DeleteImagesInSdram, param);
+            NEKCS.MtpResponse result = camera.SendCommandAndRead(NEKCS.NikonMtpOperationCode.DeleteImagesInSdram, [0]);
 
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
-            if (lvstatus == 1) camera.EndLiveView();
+            try {
+                camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
+                if (lvstatus == 1) camera.EndLiveView();
+            }
+            catch {}
 
         }
 
 
         private void cameraEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e)
         {
-            if (e.eventCode == NEKCS.NikonMtpEventCode.ObjectAddedInSdram)
+            if (e.EventCode == NEKCS.NikonMtpEventCode.ObjectAddedInSdram)
             {
-                if (e.eventParams.Length > 0 && e.eventParams[0] != 0)
+                if (e.Parameters.Length > 0 && e.Parameters[0] != 0)
                 {
-                    _sdramHandle = e.eventParams[0];
+                    _sdramHandle = e.Parameters[0];
                 }
                 else
                 {
@@ -52,14 +53,12 @@ namespace NEKCS.TestApp
 
                 camera.GetObjectInfo(_sdramHandle);
 
-                NEKCS.MtpParams param = new NEKCS.MtpParams();
-                param.addUint32(_sdramHandle);
-                NEKCS.MtpResponse result = camera.SendCommandAndRead(NEKCS.NikonMtpOperationCode.GetObject, param);
-                if (result.responseCode == NEKCS.NikonMtpResponseCode.OK)
+                NEKCS.MtpResponse result = camera.SendCommandAndRead(NEKCS.NikonMtpOperationCode.GetObject, [ _sdramHandle ]);
+                if (result.ResponseCode == NEKCS.NikonMtpResponseCode.OK)
                 {
                     _syncContext.Post(delegate
                     {
-                        var stream = new MemoryStream(result.data.ToArray());
+                        var stream = new MemoryStream(result.Data.ToArray());
                         var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(stream, System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
                         var frame = decoder.Frames[0];
                         var encoder = new PngBitmapEncoder();
@@ -76,9 +75,7 @@ namespace NEKCS.TestApp
         {
             this.capture.Enabled = false;
 
-            NEKCS.MtpParams param = new NEKCS.MtpParams();
-            param.addUint32(0xFFFFFFFF);
-            NEKCS.MtpResponse result = camera.SendCommand(NEKCS.NikonMtpOperationCode.InitiateCaptureRecInSdram, param);
+            NEKCS.MtpResponse result = camera.SendCommand(NEKCS.NikonMtpOperationCode.InitiateCaptureRecInSdram, [ 0xFFFFFFFF ]);
 
             camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy);
 
@@ -111,20 +108,19 @@ namespace NEKCS.TestApp
             try
             {
                 int headersize = 0;
-                var parameters = new MtpParams();
-                MtpResponse response = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, parameters);
-                for (var i = 1; i < response.data.Length; i++)
+                MtpResponse response = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetLiveViewImage, []);
+                for (var i = 1; i < response.Data.Length; i++)
                 {
-                    if (response.data[i] == 0xD8)
+                    if (response.Data[i] == 0xD8)
                     {
-                        if (response.data[i - 1] == 0xFF)
+                        if (response.Data[i - 1] == 0xFF)
                         {
                             headersize = i - 1;
                         }
                     }
                 }
 
-                var img = response.data.Skip(headersize).ToArray();
+                var img = response.Data.Skip(headersize).ToArray();
 
                 _syncContext.Post(delegate
                 {

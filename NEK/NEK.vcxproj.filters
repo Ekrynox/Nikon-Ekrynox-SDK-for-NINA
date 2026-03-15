@@ -25,22 +25,16 @@
     <Filter Include="Source Files\mtp">
       <UniqueIdentifier>{d814666b-f1a7-482f-9236-3ef93b9fbc36}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\mtp\backend">
+      <UniqueIdentifier>{c2f271cf-d1f4-43fa-998b-3fe6c4d2d4a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtp\backend">
+      <UniqueIdentifier>{81cc80b0-8dfe-4aa8-a10f-349e406a0868}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nek.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nikon.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nikon_enum.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\nek_threading.hpp">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\nek_int128.hpp">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="mtp\nek_mtp.hpp">
       <Filter>Header Files\mtp</Filter>
@@ -60,28 +54,40 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mtp\backend\nek_wpd.hpp">
+      <Filter>Header Files\mtp\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="mtp\backend\nek_mtp_backend.hpp">
+      <Filter>Header Files\mtp\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\nek_int128.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Nikon.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nikon_enum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="nikon_struct.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="nikon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\nek_threading.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="mtp\nek_mtp.cpp">
       <Filter>Source Files\mtp</Filter>
     </ClCompile>
     <ClCompile Include="mtp\nek_mtp_except.cpp">
       <Filter>Source Files\mtp</Filter>
     </ClCompile>
-    <ClCompile Include="mtp\nek_mtp_utils.cpp">
-      <Filter>Source Files\mtp</Filter>
-    </ClCompile>
     <ClCompile Include="mtp\nek_mtp_struct.cpp">
       <Filter>Source Files\mtp</Filter>
+    </ClCompile>
+    <ClCompile Include="mtp\backend\nek_wpd.cpp">
+      <Filter>Source Files\mtp\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="Nikon.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

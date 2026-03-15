@@ -1,6 +1,6 @@
 #pragma once
 #include "../nek.hpp"
-#include "../utils/nek_threading.hpp"
+#include "backend/nek_mtp_backend.hpp"
 #include "nek_mtp_utils.hpp"
 #include "nek_mtp_enum.hpp"
 #include "nek_mtp_struct.hpp"
@@ -15,57 +15,27 @@
 #include <thread>
 #include <vector>
 
-#include <atlbase.h>
-#include <PortableDeviceApi.h>
-#include <PortableDevice.h>
-#include <WpdMtpExtensions.h>
-
-
-
-#define CLIENT_NAME			L"Nikon Ekrynox SDK"
-#define CLIENT_MAJOR_VER	1
-#define CLIENT_MINOR_VER	0
-#define CLIENT_REVISION		0
-
 
 
 namespace nek::mtp {
 
-	class MtpManager : protected nek::utils::ThreadedClass {
+	class MtpDevice {
 	public:
-		NEK_API static MtpManager& Instance();
-
-		NEK_API std::vector<std::wstring> listMtpDevicesPath();
-		NEK_API std::map<std::wstring, MtpDeviceInfoDS> listMtpDevices();
-		NEK_API size_t countMtpDevices();
-		NEK_API bool isDeviceConnected(std::wstring devicePath);
-
-	private:
-		MtpManager& operator= (const MtpManager&) = delete;
-		MtpManager(const MtpManager&) = delete;
-		MtpManager();
-		~MtpManager() { nek::utils::ThreadedClass::~ThreadedClass(); };
-		void threadTask();
-
-		CComPtr<IPortableDeviceManager> deviceManager_;
-		std::mutex mutexDevice_;
-	};
-
-
-
-	class MtpDevice : protected nek::utils::MultiThreadedClass {
-	public:
-		NEK_API MtpDevice(std::wstring devicePath, uint8_t additionalThreadsNb = 0);
+		NEK_API MtpDevice(std::unique_ptr<backend::IMtpTransport> backend, bool autoConnect = true);
+		NEK_API MtpDevice(const backend::MtpConnectionInfo& connectionInfo, bool autoConnect = true);
+		NEK_API MtpDevice(MtpDevice&& other) noexcept;
 		NEK_API ~MtpDevice();
 
 		NEK_API bool isConnected() const;
-		NEK_API void Disconnect();
+		NEK_API virtual void Connect();
+		NEK_API virtual void Disconnect();
 
-		NEK_API MtpResponse SendCommand(uint16_t operationCode, MtpParams params);
-		NEK_API MtpResponse SendCommandAndRead(uint16_t operationCode, MtpParams params);
-		NEK_API MtpResponse SendCommandAndWrite(uint16_t operationCode, MtpParams params, std::vector<uint8_t> data);
+		NEK_API MtpResponse SendCommand(uint16_t operationCode, const std::vector<uint32_t>& params);
+		NEK_API MtpResponse SendCommandAndRead(uint16_t operationCode, const std::vector<uint32_t>& params);
+		NEK_API MtpResponse SendCommandAndWrite(uint16_t operationCode, const std::vector<uint32_t>& params, std::vector<uint8_t> data);
 
-		NEK_API size_t RegisterCallback(std::function<void(MtpEvent)> callback);
+		using Callback = std::function<void(const MtpEvent&)>;
+		NEK_API size_t RegisterCallback(Callback const& callback);
 		NEK_API void UnregisterCallback(size_t id);
 
 
@@ -80,38 +50,41 @@ namespace nek::mtp {
 
 
 	protected:
-		MtpDevice();
-		virtual void mainThreadTask();
-		virtual void additionalThreadsTask();
-
-		static MtpResponse SendCommand_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params);
-		static MtpResponse SendCommandAndRead_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params);
-		static MtpResponse SendCommandAndWrite_(CComPtr<IPortableDevice> device, uint16_t operationCode, MtpParams params, std::vector<uint8_t> data);
-
-		void initCom();
-		void initDevice();
-		virtual void startThreads();
-
-		std::wstring devicePath_;
-		CComPtr<IPortableDeviceValues> deviceClient_;
-		CComPtr<IPortableDevice> device_;
-		std::atomic<bool> connected_;
+		std::unique_ptr<backend::IMtpTransport> backend_;
+		std::optional<size_t> backendCallbackId_;
 
 		MtpDeviceInfoDS deviceInfo_;
-		std::map<uint32_t, uint16_t> devicePropDataType_;
-
-		CComPtr<MtpEventCallback> eventCallback_;
-		PWSTR eventCookie_;
-		std::mutex mutexDevice_;
 		std::mutex mutexDeviceInfo_;
 
-		uint8_t additionalThreadsNb_;
+		std::map<uint32_t, uint16_t> devicePropDataType_;
 
+		std::unordered_map<size_t, Callback> eventCallbacks_;
+		size_t eventNextId_;
+		std::mutex eventMutex_;
+		
+		void OnEvent(const MtpEvent& event);
+		
 
 		MtpDevicePropDescDSV GetDevicePropDesc_(MtpResponse& response);
 		MtpDatatypeVariant GetDevicePropValue_(MtpResponse& response, uint16_t dataType);
 		std::vector<uint8_t> SetDevicePropValue_(MtpDatatypeVariant data);
 		bool SetDevicePropValueTypesafe_(const uint16_t dataType, const MtpDatatypeVariant& data, MtpDatatypeVariant& newdata);
+	};
+
+
+
+	class MtpManager {
+	public:
+		NEK_API MtpManager();
+		NEK_API void registerBackend(std::unique_ptr<backend::IMtpBackendProvider> backend);
+
+		NEK_API std::vector<std::unique_ptr<backend::IMtpTransport>> tryCreateTransport(const backend::MtpConnectionInfo& connectionInfo);
+		NEK_API std::vector<std::pair<backend::MtpConnectionInfo, std::unique_ptr<backend::IMtpTransport>>> listAllDevices();
+		NEK_API std::vector<std::pair<backend::MtpConnectionInfo, MtpDevice>> getAllDevices();
+		NEK_API size_t countAllDevices();
+
+	private:
+		std::vector<std::unique_ptr<backend::IMtpBackendProvider>> backends_;
 	};
 
 }

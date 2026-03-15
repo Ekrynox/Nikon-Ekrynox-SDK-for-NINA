@@ -5,9 +5,6 @@
 #include <exception>
 #include <string>
 
-#include <atlbase.h>
-#include <PortableDevice.h>
-
 
 
 namespace nek::mtp {
@@ -56,15 +53,11 @@ namespace nek::mtp {
 
 	class MtpDeviceException : public std::exception {
 	public:
-		NEK_API MtpDeviceException(MtpExPhase phase, HRESULT hr);
 		NEK_API MtpDeviceException(MtpExPhase phase, MtpExCode code);
 		NEK_API const char* what() const noexcept override;
 
 		const MtpExPhase phase;
 		const MtpExCode code;
-
-	private:
-		static MtpExCode computeCode(MtpExPhase phase, HRESULT hr);
 	};
 
 

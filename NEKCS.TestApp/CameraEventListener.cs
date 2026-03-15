@@ -16,31 +16,35 @@ namespace NEKCS.TestApp
         private NEKCS.NikonCamera camera;
         private SynchronizationContext? _syncContext;
         private CameraShootingForm? _cameraShootingForm;
+        private CameraCapabilitiesForm? _cameraCapabilitiesForm;
 
 
-        public CameraEventListener(string devicePath)
+        public CameraEventListener(NEKCS.MtpConnectionInfo connectionInfo)
         {
             InitializeComponent();
             _syncContext = SynchronizationContext.Current;
 
-            camera = new NEKCS.NikonCamera(devicePath, 2);
+            camera = new NEKCS.NikonCamera(connectionInfo);
             camera.OnMtpEvent += new NEKCS.MtpEventHandler(newCamEvent);
 
             _cameraShootingForm = new CameraShootingForm(camera);
             _cameraShootingForm.Show();
+
+            _cameraCapabilitiesForm = new CameraCapabilitiesForm(camera);
+            _cameraCapabilitiesForm.Show();
         }
 
         void newCamEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e)
         {
             _syncContext?.Post(_ =>
             {
-                NEKCS.NikonMtpEventCode ecode = (NEKCS.NikonMtpEventCode)e.eventCode;
-                this.EventList.Text += "Event: " + Enum.GetName(typeof(NEKCS.NikonMtpEventCode), ecode);
-                foreach (var item in e.eventParams)
+                NEKCS.NikonMtpEventCode ecode = e.EventCode;
+                this.EventList.Text += "Event: " + Enum.GetName(typeof(NEKCS.NikonMtpEventCode), ecode) + $" 0x{((int)ecode):X}";
+                foreach (var item in e.Parameters)
                 {
                     if (ecode == NEKCS.NikonMtpEventCode.DevicePropChanged)
                     {
-                        this.EventList.Text += " -> " + Enum.GetName(typeof(NEKCS.NikonMtpDevicePropCode), item);
+                        this.EventList.Text += " -> " + Enum.GetName(typeof(NEKCS.NikonMtpDevicePropCode), item) + $" 0x{((int)item):X}";
                         //var desc = this.camera.GetDevicePropDesc((NEKCS.NikonMtpDevicePropCode)item);
                     }
                     else
@@ -61,6 +65,7 @@ namespace NEKCS.TestApp
         private void CameraEventListener_FormClosing(object sender, FormClosingEventArgs e)
         {
             _cameraShootingForm?.Dispose();
+            _cameraCapabilitiesForm?.Dispose();
             camera.Dispose();
         }
 
