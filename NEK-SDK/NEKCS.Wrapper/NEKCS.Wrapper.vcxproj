@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Nikon_Backend.h" />
     <ClInclude Include="Nikon.h" />
     <ClInclude Include="Nikon_Enum.h" />
     <ClInclude Include="Nikon_Except.h" />
@@ -91,6 +92,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Nikon.cpp" />
+    <ClCompile Include="Nikon_Backend.cpp" />
     <ClCompile Include="Nikon_Struct_Variant.cpp" />
     <ClCompile Include="Nikon_Except.cpp" />
     <ClCompile Include="Nikon_Struct.cpp" />

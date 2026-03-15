@@ -84,26 +84,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="mtp\backend\nek_mtp_backend.hpp" />
     <ClInclude Include="mtp\nek_mtp.hpp" />
     <ClInclude Include="mtp\nek_mtp_enum.hpp" />
     <ClInclude Include="mtp\nek_mtp_except.hpp" />
     <ClInclude Include="mtp\nek_mtp_struct.hpp" />
     <ClInclude Include="mtp\nek_mtp_utils.hpp" />
+    <ClInclude Include="mtp\backend\nek_wpd.hpp" />
     <ClInclude Include="nek.hpp" />
-    <ClInclude Include="nikon.hpp" />
+    <ClInclude Include="Nikon.hpp" />
     <ClInclude Include="nikon_enum.hpp" />
     <ClInclude Include="nikon_struct.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="utils\nek_int128.hpp" />
-    <ClInclude Include="utils\nek_threading.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="mtp\backend\nek_wpd.cpp" />
     <ClCompile Include="mtp\nek_mtp.cpp" />
     <ClCompile Include="mtp\nek_mtp_except.cpp" />
-    <ClCompile Include="mtp\nek_mtp_utils.cpp" />
     <ClCompile Include="mtp\nek_mtp_struct.cpp" />
-    <ClCompile Include="nikon.cpp" />
-    <ClCompile Include="utils\nek_threading.cpp" />
+    <ClCompile Include="Nikon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NEK.rc" />

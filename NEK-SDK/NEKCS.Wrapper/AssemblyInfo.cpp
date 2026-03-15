@@ -11,11 +11,11 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyConfigurationAttribute(L"")];
 [assembly:AssemblyCompanyAttribute(L"")];
 [assembly:AssemblyProductAttribute(L"Nikon Ekrynox SDK - C# Wrapper")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c) 2025 Lucas Alias")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) 2026 Lucas Alias")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 
-[assembly:AssemblyVersionAttribute(L"0.8.6.0")];
-[assembly:AssemblyFileVersionAttribute(L"0.8.6.0")]
+[assembly:AssemblyVersionAttribute(L"0.9.0.0")];
+[assembly:AssemblyFileVersionAttribute(L"0.9.0.0")]
 
 [assembly:ComVisible(false)];

@@ -2,66 +2,49 @@
 #include "mtp/nek_mtp_utils.hpp"
 #include "Nikon_Enum.h"
 
+#include <functional>
 #include <vcclr.h>
 
 
 
 namespace NEKCS {
 
-	public ref class MtpReponseParams {
-	internal:
-		nek::mtp::MtpReponseParams* m_nativeClass;
-		MtpReponseParams(nek::mtp::MtpReponseParams responseParams);
-		MtpReponseParams();
+	public ref struct MtpResponse {
+		property NikonMtpResponseCode ResponseCode {
+			NikonMtpResponseCode get() { return _responseCode; }
+		}
+		property array<System::UInt32>^ Parameters {
+			array<System::UInt32>^ get() { return _parameters; }
+		}
+		property array<System::Byte>^ Data {
+			array<System::Byte>^ get() { return _data; }
+		}
 
-	public:
-		~MtpReponseParams();
-		!MtpReponseParams();
-	};
+	private:
+		NikonMtpResponseCode _responseCode;
+		array<System::UInt32>^ _parameters;
+		array<System::Byte>^ _data;
 
-	
-	public ref class MtpParams {
-	internal:
-		nek::mtp::MtpParams* m_nativeClass;
-		MtpParams(nek::mtp::MtpParams params);
-
-	public:
-		MtpParams();
-		~MtpParams();
-		!MtpParams();
-
-		void addUint32(System::UInt32 param);
-		void addUint16(System::UInt16 param);
-		void addInt32(System::Int32 param);
-		void addInt16(System::Int16 param);
-	};
-
-
-	public ref class MtpResponse {
 	internal:
 		MtpResponse();
 		MtpResponse(nek::mtp::MtpResponse response);
-
-	public:
-		~MtpResponse();
-		!MtpResponse();
-
-		MtpReponseParams^ GetParams();
-
-		NikonMtpResponseCode responseCode;
-		array<System::Byte>^ data;
-	internal:
-		MtpReponseParams^ responseParams_;
 	};
 
 
-	public ref class MtpEvent {
+	public ref struct MtpEvent {
+		property NikonMtpEventCode EventCode {
+			NikonMtpEventCode get() { return _eventCode; }
+		}
+		property array<System::UInt32>^ Parameters {
+			array<System::UInt32>^ get() { return _parameters; }
+		}
+
+	private:
+		NikonMtpEventCode _eventCode;
+		array<System::UInt32>^ _parameters;
+
 	internal:
 		MtpEvent(nek::mtp::MtpEvent event);
-
-	public:
-		NikonMtpEventCode eventCode;
-		array<System::UInt32>^ eventParams;
 	};
 
 

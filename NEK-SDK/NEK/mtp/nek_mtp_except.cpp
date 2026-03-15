@@ -57,76 +57,7 @@ std::string MtpExCodeToString(MtpExCode code) {
 
 
 //MtpDeviceException
-MtpDeviceException::MtpDeviceException(MtpExPhase phase, HRESULT hr) : phase(phase), code(computeCode(phase, hr)) {};
 MtpDeviceException::MtpDeviceException(MtpExPhase phase, MtpExCode code) : phase(phase), code(code) {};
-
-MtpExCode MtpDeviceException::computeCode(MtpExPhase phase, HRESULT hr) {
-	if (hr == S_OK) return NO_ERR;
-	if (hr == E_OUTOFMEMORY) return MEMORY;
-	if (hr == E_UNEXPECTED) return UNEXPECTED;
-	if (hr == E_INVALIDARG) return INVALID_ARG;
-	if (hr == E_POINTER) return INVALID_ARG;
-
-	switch (phase) {
-	case COM_INIT:
-		switch (hr) {
-		case S_FALSE:
-		case RPC_E_CHANGED_MODE:
-			return ALREADY_INITIALIZED;
-		default:
-			return UNKNOW_ERR;
-		}
-
-	case MANAGER_INIT:
-		switch (hr) {
-		case E_NOINTERFACE:
-		case CLASS_E_NOAGGREGATION:
-		case REGDB_E_CLASSNOTREG:
-			return INVALID_ARG;
-		default:
-			return UNKNOW_ERR;
-		}
-
-	case DEVICE_INIT:
-		switch (hr) {
-		case E_WPD_DEVICE_ALREADY_OPENED:
-			return ALREADY_INITIALIZED;
-		default:
-			return UNKNOW_ERR;
-		}
-
-	case OPERATION_RESPONSE:
-	case OPERATIONREAD_RESPONSE:
-	case OPERATIONWRITE_RESPONSE:
-	case ENDREAD_RESPONSE:
-	case ENDWRITE_RESPONSE:
-		switch (hr) {
-		case DISP_E_TYPEMISMATCH:
-			return INVALID_TYPE;
-		case HRESULT_FROM_WIN32(ERROR_NOT_FOUND):
-			return MISSING;
-		default:
-			return UNKNOW_ERR;
-		}
-
-	case OPERATION_SEND:
-	case OPERATIONREAD_SEND:
-	case OPERATIONWRITE_SEND:
-	case DATAWRITE_SEND:
-	case DATAREAD_SEND:
-	case ENDREAD_SEND:
-	case ENDWRITE_SEND:
-		switch (hr) {
-		case UI_E_SHUTDOWN_CALLED:
-			return DEVICE_DISCONNECTED;
-		default:
-			return UNKNOW_ERR;
-		}
-
-	default:
-		return UNKNOW_ERR;
-	}
-}
 
 const char* MtpDeviceException::what() const noexcept {
 	std::ostringstream message;

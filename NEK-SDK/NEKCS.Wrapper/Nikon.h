@@ -4,6 +4,7 @@
 #include "Nikon_Enum.h"
 #include "Nikon_Struct.h"
 #include "Nikon_Except.h"
+#include "Nikon_Backend.h"
 
 #include <vcclr.h>
 
@@ -17,21 +18,22 @@ namespace NEKCS {
 		System::Collections::Generic::Dictionary<MtpEventHandler^, size_t> _callbackIds;
 
 	public:
-		static System::Collections::Generic::Dictionary<System::String^, NikonDeviceInfoDS^>^ listNikonCameras(System::Boolean onlyOn);
-		static System::Collections::Generic::Dictionary<System::String^, NikonDeviceInfoDS^>^ listNikonCameras();
+		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ listNikonCameras(System::Boolean onlyOn);
+		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ listNikonCameras();
+		static System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ getNikonCameras(System::Boolean onlyOn);
+		static System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ getNikonCameras();
 		static size_t countNikonCameras(System::Boolean onlyOn);
 		static size_t countNikonCameras();
 
-		NikonCamera(System::String^ devicePath, System::Byte additionThreads);
-		NikonCamera(System::String^ devicePath);
+		NikonCamera(MtpConnectionInfo^ connectionInfo);
 		~NikonCamera();
 		!NikonCamera();
 
 		System::Boolean isConnected();
 
-		MtpResponse^ SendCommand(NikonMtpOperationCode operationCode, MtpParams^ params);
-		MtpResponse^ SendCommandAndRead(NikonMtpOperationCode operationCode, MtpParams^ params);
-		MtpResponse^ SendCommandAndWrite(NikonMtpOperationCode operationCode, MtpParams^ params, array<System::Byte>^ data);
+		MtpResponse^ SendCommand(NikonMtpOperationCode operationCode, array<System::UInt32>^ params);
+		MtpResponse^ SendCommandAndRead(NikonMtpOperationCode operationCode, array<System::UInt32>^ params);
+		MtpResponse^ SendCommandAndWrite(NikonMtpOperationCode operationCode, array<System::UInt32>^ params, array<System::Byte>^ data);
 
 
 		event MtpEventHandler^ OnMtpEvent {
@@ -95,6 +97,9 @@ namespace NEKCS {
 		NikonMtpResponseCode StartLiveView(System::Boolean wait);
 		NikonMtpResponseCode StartLiveView();
 		void EndLiveView();
+
+	internal:
+		NikonCamera(nek::NikonCamera&& camera);
 	};
 
 }
