@@ -131,7 +131,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
                 //Switch to HostMode if the settings is True
-                if (NEKMediator.Plugin.UseHostMode && this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
+                if (NEKMediator.Plugin.UseHostMode) {
                     try {
                         this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
                     } catch (MtpDeviceException e) {
@@ -139,6 +139,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     } catch (MtpException e) {
                         Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
                     }
+                }
+
+
+                //Scan if camera supports Liveview
+                _canLiveview = false;
+                if ((cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage) || cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImageEx)) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.StartLiveView) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.EndLiveView)) _canLiveview = true;
+                else {
+                    try {
+                        this.camera.SendCommand(NikonMtpOperationCode.StartLiveView, []);
+                        this.camera.SendCommand(NikonMtpOperationCode.EndLiveView, []);
+                        _canLiveview = true;
+                    } catch (MtpDeviceException e) {
+                        Logger.Error("Error while trying to start/end Liveview: " + this.Name, e, sourceFile);
+                    } catch (MtpException) {}
                 }
 
 
@@ -200,14 +214,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     this.camera.DeviceReadyWhileNot(NikonMtpResponseCode.OK);
 
                     //Switch back to CameraMode
-                    if (this.cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.ChangeCameraMode)) {
-                        try {
-                            this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [0]);
-                        } catch (MtpDeviceException e) {
-                            Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
-                        } catch (MtpException e) {
-                            Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
-                        }
+                    try {
+                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [0]);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                    } catch (MtpException e) {
+                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
                     }
                 }
 
@@ -1038,7 +1050,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _imageStream = new(result.Data);
 
                     //Stop the Liveview started to prevent AF (needed for the D7100, ...)
-                    StopLiveViewBackground();
+                    if (CanShowLiveView) StopLiveViewBackground();
                     RestoreExposureTime();
 
                     if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
@@ -1085,7 +1097,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             }
 
             //Start the Liveview started to prevent AF (needed for the D7100, ...)
-            StartLiveViewBackground();
+            if (CanShowLiveView) StartLiveViewBackground();
 
             try {
                 MtpResponse result;
@@ -1197,10 +1209,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
 
 
+        private bool _canLiveview = false;
         private int _liveviewHeaderSize;
         private uint _requestedLiveview;
         private bool _liveviewEnabled = false;
-        public bool CanShowLiveView { get => cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage); }
+        public bool CanShowLiveView { get => _canLiveview; }
         public bool LiveViewEnabled {
             get {
                 if (!Connected) return false;
