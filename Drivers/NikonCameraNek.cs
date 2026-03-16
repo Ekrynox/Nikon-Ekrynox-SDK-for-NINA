@@ -100,13 +100,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []);
+                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []);
+                    if (response.ResponseCode != NikonMtpResponseCode.OK) {
+                        Logger.Error("Error while purging SDRAM: " + this.Name, new MtpException(NikonMtpOperationCode.DeleteImagesInSdram, response.ResponseCode), "Connect", sourceFile);
+                        this.camera.Dispose();
+                        this.camera = null;
+                        return false;
+                    }
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
-                    this.camera.Dispose();
-                    this.camera = null;
-                    return false;
-                } catch (MtpException e) {
                     Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
                     this.camera.Dispose();
                     this.camera = null;
@@ -133,10 +134,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 //Switch to HostMode if the settings is True
                 if (NEKMediator.Plugin.UseHostMode) {
                     try {
-                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
+                        var response = this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
+                        if (response.ResponseCode != NikonMtpResponseCode.OK) {
+                            Logger.Error("Error while switching to Host Mode: " + this.Name, new MtpException(NikonMtpOperationCode.ChangeCameraMode, response.ResponseCode), "Connect", sourceFile);
+                            Notification.ShowError("Error while switching to Host Mode: " + this.Name + " - " + response.ResponseCode);
+                        }
                     } catch (MtpDeviceException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
-                    } catch (MtpException e) {
                         Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
                     }
                 }
@@ -147,12 +150,16 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if ((cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage) || cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImageEx)) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.StartLiveView) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.EndLiveView)) _canLiveview = true;
                 else {
                     try {
-                        this.camera.SendCommand(NikonMtpOperationCode.StartLiveView, []);
-                        this.camera.SendCommand(NikonMtpOperationCode.EndLiveView, []);
-                        _canLiveview = true;
+                        var response = this.camera.SendCommand(NikonMtpOperationCode.StartLiveView, []);
+                        if (response.ResponseCode == NikonMtpResponseCode.OK) {
+                            response = this.camera.SendCommand(NikonMtpOperationCode.EndLiveView, []);
+                            if (response.ResponseCode == NikonMtpResponseCode.OK) {
+                                _canLiveview = true;
+                            }
+                        }
                     } catch (MtpDeviceException e) {
                         Logger.Error("Error while trying to start/end Liveview: " + this.Name, e, sourceFile);
-                    } catch (MtpException) {}
+                    }
                 }
 
 
@@ -215,11 +222,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                     //Switch back to CameraMode
                     try {
-                        this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [0]);
+                        var response = this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [0]);
+                        if (response.ResponseCode != NikonMtpResponseCode.OK) {
+                            Logger.Error("Error while switching off Host Mode: " + this.Name, new MtpException(NikonMtpOperationCode.ChangeCameraMode, response.ResponseCode), "Connect", sourceFile);
+                            Notification.ShowError("Error while switching to Host Mode: " + this.Name + " - " + response.ResponseCode);
+                        }
                     } catch (MtpDeviceException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
-                    } catch (MtpException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                        Logger.Error("Error while switching off Host Mode: " + this.Name, e, sourceFile);
                     }
                 }
 
@@ -834,14 +843,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public bool isFocusDrivableLens() {
             if (Connected) {
                 if (!isCpuLensMounted()) return false;
-                cameraInfo.OperationsSupported.Clear();
+                
                 if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) {
                     try {
-                        camera.SendCommand(NikonMtpOperationCode.MfDrive, []);
+                        var response = camera.SendCommand(NikonMtpOperationCode.MfDrive, []);
+                        if (response.ResponseCode == NikonMtpResponseCode.Operation_Not_Supported) return false;
                     } catch (MtpDeviceException e) {
                         Logger.Error(this.Name, e, "isFocusDrivableLens", sourceFile);
-                    } catch (MtpException e) {
-                        if (e.ResponseCode == NikonMtpResponseCode.Operation_Not_Supported) return false;
                     }
                 }
 
@@ -1055,8 +1063,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     //Retreive the Image Metadata (needed for the D80, ...)
                     _imageInfo = camera.GetObjectInfo(sdramHandle);
 
-                    NEKCS.MtpResponse result = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, [sdramHandle]);
-                    _imageStream = new(result.Data);
+                    var response = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, [sdramHandle]);
+                    _imageStream = new(response.Data);
 
                     //Stop the Liveview started to prevent AF (needed for the D7100, ...)
                     if (CanShowLiveView) StopLiveViewBackground();
@@ -1161,10 +1169,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (_cameraState == CameraStates.Exposing) {
                         bulbToken.Cancel();
                         try {
-                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
+                            var response = camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
+                            if (response.ResponseCode != NikonMtpResponseCode.OK) {
+                                Logger.Error(this.Name, new MtpException(NikonMtpOperationCode.TerminateCapture, response.ResponseCode), "StopExposure", sourceFile);
+                            }
                         } catch (MtpDeviceException e) {
-                            Logger.Error(this.Name, e, "StopExposure", sourceFile);
-                        } catch (MtpException e) {
                             Logger.Error(this.Name, e, "StopExposure", sourceFile);
                         }
                     }
@@ -1180,7 +1189,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (_cameraState == CameraStates.Exposing) {
                         bulbToken.Cancel();
                         try {
-                            camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
+                            var response = camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
+                            if (response.ResponseCode != NikonMtpResponseCode.OK) {
+                                Logger.Error(this.Name, new MtpException(NikonMtpOperationCode.TerminateCapture, response.ResponseCode), "StopExposure", sourceFile);
+                            }
                         } catch (MtpDeviceException e) {
                             Logger.Error(this.Name, e, "AbortExposure", sourceFile);
                         } catch (MtpException e) {
