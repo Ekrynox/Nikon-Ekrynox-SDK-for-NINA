@@ -12,7 +12,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'exp-[0-9]+.[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+.1[0-9]+'
 
 permissions:
   contents: write
@@ -89,7 +89,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          name: Experimental ${{ github.ref_name }}
+          name: Nightly ${{ github.ref_name }}
           draft: false
           prerelease: true
           files: |

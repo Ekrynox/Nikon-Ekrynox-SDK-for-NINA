@@ -12,7 +12,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+.9[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+.2[0-9]+'
 
 permissions:
   contents: write
@@ -78,7 +78,7 @@ jobs:
       - name: Create Plugin archives and manifests
         run: |
           curl -LO https://raw.githubusercontent.com/isbeorn/nina.plugin.manifests/refs/heads/main/tools/CreateManifest.ps1?raw=true
-          pwsh CreateManifest.ps1 -file "packages/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_DLL_NAME }}.dll" -installerUrl "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.zip" -createArchive -includeAll
+          pwsh CreateManifest.ps1 -file "packages/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_DLL_NAME }}.dll" -installerUrl "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.zip" -createArchive -includeAll -beta
           Rename-Item -Path "manifest.json" -NewName "${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.manifest.json"
           Rename-Item -Path ${{ env.PLUGIN_DLL_NAME }}.zip -NewName ${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.zip
 
@@ -89,9 +89,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: Beta ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: true
           files: |
             ./${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.zip
             ./${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.manifest.json
