@@ -1,9 +1,11 @@
 # Nikon Ekrynox SDK
 
-## 1.2.0.0
+## 2.0.0.1001
 - Add Docakable to modify MTP Device Properties
 - Add support for HostMode
+- Enforce the scan of some capabilities for D3200: Liveview, Focusing, ...
 - Fix issues when cammera is abruptly diconnected
+- Update to the reworked Multibackend NEK-SDK
 
 
 ## 1.1.0.0
