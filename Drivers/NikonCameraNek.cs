@@ -100,12 +100,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []);
+                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, [0]);
                     if (response.ResponseCode != NikonMtpResponseCode.OK) {
                         Logger.Error("Error while purging SDRAM: " + this.Name, new MtpException(NikonMtpOperationCode.DeleteImagesInSdram, response.ResponseCode), "Connect", sourceFile);
-                        this.camera.Dispose();
-                        this.camera = null;
-                        return false;
                     }
                 } catch (MtpDeviceException e) {
                     Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
@@ -215,7 +212,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     //Stop all liveview and possible exposures
                     this._requestedLiveview = 0;
                     this._liveviewEnabled = false;
-                    this.StopLiveView();
+                    if (_canLiveview) this.StopLiveView();
                     this.AbortExposure();
 
                     this.camera.DeviceReadyWhileNot(NikonMtpResponseCode.OK);
@@ -1343,7 +1340,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 Interlocked.Decrement(ref this._requestedLiveview);
                 Task.Run(async () => {
                     await Task.Delay(waitms);
-                    if (!this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
+                    if (Connected && !this._liveviewEnabled && Interlocked.Equals(this._requestedLiveview, (uint)0)) camera.EndLiveView();
                 });
             } catch (Exception e) {
                 Logger.Error(this.Name, e, "StopLiveView", sourceFile);

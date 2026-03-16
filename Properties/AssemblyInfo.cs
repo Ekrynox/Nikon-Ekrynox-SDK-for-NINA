@@ -78,6 +78,8 @@ If you encounter an ""NEKCS.Wrapper"" not found, you need to install [Microsoft 
 
 The focuser have some difficulties with older models like the D7100/D7200. It has difficulties to accurately detect the focus limit (0 and infinity), and overestimate the step range.
 
+The Nikon ZF (and other camera with Physical ISO/Speed/... Dials) requires to enable the Host Mode (Plugin settings) to control the settings associated with thoose physical controls.
+
 ## Special Notes
 Thanks to all the contributors of NINA for the great work done on the main application.  
 Thanks to **LEX** for all the work on testing his cameras and providing feedback.")]
