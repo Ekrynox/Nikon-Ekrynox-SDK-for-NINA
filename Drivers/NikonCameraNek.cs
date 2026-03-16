@@ -833,8 +833,17 @@ namespace LucasAlias.NINA.NEK.Drivers {
         }
         public bool isFocusDrivableLens() {
             if (Connected) {
-                if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) return false;
                 if (!isCpuLensMounted()) return false;
+                cameraInfo.OperationsSupported.Clear();
+                if (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.MfDrive)) {
+                    try {
+                        camera.SendCommand(NikonMtpOperationCode.MfDrive, []);
+                    } catch (MtpDeviceException e) {
+                        Logger.Error(this.Name, e, "isFocusDrivableLens", sourceFile);
+                    } catch (MtpException e) {
+                        if (e.ResponseCode == NikonMtpResponseCode.Operation_Not_Supported) return false;
+                    }
+                }
 
                 try {
                     //MirrorLess doesn't support non AF-S lens with the Z adapter => no Screew in
