@@ -73,7 +73,7 @@ namespace nek::mtp::backend::wpd {
 			HRESULT __stdcall OnEvent(IPortableDeviceValues* pEventParameters) override;
 
 			std::unordered_map<size_t, Handler> eventCallbacks_;
-			size_t eventNextId_;
+			size_t eventNextId_ = 0;
 			std::mutex eventMutex_;
 
 		private:
