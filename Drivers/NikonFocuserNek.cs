@@ -133,7 +133,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 _isConnected = false;
                 RaiseAllPropertiesChanged();
 
-                if (cameraNek != null || cameraNek.camera != null) cameraNek.camera.OnMtpEvent -= camPropEvent;
+                if (cameraNek != null && cameraNek.camera != null) cameraNek.camera.OnMtpEvent -= camPropEvent;
             }
 
             public void SetupDialog() => throw new NotImplementedException();
