@@ -100,7 +100,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, [0]);
+                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, [0]); //Newer model (eg: Z6)
+                    if (response.ResponseCode == NikonMtpResponseCode.Parameter_Not_Supported) response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []); //Older model (eg: d80)
                     if (response.ResponseCode != NikonMtpResponseCode.OK) {
                         Logger.Error("Error while purging SDRAM: " + this.Name, new MtpException(NikonMtpOperationCode.DeleteImagesInSdram, response.ResponseCode), "Connect", sourceFile);
                     }
