@@ -107,7 +107,7 @@ void NikonCamera::Connect() {
 				}
 				catch (const mtp::MtpDeviceException& e) {
 					if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-						std::async(std::launch::async, [this]() { this->Disconnect(); });
+						this->Disconnect();
 						return;
 					}
 				}
@@ -124,7 +124,7 @@ void NikonCamera::Connect() {
 				}
 				catch (const mtp::MtpDeviceException& e) {
 					if (e.code == nek::mtp::MtpExCode::DEVICE_DISCONNECTED) {
-						std::async(std::launch::async, [this]() { this->Disconnect(); });
+						this->Disconnect();
 						return;
 					}
 				}
@@ -137,19 +137,17 @@ void NikonCamera::Connect() {
 }
 
 void NikonCamera::Disconnect() {
-	bool connected = isConnected();
 	if (backend_) {
 		if (backendCallbackId_.has_value()) backend_->unsubscribe(backendCallbackId_.value());
 		backendCallbackId_ = std::nullopt;
 		backend_->disconnect();
+		OnEvent(nek::mtp::MtpEvent(NikonMtpEventCode::DeviceInfoChanged)); // Notify Disconnection: DeviceInfoChanged
 	}
 
 	if (eventPolling.joinable()) {
 		eventPolling.request_stop();
 		if(std::this_thread::get_id() != eventPolling.get_id()) eventPolling.join();
 	}
-
-	if (connected) OnEvent(nek::mtp::MtpEvent(NikonMtpEventCode::DeviceInfoChanged)); // Notify Disconnection: DeviceInfoChanged
 }
 
 
@@ -158,13 +156,8 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 	NikonDeviceInfoDS deviceInfo = mtp::MtpDevice::GetDeviceInfo();
 
 	//Additional VendorCodes
-	try {
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, {});
-
-		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw mtp::MtpException(NikonMtpOperationCode::GetVendorPropCodes, response.responseCode);
-		}
-
+	mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, {});
+	if (response.responseCode == NikonMtpResponseCode::OK) {
 		uint32_t len = *(uint32_t*)response.data.data();
 		size_t offset = sizeof(uint32_t);
 		uint32_t code;
@@ -178,15 +171,10 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 			}
 		}
 	}
-	catch (...) {}
 
-	try {
-		//OpCode
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x09 });
-
-		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
-		}
+	//OpCode
+	response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x09 });
+	if (response.responseCode == NikonMtpResponseCode::OK) {
 
 		uint32_t len = *(uint32_t*)response.data.data();
 		size_t offset = sizeof(uint32_t);
@@ -201,15 +189,10 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 			}
 		}
 	}
-	catch (...) {}
 	
-	try {
-		//PropCode
-		mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x0D });
-
-		if (response.responseCode != NikonMtpResponseCode::OK) {
-			throw mtp::MtpException(NikonMtpOperationCode::GetVendorCodes, response.responseCode);
-		}
+	//PropCode
+	response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x0D });
+	if (response.responseCode == NikonMtpResponseCode::OK) {
 
 		uint32_t len = *(uint32_t*)response.data.data();
 		size_t offset = sizeof(uint32_t);
@@ -224,7 +207,6 @@ NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 			}
 		}
 	}
-	catch (...) {}
 
 
 	mutexDeviceInfo_.lock();

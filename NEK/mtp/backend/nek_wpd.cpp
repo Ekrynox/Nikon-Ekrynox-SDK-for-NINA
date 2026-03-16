@@ -657,7 +657,7 @@ namespace nek::mtp::backend::wpd {
 	size_t WpdMtpTransport::subscribe(Handler const& eventCallback) {
 		if (!running_) throw MtpDeviceException(DEVICE_NOT_CONNECTED, DEVICE_DISCONNECTED); //TODO: Throw an error like device not connected
 		std::lock_guard lock(eventManager_->eventMutex_);
-		eventManager_->eventCallbacks_[eventManager_->eventNextId_] = std::move(eventCallback);
+		eventManager_->eventCallbacks_[eventManager_->eventNextId_] = eventCallback;
 
 		startEventCapture();
 

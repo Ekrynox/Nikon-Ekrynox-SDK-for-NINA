@@ -94,7 +94,7 @@ MtpResponse MtpDevice::SendCommandAndWrite(uint16_t operationCode, const std::ve
 
 size_t MtpDevice::RegisterCallback(Callback const& callback) {
 	std::lock_guard lock(eventMutex_);
-	eventCallbacks_[eventNextId_] = std::move(callback);
+	eventCallbacks_[eventNextId_] = callback;
 	return eventNextId_++;
 }
 
