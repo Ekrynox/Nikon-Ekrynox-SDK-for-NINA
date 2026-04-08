@@ -9,8 +9,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("2.0.0.1001")]
-[assembly: AssemblyFileVersion("2.0.0.1001")]
+[assembly: AssemblyVersion("2.0.0.1002")]
+[assembly: AssemblyFileVersion("2.0.0.1002")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Nikon Ekrynox SDK")]
