@@ -57,22 +57,22 @@ std::string MtpExCodeToString(MtpExCode code) {
 
 
 //MtpDeviceException
-MtpDeviceException::MtpDeviceException(MtpExPhase phase, MtpExCode code) : phase(phase), code(code) {};
-
-const char* MtpDeviceException::what() const noexcept {
+MtpDeviceException::MtpDeviceException(MtpExPhase phase, MtpExCode code) : phase(phase), code(code) {
 	std::ostringstream message;
 	message << "MTP Device Exception - Phase: " << MtpExPhaseToString(phase) << ", Code: " << MtpExCodeToString(code);
-	return message.str().c_str();
-}
+	this->message = message.str();
+};
+
+const char* MtpDeviceException::what() const noexcept { return message.c_str(); }
 
 
 
 //MtpException
-MtpException::MtpException(uint32_t operationCode, uint32_t responseCode) : operationCode(operationCode), responseCode(responseCode) {}
-
-const char* MtpException::what() const noexcept {
+MtpException::MtpException(uint32_t operationCode, uint32_t responseCode) : operationCode(operationCode), responseCode(responseCode) {
 	std::ostringstream message;
 	message << "MTP Error - Operation: 0x" << std::hex << operationCode;
 	message << ", Response: 0x" << std::hex << responseCode;
-	return message.str().c_str();
+	this->message = message.str();
 }
+
+const char* MtpException::what() const noexcept { return message.c_str(); }
