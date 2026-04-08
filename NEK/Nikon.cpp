@@ -90,7 +90,7 @@ void NikonCamera::Connect() {
 	}
 
 	bool canGetEvent = std::find(info.OperationsSupported.begin(), info.OperationsSupported.end(), NikonMtpOperationCode::GetEvent) != info.OperationsSupported.end();
-	if (canGetEventEx && !canGetEvent) { //Enforce testing as some camera does not correctly repport their capabilities (D3200, ...)
+	if (!canGetEventEx && !canGetEvent) { //Enforce testing as some camera does not correctly repport their capabilities (D3200, ...)
 		try {
 			events = GetEvent();
 			canGetEvent = true;
@@ -155,57 +155,74 @@ void NikonCamera::Disconnect() {
 NikonDeviceInfoDS NikonCamera::GetDeviceInfo() {
 	NikonDeviceInfoDS deviceInfo = mtp::MtpDevice::GetDeviceInfo();
 
+	mtp::MtpResponse response;
+
 	//Additional VendorCodes
-	mtp::MtpResponse response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, {});
-	if (response.responseCode == NikonMtpResponseCode::OK) {
-		uint32_t len = *(uint32_t*)response.data.data();
-		size_t offset = sizeof(uint32_t);
-		uint32_t code;
+	try {
+		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorPropCodes, {});
+		if (response.responseCode == NikonMtpResponseCode::OK) {
+			uint32_t len = *(uint32_t*)response.data.data();
+			size_t offset = sizeof(uint32_t);
+			uint32_t code;
 
-		for (uint32_t i = 0; i < len; i++) {
-			code = static_cast<uint32_t>(*(uint16_t*)(response.data.data() + offset));
-			offset += sizeof(uint16_t);
+			for (uint32_t i = 0; i < len; i++) {
+				code = static_cast<uint32_t>(*(uint16_t*)(response.data.data() + offset));
+				offset += sizeof(uint16_t);
 
-			if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
-				deviceInfo.DevicePropertiesSupported.push_back(code);
+				if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
+					deviceInfo.DevicePropertiesSupported.push_back(code);
+				}
 			}
 		}
+	}
+	catch (...) {
+		//Ignore error, this command is not supported by all camera and is not mandatory to be able to use the camera
 	}
 
 	//OpCode
-	response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x09 });
-	if (response.responseCode == NikonMtpResponseCode::OK) {
+	try {
+		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x09 });
+		if (response.responseCode == NikonMtpResponseCode::OK) {
 
-		uint32_t len = *(uint32_t*)response.data.data();
-		size_t offset = sizeof(uint32_t);
-		uint32_t code;
+			uint32_t len = *(uint32_t*)response.data.data();
+			size_t offset = sizeof(uint32_t);
+			uint32_t code;
 
-		for (uint32_t i = 0; i < len; i++) {
-			code = *(uint32_t*)(response.data.data() + offset);
-			offset += sizeof(uint32_t);
+			for (uint32_t i = 0; i < len; i++) {
+				code = *(uint32_t*)(response.data.data() + offset);
+				offset += sizeof(uint32_t);
 
-			if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), code) == deviceInfo.OperationsSupported.end()) {
-				deviceInfo.OperationsSupported.push_back(code);
+				if (std::find(deviceInfo.OperationsSupported.begin(), deviceInfo.OperationsSupported.end(), code) == deviceInfo.OperationsSupported.end()) {
+					deviceInfo.OperationsSupported.push_back(code);
+				}
 			}
 		}
 	}
+	catch (...) {
+		//Ignore error, this command is not supported by all camera and is not mandatory to be able to use the camera
+	}
 	
 	//PropCode
-	response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x0D });
-	if (response.responseCode == NikonMtpResponseCode::OK) {
+	try {
+		response = SendCommandAndRead(NikonMtpOperationCode::GetVendorCodes, { 0x0D });
+		if (response.responseCode == NikonMtpResponseCode::OK) {
 
-		uint32_t len = *(uint32_t*)response.data.data();
-		size_t offset = sizeof(uint32_t);
-		uint32_t code;
+			uint32_t len = *(uint32_t*)response.data.data();
+			size_t offset = sizeof(uint32_t);
+			uint32_t code;
 
-		for (uint32_t i = 0; i < len; i++) {
-			code = *(uint32_t*)(response.data.data() + offset);
-			offset += sizeof(uint32_t);
+			for (uint32_t i = 0; i < len; i++) {
+				code = *(uint32_t*)(response.data.data() + offset);
+				offset += sizeof(uint32_t);
 
-			if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
-				deviceInfo.DevicePropertiesSupported.push_back(code);
+				if (std::find(deviceInfo.DevicePropertiesSupported.begin(), deviceInfo.DevicePropertiesSupported.end(), code) == deviceInfo.DevicePropertiesSupported.end()) {
+					deviceInfo.DevicePropertiesSupported.push_back(code);
+				}
 			}
 		}
+	}
+	catch (...) {
+		//Ignore error, this command is not supported by all camera and is not mandatory to be able to use the camera
 	}
 
 

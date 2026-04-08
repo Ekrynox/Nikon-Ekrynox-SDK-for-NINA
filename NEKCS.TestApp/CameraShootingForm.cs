@@ -73,9 +73,8 @@ namespace NEKCS.TestApp
 
         private void capture_Click(object sender, EventArgs e)
         {
-            this.capture.Enabled = false;
-
             NEKCS.MtpResponse result = camera.SendCommand(NEKCS.NikonMtpOperationCode.InitiateCaptureRecInSdram, [ 0xFFFFFFFF ]);
+            this.capture.Enabled = false;
 
             camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy);
 
@@ -84,7 +83,7 @@ namespace NEKCS.TestApp
 
         private void liveview_Click(object sender, EventArgs e)
         {
-            camera.GetDevicePropValue(NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
+            camera.GetDevicePropValue(NEKCS.NikonMtpDevicePropCode.RemoteLiveViewStatus).TryGetUInt8(out var lvstatus);
             if (lvstatus == 0)
             {
                 var res = camera.StartLiveView();

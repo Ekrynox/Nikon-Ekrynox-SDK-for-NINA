@@ -58,6 +58,9 @@ namespace nek::mtp {
 
 		const MtpExPhase phase;
 		const MtpExCode code;
+
+	private:
+		std::string message;
 	};
 
 
@@ -69,6 +72,9 @@ namespace nek::mtp {
 
 		const uint32_t operationCode;
 		const uint32_t responseCode;
+
+	private:
+		std::string message;
 	};
 
 }
