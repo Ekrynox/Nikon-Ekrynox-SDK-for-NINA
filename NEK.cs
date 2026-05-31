@@ -57,7 +57,7 @@ namespace LucasAlias.NINA.NEK {
         //Plugin Settings
         public bool UseHostMode {
             get {
-                return pluginSettings.GetValueBoolean(nameof(UseHostMode), false);
+                return pluginSettings.GetValueBoolean(nameof(UseHostMode), true);
             }
             set {
                 pluginSettings.SetValueBoolean(nameof(UseHostMode), value);
