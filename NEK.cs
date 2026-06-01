@@ -73,5 +73,15 @@ namespace LucasAlias.NINA.NEK {
                 RaisePropertyChanged();
             }
         }
+
+        public bool AdvancedMtpDockable {
+            get {
+                return pluginSettings.GetValueBoolean(nameof(AdvancedMtpDockable), false);
+            }
+            set {
+                pluginSettings.SetValueBoolean(nameof(AdvancedMtpDockable), value);
+                RaisePropertyChanged();
+            }
+        }
     }
 }

@@ -28,10 +28,9 @@ namespace LucasAlias.NINA.NEK.Dockables {
     class NikonMtpDockableNek : DockableVM {
         public const string sourceFile = @"NEKDockables\NikonMtpDockableNek.cs";
 
-        private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
+        private NikonCameraNek cameraNek { get => cameraMediator.GetDevice() != null && cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
 
         private readonly ICameraMediator cameraMediator;
-
         private Boolean _connected = false;
 
 
@@ -41,7 +40,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
             this.cameraMediator.Connected += CameraConnected;
             this.cameraMediator.Disconnected += CameraDisconnected;
 
-            this.Title = "Nikon MTP Settings (NEK)";
+            Title = "Nikon MTP Settings (NEK)";
 
 
             Application.Current.Dispatcher.Invoke(() => {
@@ -53,30 +52,30 @@ namespace LucasAlias.NINA.NEK.Dockables {
         }
 
         public void Dispose() {
-            this.cameraMediator.Connected -= CameraConnected;
-            this.cameraMediator.Disconnected -= CameraDisconnected;
+            cameraMediator.Connected -= CameraConnected;
+            cameraMediator.Disconnected -= CameraDisconnected;
         }
 
 
 
-        public Boolean Connected { get => _connected && cameraNek != null; }
+        public Boolean Connected { get => NEKMediator.Plugin.AdvancedMtpDockable && _connected && cameraNek != null; }
         public ObservableCollection<INikonDevicePropDescVM> DeviceProperties { get; private set; }
         public ICollectionView DevicePropertiesView { get; private set; }
 
         private async Task CameraConnected(object arg1, EventArgs arg2) {
-            if (this.cameraNek != null) {
+            if (NEKMediator.Plugin.AdvancedMtpDockable && cameraNek != null) {
                 //Notify UI immediately
-                this._connected = true;
+                _connected = true;
                 RaiseAllPropertiesChanged();
 
                 //Fill the array in background
                 _ = Task.Run(() => {
                     var newDeviceProps = new List<INikonDevicePropDescVM>();
 
-                    foreach (var k in this.cameraNek.cameraInfo.DevicePropertiesSupported) {
-                        if (this.cameraNek == null) return;
+                    foreach (var k in cameraNek.cameraInfo.DevicePropertiesSupported) {
+                        if (cameraNek == null) return;
                         try {
-                            var desc = INikonDevicePropDescVM.Create(this.cameraNek.camera.GetDevicePropDesc(k));
+                            var desc = INikonDevicePropDescVM.Create(cameraNek.camera.GetDevicePropDesc(k));
                             desc.ValueChanged += SetDeviceProperty;
                             newDeviceProps.Add(desc);
                         } catch (NEKCS.MtpDeviceException e) {
@@ -93,7 +92,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
                         RaisePropertyChanged(nameof(DeviceProperties));
 
                         if (Connected) {
-                            this.cameraNek.camera.OnMtpEvent += UpdateDeviceProperties;
+                            cameraNek.camera.OnMtpEvent += UpdateDeviceProperties;
                         }
                     });
                 });
@@ -101,12 +100,12 @@ namespace LucasAlias.NINA.NEK.Dockables {
         }
 
         private async Task CameraDisconnected(object arg1, EventArgs arg2) {
-            if (this._connected) {
-                if (this.cameraNek != null) {
-                    this.cameraNek.camera.OnMtpEvent -= UpdateDeviceProperties;
+            if (_connected) {
+                if (cameraNek != null) {
+                    cameraNek.camera.OnMtpEvent -= UpdateDeviceProperties;
                 }
                 //Notify UI immediately
-                this._connected = false;
+                _connected = false;
                 RaiseAllPropertiesChanged();
 
                 _= Application.Current.Dispatcher.BeginInvoke(() => {
@@ -126,7 +125,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
         
         private void UpdateDeviceProperty(NEKCS.NikonMtpDevicePropCode code) {
             try {
-                var desc = INikonDevicePropDescVM.Create(this.cameraNek.camera.GetDevicePropDesc(code));
+                var desc = INikonDevicePropDescVM.Create(cameraNek.camera.GetDevicePropDesc(code));
                 desc.ValueChanged += SetDeviceProperty;
                 Application.Current.Dispatcher.BeginInvoke(() => {
                     if (!Connected) return;
@@ -149,7 +148,7 @@ namespace LucasAlias.NINA.NEK.Dockables {
             if (!Connected) return;
 
             try {
-                this.cameraNek.camera.SetDevicePropValueTypesafe(desc.DevicePropertyCode, desc.CurrentValueVariant);
+                cameraNek.camera.SetDevicePropValueTypesafe(desc.DevicePropertyCode, desc.CurrentValueVariant);
             } catch (NEKCS.MtpDeviceException e) {
                 Logger.Error($"Error while trying to Set Device Property: {desc.DevicePropertyCode.ToString()} to '{desc.CurrentValueUntyped.ToString()}'" , e, sourceFile);
                 UpdateDeviceProperty(desc.DevicePropertyCode);

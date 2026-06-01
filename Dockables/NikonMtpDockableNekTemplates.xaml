@@ -84,7 +84,7 @@
     <DataTemplate x:Key="LucasAlias.NINA.NEK.Dockables.NikonMtpDockableNek_Dockable">
         <Grid x:Name="DockRoot" Margin="5">
             <Grid Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected with Nikon Ekrynox SDK" />
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="No Nikon camera connected or the Advanced MTP Dockable is not enabled" />
             </Grid>
 
             <Grid Visibility="{Binding Connected, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}">

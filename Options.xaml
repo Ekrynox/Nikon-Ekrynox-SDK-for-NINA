@@ -52,6 +52,35 @@
                 <CheckBox IsChecked="{Binding UpdateLensInfo}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
             </Grid>
 
+            <!--Advanced MTP Dockable-->
+            <Grid Margin="0,7,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="NEK_Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Use the Advanced MTP Dockable?" VerticalAlignment="Center" />
+                        <TextBlock Text=" (Require reconnect)" Foreground="Red" VerticalAlignment="Center">
+                            <TextBlock.LayoutTransform>
+                                <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock Text="Enable the Advanced MTP Dockable that allow to set PTP/MTP camera properties." VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                    <TextBlock Text="This is an advanced and experimental feature." VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <ScaleTransform ScaleX="0.80" ScaleY="0.80" />
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding AdvancedMtpDockable}" Grid.Column="1" Margin="7,0,0,0" HorizontalAlignment="Left" />
+            </Grid>
+
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>
