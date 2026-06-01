@@ -21,13 +21,15 @@ namespace LucasAlias.NINA.NEK.Drivers {
         private IExposureDataFactory exposureDataFactory;
         private ICameraMediator cameraMediator;
         private IFocuserMediator focuserMediator;
+        private ITelescopeMediator telescopeMediator;
 
         [ImportingConstructor]
-		public NikonCameraNekProvider(IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator) {
+		public NikonCameraNekProvider(IProfileService profileService, IExposureDataFactory exposureDataFactory, ICameraMediator cameraMediator, IFocuserMediator focuserMediator, ITelescopeMediator telescopeMediator) {
 			this.profileService = profileService;
             this.exposureDataFactory = exposureDataFactory;
             this.cameraMediator = cameraMediator;
             this.focuserMediator = focuserMediator;
+            this.telescopeMediator = telescopeMediator;
         }
 
 		public string Name => "Nikon";
@@ -37,7 +39,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 			var nekCameraList = NEKCS.NikonCamera.listNikonCameras();
 			foreach (var camera in nekCameraList) {
-			    devices.Add(new NikonCameraNek(camera.Item1, camera.Item2, profileService, exposureDataFactory, cameraMediator, focuserMediator));
+			    devices.Add(new NikonCameraNek(camera.Item1, camera.Item2, profileService, exposureDataFactory, cameraMediator, focuserMediator, telescopeMediator));
 			}
 
 			return devices;
