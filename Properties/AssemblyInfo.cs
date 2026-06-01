@@ -9,8 +9,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("2.0.0.1002")]
-[assembly: AssemblyFileVersion("2.0.0.1002")]
+[assembly: AssemblyVersion("2.0.0.1003")]
+[assembly: AssemblyFileVersion("2.0.0.1003")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Nikon Ekrynox SDK")]
@@ -61,11 +61,13 @@ Based on [Nikon Ekrynox SDK (NEK)](https://github.com/Ekrynox/Nikon-Ekrynox-SDK)
 Directly connecting to the camera through MTP/PTP and Windows Portable Device API, it should allow support for some unsupported cameras (as long as their MTP/PTP API remains similar to that of other cameras).  
 **Repported working models:**
 - Nikon D80
+- Nikon D3200
 - Nikon D3500
 - Nikon D7100
 - Nikon D7200
 - Nikon Z6 II
 - Nikon Z50 II
+- and many other unreported models...
 
 ## Features
 - Capture (Bulb: USB only)
@@ -78,7 +80,7 @@ If you encounter an ""NEKCS.Wrapper"" not found, you need to install [Microsoft 
 
 The focuser have some difficulties with older models like the D7100/D7200. It has difficulties to accurately detect the focus limit (0 and infinity), and overestimate the step range.
 
-The Nikon ZF (and other camera with Physical ISO/Speed/... Dials) requires to enable the Host Mode (Plugin settings) to control the settings associated with thoose physical controls.
+The Nikon ZF (and other camera with Physical ISO/Speed/... Dials) requires to enable the Host Mode (enabled by default) (Plugin settings) to control the settings associated with thoose physical controls.
 
 ## Special Notes
 Thanks to all the contributors of NINA for the great work done on the main application.  
