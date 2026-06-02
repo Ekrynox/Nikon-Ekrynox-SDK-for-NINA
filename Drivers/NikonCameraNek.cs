@@ -17,6 +17,7 @@ using NINA.Profile.Interfaces;
 using NINA.Sequencer.Utility;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -78,56 +79,56 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public Task<bool> Connect(CancellationToken token) {
             return Task.Run(() => {
-                Logger.Info("Start connecting to the Camera: " + this.Name, "Connect", sourceFile);
+                Logger.Info("Start connecting to the Camera: " + Name, "Connect", sourceFile);
 
                 //Connect to the Camera
                 try {
-                    this.camera = new NEKCS.NikonCamera(connectInfo);
-                    if (!this.camera.isConnected()) {
-                        this.camera.Dispose();
-                        this.camera = null;
+                    camera = new NEKCS.NikonCamera(connectInfo);
+                    if (!camera.isConnected()) {
+                        camera.Dispose();
+                        camera = null;
                         return false;
                     }
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while connecting to the Camera: " + this.Name, e, "Connect", sourceFile);
+                    Logger.Error("Error while connecting to the Camera: " + Name, e, "Connect", sourceFile);
                     return false;
                 }
 
 
                 //Check if the camera have been found in the Database
-                if (this.cameraSpec.Year < 0) {
-                    Logger.Warning($"\"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", "Connect", sourceFile);
-                    Notification.ShowWarning($"Nikon Nek: \"{this.cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(10));
+                if (cameraSpec.Year < 0) {
+                    Logger.Warning($"\"{cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", "Connect", sourceFile);
+                    Notification.ShowWarning($"Nikon Nek: \"{cameraInfo.Model}\" haven't been found in the Plugin Database.\nSome functionalities like Detection of Sensor's spec, Crop Area, ... might not work properly.", TimeSpan.FromSeconds(10));
                 }
 
 
                 //Try to purge the Camera SDRAM to correctly receive handle at the first capture
                 try {
-                    var response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, [0]); //Newer model (eg: Z6)
-                    if (response.ResponseCode == NikonMtpResponseCode.Parameter_Not_Supported) response = this.camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []); //Older model (eg: d80)
+                    var response = camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, [0]); //Newer model (eg: Z6)
+                    if (response.ResponseCode == NikonMtpResponseCode.Parameter_Not_Supported) response = camera.SendCommand(NikonMtpOperationCode.DeleteImagesInSdram, []); //Older model (eg: d80)
                     if (response.ResponseCode != NikonMtpResponseCode.OK) {
-                        Logger.Error("Error while purging SDRAM: " + this.Name, new MtpException(NikonMtpOperationCode.DeleteImagesInSdram, response.ResponseCode), "Connect", sourceFile);
+                        Logger.Error("Error while purging SDRAM: " + Name, new MtpException(NikonMtpOperationCode.DeleteImagesInSdram, response.ResponseCode), "Connect", sourceFile);
                     }
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while purging SDRAM: " + this.Name, e, "Connect", sourceFile);
-                    this.camera.Dispose();
-                    this.camera = null;
+                    Logger.Error("Error while purging SDRAM: " + Name, e, "Connect", sourceFile);
+                    camera.Dispose();
+                    camera = null;
                     return false;
                 }
 
 
                 //Get device info: Operation, Properties, Events, ... supported + Name, model number, serial, ...
                 try {
-                    this.cameraInfo = this.camera.GetDeviceInfo();
+                    cameraInfo = camera.GetDeviceInfo();
                 } catch (MtpDeviceException e) {
-                    Logger.Error("Error while requesting Device Info: " + this.Name, e, sourceFile);
-                    this.camera.Dispose();
-                    this.camera = null;
+                    Logger.Error("Error while requesting Device Info: " + Name, e, sourceFile);
+                    camera.Dispose();
+                    camera = null;
                     return false;
                 } catch (MtpException e) {
-                    Logger.Error("Error while requesting Device Info: " + this.Name, e, sourceFile);
-                    this.camera.Dispose();
-                    this.camera = null;
+                    Logger.Error("Error while requesting Device Info: " + Name, e, sourceFile);
+                    camera.Dispose();
+                    camera = null;
                     return false;
                 }
 
@@ -135,13 +136,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 //Switch to HostMode if the settings is True
                 if (NEKMediator.Plugin.UseHostMode) {
                     try {
-                        var response = this.camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
+                        var response = camera.SendCommand(NikonMtpOperationCode.ChangeCameraMode, [1]);
                         if (response.ResponseCode != NikonMtpResponseCode.OK) {
-                            Logger.Error("Error while switching to Host Mode: " + this.Name, new MtpException(NikonMtpOperationCode.ChangeCameraMode, response.ResponseCode), "Connect", sourceFile);
-                            Notification.ShowError("Error while switching to Host Mode: " + this.Name + " - " + response.ResponseCode);
+                            Logger.Error("Error while switching to Host Mode: " + Name, new MtpException(NikonMtpOperationCode.ChangeCameraMode, response.ResponseCode), "Connect", sourceFile);
+                            Notification.ShowError("Error while switching to Host Mode: " + Name + " - " + response.ResponseCode);
                         }
                     } catch (MtpDeviceException e) {
-                        Logger.Error("Error while switching to Host Mode: " + this.Name, e, sourceFile);
+                        Logger.Error("Error while switching to Host Mode: " + Name, e, sourceFile);
                     }
                 }
 
@@ -151,15 +152,15 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if ((cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImage) || cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.GetLiveViewImageEx)) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.StartLiveView) && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.EndLiveView)) _canLiveview = true;
                 else {
                     try {
-                        var response = this.camera.SendCommand(NikonMtpOperationCode.StartLiveView, []);
+                        var response = camera.SendCommand(NikonMtpOperationCode.StartLiveView, []);
                         if (response.ResponseCode == NikonMtpResponseCode.OK) {
-                            response = this.camera.SendCommand(NikonMtpOperationCode.EndLiveView, []);
+                            response = camera.SendCommand(NikonMtpOperationCode.EndLiveView, []);
                             if (response.ResponseCode == NikonMtpResponseCode.OK) {
                                 _canLiveview = true;
                             }
                         }
                     } catch (MtpDeviceException e) {
-                        Logger.Error("Error while trying to start/end Liveview: " + this.Name, e, sourceFile);
+                        Logger.Error("Error while trying to start/end Liveview: " + Name, e, sourceFile);
                     }
                 }
 
@@ -167,16 +168,18 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 //Register the events listeners
                 camera.OnMtpEvent += camPropEvent;
                 camera.OnMtpEvent += camStateEvent;
+                profileService.ActiveProfile.CameraSettings.PropertyChanged += CameraSettings_PropertyChanged;
 
 
                 //Set the default values for the camera
                 lock (_gateCameraState) {
-                    this._cameraState = CameraStates.Idle;
+                    _cameraState = CameraStates.Idle;
                 }
 
                 _exposureInfo.bulbTime = 0;
                 _exposureInfo.isBulb = false;
                 _exposureInfo.bulbMode = CameraBulbModeEnum.NATIVE;
+                _ = ExposureTime; //To initialize the bulb mode
 
                 _imageInfo = null;
                 _imageStream = null;
@@ -208,6 +211,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.focuserMediator.Disconnect();
             }
 
+            profileService.ActiveProfile.CameraSettings.PropertyChanged -= CameraSettings_PropertyChanged;
             if (this.camera != null) {
                 //Unregister the events listeners
                 this.camera.OnMtpEvent -= camPropEvent;
@@ -257,6 +261,15 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public void SendCommandBlind(string command, bool raw = true) { throw new NotImplementedException(); }
 
+
+
+        private void CameraSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            if (e.PropertyName == nameof(profileService.ActiveProfile.CameraSettings.BulbMode)) {
+                RaisePropertyChanged(nameof(CanSetBulb));
+                RaisePropertyChanged(nameof(ExposureMin));
+                RaisePropertyChanged(nameof(ExposureMax));
+            }
+        }
 
 
 
@@ -722,7 +735,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                     if ((value > 1.0) && CanSetBulb) {
                         try {
-                            camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
+                            camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ShutterSpeed, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
                             _exposureInfo.isBulb = true;
                             _exposureInfo.bulbTime = value;
                             _exposureInfo.bulbMode = profileService.ActiveProfile.CameraSettings.BulbMode;
@@ -1037,6 +1050,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         private readonly object _gateCameraState = new();
         private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
         private CancellationTokenSource bulbToken;
+        private ExposureInfo currentExposureInfo;
 
         private SerialPortInteraction serialPort;
         private SerialRelayInteraction serialRelay;
@@ -1137,25 +1151,26 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (CanShowLiveView) StartLiveViewBackground();
 
             try {
+                currentExposureInfo = _exposureInfo;
                 MtpResponse result;
-                if (_exposureInfo.isBulb) {
-                    if (_exposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
+                if (currentExposureInfo.isBulb) {
+                    if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
                         result = camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, [0xFFFFFFFF, 0x0001]);
                         if (result.ResponseCode != NikonMtpResponseCode.OK) throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.ResponseCode);
                     }
-                    else if (_exposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
+                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
                         OpenSerialPort();
                         serialPort.EnableRts(true);
                     }
-                    else if (_exposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
+                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
                         OpenSerialRelay();
                         serialRelay.Send(new byte[] { 0xFF, 0x01, 0x01 });
                     }
-                    else if (_exposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
+                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
                         if (!telescopeMediator.SendToSnapPort(true)) throw new Exception("Failed to send start signal to TelescopeSnapPort for Bulb mode");
                     }
                     else {
-                        throw new ArgumentException("Unknown Bulb Mode: " + _exposureInfo.bulbMode.ToString());
+                        throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
                     }
 
                     RaisePropertyChanged(nameof(CameraState));
@@ -1200,26 +1215,26 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public void StopExposure() {
             if (!Connected) return;
 
-            if (_exposureInfo.isBulb) {
+            if (currentExposureInfo.isBulb) {
                 lock (_gateCameraState) {
                     if (_cameraState == CameraStates.Exposing) {
                         bulbToken.Cancel();
                         try {
-                            if (_exposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
+                            if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
                                 var response = camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
                                 if (response.ResponseCode != NikonMtpResponseCode.OK) {
                                     Logger.Error(this.Name, new MtpException(NikonMtpOperationCode.TerminateCapture, response.ResponseCode), "StopExposure", sourceFile);
                                 }
-                            } else if (_exposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
+                            } else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
                                 OpenSerialPort();
                                 serialPort.EnableRts(false);
-                            } else if (_exposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
+                            } else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
                                 OpenSerialRelay();
                                 serialRelay.Send(new byte[] { 0xFF, 0x01, 0x00 });
-                            } else if (_exposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
+                            } else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
                                 if (!telescopeMediator.SendToSnapPort(false)) throw new Exception("Failed to send stop signal to TelescopeSnapPort for Bulb mode");
                             } else {
-                                throw new ArgumentException("Unknown Bulb Mode: " + _exposureInfo.bulbMode.ToString());
+                                throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
                             }
                         } catch (Exception e) {
                             Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
