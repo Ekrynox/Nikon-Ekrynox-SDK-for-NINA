@@ -1158,19 +1158,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         result = camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, [0xFFFFFFFF, 0x0001]);
                         if (result.ResponseCode != NikonMtpResponseCode.OK) throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.ResponseCode);
                     }
-                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
-                        OpenSerialPort();
-                        serialPort.EnableRts(true);
-                    }
-                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
-                        OpenSerialRelay();
-                        serialRelay.Send(new byte[] { 0xFF, 0x01, 0x01 });
-                    }
-                    else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
-                        if (!telescopeMediator.SendToSnapPort(true)) throw new Exception("Failed to send start signal to TelescopeSnapPort for Bulb mode");
-                    }
                     else {
-                        throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
+                        camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.RecordingMedia, new MtpDatatypeVariant((Byte)1)); //Recording to SDRAM
+
+                        if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALPORT) {
+                            OpenSerialPort();
+                            serialPort.EnableRts(true);
+                        } else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.SERIALRELAY) {
+                            OpenSerialRelay();
+                            serialRelay.Send(new byte[] { 0xFF, 0x01, 0x01 });
+                        } else if (currentExposureInfo.bulbMode == CameraBulbModeEnum.TELESCOPESNAPPORT) {
+                            if (!telescopeMediator.SendToSnapPort(true)) throw new Exception("Failed to send start signal to TelescopeSnapPort for Bulb mode");
+                        } else {
+                            throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
+                        }
                     }
 
                     RaisePropertyChanged(nameof(CameraState));
