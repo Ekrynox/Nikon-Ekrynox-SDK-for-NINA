@@ -176,11 +176,6 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _cameraState = CameraStates.Idle;
                 }
 
-                _exposureInfo.bulbTime = 0;
-                _exposureInfo.isBulb = false;
-                _exposureInfo.bulbMode = CameraBulbModeEnum.NATIVE;
-                _ = ExposureTime; //To initialize the bulb mode
-
                 _imageInfo = null;
                 _imageStream = null;
 
@@ -193,6 +188,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 _isCropDirty = true;
                 _isExposuresDirty = true;
                 _isGainsDirty = true;
+
+                _exposureInfo.bulbTime = 0;
+                _exposureInfo.isBulb = false;
+                _exposureInfo.bulbMode = profileService.ActiveProfile.CameraSettings.BulbMode;
+                _ = ExposureTime; //To initialize the bulb mode
 
                 updateLensInfo(true);
 
@@ -265,6 +265,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         private void CameraSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             if (e.PropertyName == nameof(profileService.ActiveProfile.CameraSettings.BulbMode)) {
+                _exposureInfo.bulbMode = profileService.ActiveProfile.CameraSettings.BulbMode;
                 RaisePropertyChanged(nameof(CanSetBulb));
                 RaisePropertyChanged(nameof(ExposureMin));
                 RaisePropertyChanged(nameof(ExposureMax));
@@ -647,7 +648,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public bool CanSetBulb {
             get {
                 if (Connected) {
-                    if (profileService.ActiveProfile.CameraSettings.BulbMode == CameraBulbModeEnum.NATIVE && !cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia)) return false;
+                    if (profileService.ActiveProfile.CameraSettings.BulbMode == CameraBulbModeEnum.NATIVE && (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia) || !cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.TerminateCapture))) return false;
                     if (_isExposuresDirty) _ = Exposures;
                     return _cachedExposures.Contains(0xFFFFFFFF);
                 }
@@ -713,6 +714,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         var result = camera.GetDevicePropValue(NikonMtpDevicePropCode.ExposureTime);
                         if (!result.TryGetUInteger(out var exp)) {
                             Logger.Error("Wrong Datatype UInteger! Expected: " + result.GetType().ToString() + " for ExposureTime on " + Name, "ExposureTime -> Getter", sourceFile);
+                            _exposureInfo.isBulb = false;
                             return 0;
                         }
 
@@ -752,7 +754,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(newExp * 10000)));
                             _exposureInfo.isBulb = false;
                             _exposureInfo.bulbTime = value;
-                            _exposureInfo.bulbMode = CameraBulbModeEnum.NATIVE;
+                            _exposureInfo.bulbMode = profileService.ActiveProfile.CameraSettings.BulbMode;
                             RaisePropertyChanged(nameof(ExposureTime));
                         } catch (MtpDeviceException e) {
                             Logger.Error(Name, e, "ExposureTime -> Setter: " + value, sourceFile);
@@ -1156,7 +1158,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 if (currentExposureInfo.isBulb) {
                     if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
                         result = camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInMedia, [0xFFFFFFFF, 0x0001]);
-                        if (result.ResponseCode != NikonMtpResponseCode.OK) throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.ResponseCode);
+                        if (result.ResponseCode != NikonMtpResponseCode.OK) throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInMedia, result.ResponseCode);
                     }
                     else {
                         camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.RecordingMedia, new MtpDatatypeVariant((Byte)1)); //Recording to SDRAM
