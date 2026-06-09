@@ -379,8 +379,8 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _cachedCrop = getter();
                     _isCropDirty = false;
 
-                    RaisePropertyChanged("CameraXSize");
-                    RaisePropertyChanged("CameraYSize");
+                    RaisePropertyChanged(nameof(CameraXSize));
+                    RaisePropertyChanged(nameof(CameraYSize));
                 }
 
                 return _cachedCrop;
@@ -442,7 +442,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _cachedBitDepth = getter();
                     _isBitDepthDirty = false;
 
-                    RaisePropertyChanged("BitDepth");
+                    RaisePropertyChanged(nameof(BitDepth));
                 }
 
                 return _cachedBitDepth;
