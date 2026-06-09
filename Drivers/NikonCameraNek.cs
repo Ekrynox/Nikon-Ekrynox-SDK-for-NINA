@@ -1153,7 +1153,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (CanShowLiveView) StartLiveViewBackground();
 
             try {
-                currentExposureInfo = _exposureInfo;
+                currentExposureInfo.bulbMode = _exposureInfo.bulbMode;
+                currentExposureInfo.isBulb = _exposureInfo.isBulb;
+                currentExposureInfo.bulbTime = _exposureInfo.bulbTime;
+
                 MtpResponse result;
                 if (currentExposureInfo.isBulb) {
                     if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
