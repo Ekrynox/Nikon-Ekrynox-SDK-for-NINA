@@ -648,7 +648,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public bool CanSetBulb {
             get {
                 if (Connected) {
-                    if (profileService.ActiveProfile.CameraSettings.BulbMode == CameraBulbModeEnum.NATIVE && (!cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia) || !cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.TerminateCapture))) return false;
+                    if (profileService.ActiveProfile.CameraSettings.BulbMode == CameraBulbModeEnum.NATIVE) return cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.InitiateCaptureRecInMedia && cameraInfo.OperationsSupported.Contains(NikonMtpOperationCode.TerminateCapture;
                     if (_isExposuresDirty) _ = Exposures;
                     return _cachedExposures.Contains(0xFFFFFFFF);
                 }
