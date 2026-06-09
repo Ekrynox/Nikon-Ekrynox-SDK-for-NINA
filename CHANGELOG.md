@@ -1,6 +1,6 @@
 # Nikon Ekrynox SDK
 
-## 2.0.0.1004
+## 2.0.0.1005
 - Add Docakable to modify MTP Device Properties (disabled by default)
 - Add support for Bulb with Serial Port, Serial Relay, and Telescope Snap Port
 - Add support for HostMode
