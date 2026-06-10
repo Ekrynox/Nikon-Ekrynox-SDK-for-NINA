@@ -20,6 +20,7 @@ namespace nek {
 
 		NEK_API NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, bool autoConnect = true);
 		NEK_API NikonCamera(mtp::backend::MtpConnectionInfo connectionInfo, bool autoConnect = true);
+		NEK_API ~NikonCamera();
 
 		NEK_API void Connect() override;
 		NEK_API void Disconnect() override;
