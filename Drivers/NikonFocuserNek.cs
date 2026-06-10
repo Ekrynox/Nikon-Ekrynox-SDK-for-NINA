@@ -259,8 +259,18 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (!Connected) return NikonMtpResponseCode.General_Error;
                     if (needInit) if (!InitFocusingProcess()) return NikonMtpResponseCode.General_Error;
 
-                    var response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, [(UInt32)(toInf ? 2 : 1), distance]);
-                    var result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 20);
+                    MtpResponse response;
+                    NikonMtpResponseCode result;
+                    try {
+                        response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, [(UInt32)(toInf ? 2 : 1), distance]);
+                        result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 20);
+                    }
+                    catch (NEKCS.MtpDeviceException e) {
+                        Logger.Error("Nikon NEK: Error while moving Focus: " + Name, e, "MoveBy", sourceFile);
+                        Notification.ShowError("Nikon NEK: Error while moving Focus: " + Name);
+                        if (needInit) StopFocusingProcess();
+                        return NikonMtpResponseCode.General_Error;
+                    }
 
                     if (response.ResponseCode == NikonMtpResponseCode.MfDrive_Step_Insufficiency || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
                         result = NikonMtpResponseCode.MfDrive_Step_Insufficiency;
@@ -274,9 +284,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         _position -= toInf ? 0 : distance;
                     } else {
                         var e = new MtpException(NikonMtpOperationCode.MfDrive, response.ResponseCode);
-                        Logger.Error(e, "MoveBy", sourceFile);
+                        Logger.Error("Nikon NEK: Error while moving Focus: " + Name, e, "MoveBy", sourceFile);
+                        Notification.ShowError("Nikon NEK: Error while moving Focus: " + Name + " - " + response.ResponseCode);
                         if (needInit) StopFocusingProcess();
-                        throw e;
+                        return response.ResponseCode;
                     }
                     RaisePropertyChanged(nameof(Position));
 
