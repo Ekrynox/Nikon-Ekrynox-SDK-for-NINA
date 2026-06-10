@@ -83,6 +83,9 @@ NikonCamera::NikonCamera(mtp::backend::MtpConnectionInfo connectionInfo, bool au
 
 	if (autoConnect) Connect();
 }
+NikonCamera::~NikonCamera() {
+	Disconnect();
+}
 
 
 void NikonCamera::Connect() {
