@@ -12,23 +12,26 @@ using namespace nek;
 
 
 
-std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> NikonCamera::listNikonCameras(bool onlyOn) {
-	std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> result;
+std::vector<mtp::backend::MtpConnectionInfo> NikonCamera::listNikonCameras(bool onlyOn) {
+	std::vector<mtp::backend::MtpConnectionInfo> result;
 
 	mtp::MtpManager manager;
 	auto devices = manager.listAllDevices();
 
 	for (auto& d : devices) {
-		if (d.first.usbPath.has_value()) {
-			std::wstring id = d.first.usbPath.value();
+		if (d.usbPath.has_value()) {
+			std::wstring id = d.usbPath.value();
 			std::transform(id.begin(), id.end(), id.begin(), ::towupper);
 			if (id.find(L"VID_04B0") != std::wstring::npos) {
-				auto cam = NikonCamera(std::move(d.second));
-				auto info = cam.GetDeviceInfo();
+				if (onlyOn) {
+					auto cam = NikonCamera(d);
+					auto info = cam.GetDeviceInfo();
 
-				if (!onlyOn || std::find_if(info.OperationsSupported.begin(), info.OperationsSupported.end(), [](const uint32_t& x) { return x == NikonMtpOperationCode::InitiateCapture || x == NikonMtpOperationCode::InitiateCaptureRecInSdram || x == NikonMtpOperationCode::InitiateCaptureRecInMedia; }) != info.OperationsSupported.end()) {
-					result.push_back(std::make_pair(std::move(d.first), std::move(info)));
+					if (std::find_if(info.OperationsSupported.begin(), info.OperationsSupported.end(), [](const uint32_t& x) { return x == NikonMtpOperationCode::InitiateCapture || x == NikonMtpOperationCode::InitiateCaptureRecInSdram || x == NikonMtpOperationCode::InitiateCaptureRecInMedia; }) != info.OperationsSupported.end()) {
+						result.push_back(d);
+					}
 				}
+				else result.push_back(d);
 			}
 		}
 	}
@@ -36,22 +39,23 @@ std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> Ni
 	return result;
 }
 
-std::vector<std::pair<NikonCamera, mtp::MtpDeviceInfoDS>> NikonCamera::getNikonCameras(bool onlyOn) {
-	std::vector<std::pair<NikonCamera, mtp::MtpDeviceInfoDS>> result;
+std::vector<std::tuple<mtp::backend::MtpConnectionInfo, NikonDeviceInfoDS, std::unique_ptr<NikonCamera>>> NikonCamera::getNikonCameras(bool onlyOn) {
+	std::vector<std::tuple<mtp::backend::MtpConnectionInfo, NikonDeviceInfoDS, std::unique_ptr<NikonCamera>>> result;
 
 	mtp::MtpManager manager;
 	auto devices = manager.listAllDevices();
 
 	for (auto& d : devices) {
-		if (d.first.usbPath.has_value()) {
-			std::wstring id = d.first.usbPath.value();
+		if (d.usbPath.has_value()) {
+			std::wstring id = d.usbPath.value();
 			std::transform(id.begin(), id.end(), id.begin(), ::towupper);
 			if (id.find(L"VID_04B0") != std::wstring::npos) {
-				auto cam = NikonCamera(std::move(d.second));
-				auto info = cam.GetDeviceInfo();
+				auto cam = std::make_unique<NikonCamera>(d, true);
+				auto info = cam->GetDeviceInfo();
+				cam->Disconnect();
 
 				if (!onlyOn || std::find_if(info.OperationsSupported.begin(), info.OperationsSupported.end(), [](const uint32_t& x) { return x == NikonMtpOperationCode::InitiateCapture || x == NikonMtpOperationCode::InitiateCaptureRecInSdram || x == NikonMtpOperationCode::InitiateCaptureRecInMedia; }) != info.OperationsSupported.end()) {
-					result.push_back(std::make_pair(NikonCamera(std::move(d.first), false), std::move(info)));
+					result.push_back(std::make_tuple(d, info, std::move(cam)));
 				}
 			}
 		}
@@ -66,9 +70,17 @@ size_t NikonCamera::countNikonCameras(bool onlyOn) {
 
 
 NikonCamera::NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(std::move(backend), false) {
+	deviceReadyWorkerCount = 0;
+	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+	deviceReadyPollingException = nullptr;
+	
 	if (autoConnect) Connect();
 }
 NikonCamera::NikonCamera(mtp::backend::MtpConnectionInfo connectionInfo, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(connectionInfo, false) {
+	deviceReadyWorkerCount = 0;
+	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+	deviceReadyPollingException = nullptr;
+
 	if (autoConnect) Connect();
 }
 
@@ -147,6 +159,16 @@ void NikonCamera::Disconnect() {
 	if (eventPolling.joinable()) {
 		eventPolling.request_stop();
 		if(std::this_thread::get_id() != eventPolling.get_id()) eventPolling.join();
+	}
+
+	if (deviceReadyPolling.joinable()) {
+		deviceReadyPolling.request_stop();
+		if (std::this_thread::get_id() != deviceReadyPolling.get_id()) deviceReadyPolling.join();
+
+		std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
+		deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+		deviceReadyPollingException = std::make_exception_ptr(mtp::MtpDeviceException(mtp::MtpExPhase::DEVICE_NOT_CONNECTED, mtp::MtpExCode::DEVICE_DISCONNECTED));
+		deviceReadyPollingCv.notify_all();
 	}
 }
 
@@ -379,39 +401,70 @@ void NikonCamera::SetDevicePropValueTypesafe(uint32_t devicePropCode, mtp::MtpDa
 
 
 uint32_t NikonCamera::DeviceReady() {
-	return SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
+	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
+
+	deviceReadyPollingCv.wait(readlock);
+
+	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
+	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(uint32_t whileResponseCode, std::stop_token stopToken, size_t sleepTimems) {
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	while ((responseCode == whileResponseCode) && !stopToken.stop_requested()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	}
-	return responseCode;
+	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
+
+	deviceReadyPollingCv.wait(readlock);
+	deviceReadyPollingCv.wait(readlock, stopToken, [this, whileResponseCode] {
+		if (deviceReadyPollingException) return true;
+		return deviceReadyPollingResponseCode != whileResponseCode;
+	});
+
+	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
+	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(std::vector<uint32_t> whileResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	while ((std::find(whileResponseCodes.begin(), whileResponseCodes.end(), responseCode) != whileResponseCodes.end()) && !stopToken.stop_requested()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	}
-	return responseCode;
+	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
+
+	deviceReadyPollingCv.wait(readlock);
+	deviceReadyPollingCv.wait(readlock, stopToken, [this, &whileResponseCodes] {
+		if (deviceReadyPollingException) return true;
+		return std::find(whileResponseCodes.begin(), whileResponseCodes.end(), deviceReadyPollingResponseCode) == whileResponseCodes.end();
+	});
+
+	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
+	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(uint32_t whileNotResponseCode, std::stop_token stopToken, size_t sleepTimems) {
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	while ((responseCode != whileNotResponseCode) && !stopToken.stop_requested()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	}
-	return responseCode;
+	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
+
+	deviceReadyPollingCv.wait(readlock);
+	deviceReadyPollingCv.wait(readlock, stopToken, [this, whileNotResponseCode] {
+		if (deviceReadyPollingException) return true;
+		return deviceReadyPollingResponseCode == whileNotResponseCode;
+	});
+
+	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
+	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(std::vector<uint32_t> whileNotResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
-	uint32_t responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	while ((std::find(whileNotResponseCodes.begin(), whileNotResponseCodes.end(), responseCode) == whileNotResponseCodes.end()) && !stopToken.stop_requested()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimems));
-		responseCode = SendCommandAndRead(NikonMtpOperationCode::DeviceReady, {}).responseCode;
-	}
-	return responseCode;
+	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
+
+	deviceReadyPollingCv.wait(readlock);
+	deviceReadyPollingCv.wait(readlock, stopToken, [this, &whileNotResponseCodes] {
+		if (deviceReadyPollingException) return true;
+		return std::find(whileNotResponseCodes.begin(), whileNotResponseCodes.end(), deviceReadyPollingResponseCode) != whileNotResponseCodes.end();
+	});
+
+	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
+	return deviceReadyPollingResponseCode;
 }
 
 
@@ -439,4 +492,43 @@ void NikonCamera::EndLiveView() {
 	if (response.responseCode != NikonMtpResponseCode::OK) {
 		throw mtp::MtpException(NikonMtpOperationCode::EndLiveView, response.responseCode);
 	}
+}
+
+
+
+void nek::NikonCamera::StartDeviceReadyPolling() {
+	if (deviceReadyPolling.joinable()) {
+		deviceReadyPolling.request_stop();
+		deviceReadyPolling.join();
+	}
+
+	deviceReadyPollingSleepTimems = 200;
+	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+	deviceReadyPollingException = nullptr;
+
+	deviceReadyPolling = std::jthread([this](std::stop_token stop_token) {
+		mtp::MtpResponse response;
+		while (!stop_token.stop_requested() && this->isConnected()) {
+			try {
+				response = SendCommand(NikonMtpOperationCode::DeviceReady, {});
+
+				{
+					std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
+					deviceReadyPollingResponseCode = response.responseCode;
+					deviceReadyPollingException = nullptr;
+				}
+				deviceReadyPollingCv.notify_all();
+			}
+			catch (...) {
+				{
+					std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
+					deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+					deviceReadyPollingException = std::current_exception();
+				}
+				deviceReadyPollingCv.notify_all();
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(deviceReadyPollingSleepTimems));
+		}
+	});
 }

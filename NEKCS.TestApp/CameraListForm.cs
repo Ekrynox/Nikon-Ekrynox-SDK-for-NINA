@@ -2,7 +2,7 @@ namespace NEKCS.TestApp
 {
     public partial class CameraListForm : Form
     {
-        System.Collections.Generic.List<(NEKCS.MtpConnectionInfo, NEKCS.NikonDeviceInfoDS)> cameras;
+        System.Collections.Generic.List<(NEKCS.MtpConnectionInfo, NEKCS.NikonDeviceInfoDS, NEKCS.NikonCamera)> cameras;
 
         public CameraListForm()
         {
@@ -11,7 +11,7 @@ namespace NEKCS.TestApp
 
         private void refreshCameraList_Click(object sender, EventArgs e)
         {
-            cameras = NEKCS.NikonCamera.listNikonCameras();
+            cameras = NEKCS.NikonCamera.getNikonCameras();
             this.cameraList.Items.Clear();
             foreach (var camera in cameras)
             {

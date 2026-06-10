@@ -12,7 +12,10 @@ using namespace nek::mtp;
 
 #pragma region MtpDevice
 
-MtpDevice::MtpDevice(std::unique_ptr<backend::IMtpTransport> backend, bool autoConnect) : backend_(std::move(backend)), backendCallbackId_(std::nullopt) {
+MtpDevice::MtpDevice(std::unique_ptr<backend::IMtpTransport> backend, bool autoConnect) : backend_(std::move(backend)) {
+	backend_->unsubscribe();
+	backendCallbackId_ = std::nullopt;
+
 	std::lock_guard lock(eventMutex_);
 	eventCallbacks_.clear();
 	eventNextId_ = 0;
@@ -22,8 +25,9 @@ MtpDevice::MtpDevice(std::unique_ptr<backend::IMtpTransport> backend, bool autoC
 
 MtpDevice::MtpDevice(const backend::MtpConnectionInfo& connectionInfo, bool autoConnect) {
 	auto backends = MtpManager().tryCreateTransport(connectionInfo);
-	if (backends.size() == 0) throw MtpDeviceException(MtpExPhase::DEVICE_NOT_CONNECTED, MtpExCode::DEVICE_DISCONNECTED); //TODO chnage to a more explicit error
+	if (backends.size() == 0) throw MtpDeviceException(MtpExPhase::DEVICE_NOT_CONNECTED, MtpExCode::DEVICE_DISCONNECTED); //TODO change to a more explicit error
 	backend_ = std::move(backends[0]);
+	backend_->unsubscribe();
 	backendCallbackId_ = std::nullopt;
 
 	std::lock_guard lock(eventMutex_);
@@ -31,17 +35,6 @@ MtpDevice::MtpDevice(const backend::MtpConnectionInfo& connectionInfo, bool auto
 	eventNextId_ = 0;
 
 	if (autoConnect) Connect();
-}
-
-nek::mtp::MtpDevice::MtpDevice(MtpDevice&& other) noexcept {
-	std::lock_guard lock(eventMutex_);
-	backend_ = std::move(other.backend_);
-	backendCallbackId_ = std::nullopt;
-
-	eventCallbacks_ = std::move(other.eventCallbacks_);
-	eventNextId_ = other.eventNextId_;
-
-	if (isConnected()) Connect();
 }
 
 MtpDevice::~MtpDevice() {
@@ -1467,21 +1460,24 @@ std::vector<std::unique_ptr<backend::IMtpTransport>> MtpManager::tryCreateTransp
 	return result;
 }
 
-std::vector<std::pair<backend::MtpConnectionInfo, std::unique_ptr<backend::IMtpTransport>>> MtpManager::listAllDevices() {
-	auto result = std::vector<std::pair<backend::MtpConnectionInfo, std::unique_ptr<backend::IMtpTransport>>>();
+std::vector<backend::MtpConnectionInfo> MtpManager::listAllDevices() {
+	auto result = std::vector<backend::MtpConnectionInfo>();
 	for (auto& b : backends_) {
 		for (auto& d : b->listDevices()) {
-			result.push_back(std::move(d));
+			result.push_back(d);
 		}
 	}
 	return result;
 }
 
-std::vector<std::pair<backend::MtpConnectionInfo, MtpDevice>> MtpManager::getAllDevices() {
-	auto result = std::vector<std::pair<backend::MtpConnectionInfo, MtpDevice>>();
+std::vector<std::tuple<backend::MtpConnectionInfo, MtpDeviceInfoDS, std::unique_ptr<MtpDevice>>> MtpManager::getAllDevices() {
+	auto result = std::vector<std::tuple<backend::MtpConnectionInfo, MtpDeviceInfoDS, std::unique_ptr<MtpDevice>>>();
 	for (auto& b : backends_) {
-		for (auto& d : b->listDevices()) {
-			result.push_back(std::make_pair(d.first, std::move(MtpDevice(std::move(d.second), false))));
+		for (auto& d : b->getDevices()) {
+			auto device = std::make_unique<MtpDevice>(std::move(d.second), true);
+			auto mtp = device->GetDeviceInfo();
+			device->Disconnect();
+			result.push_back(std::make_tuple(d.first, mtp, std::move(device)));
 		}
 	}
 	return result;

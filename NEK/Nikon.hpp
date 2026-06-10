@@ -4,6 +4,7 @@
 #include "nikon_enum.hpp"
 #include "nikon_struct.hpp"
 
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -13,8 +14,8 @@ namespace nek {
 
 	class NikonCamera : public nek::mtp::MtpDevice {
 	public:
-		NEK_API static std::vector<std::pair<mtp::backend::MtpConnectionInfo, mtp::MtpDeviceInfoDS>> listNikonCameras(bool onlyOn = true);
-		NEK_API static std::vector<std::pair<NikonCamera, mtp::MtpDeviceInfoDS>>getNikonCameras(bool onlyOn = true);
+		NEK_API static std::vector<mtp::backend::MtpConnectionInfo> listNikonCameras(bool onlyOn = true);
+		NEK_API static std::vector<std::tuple<mtp::backend::MtpConnectionInfo, NikonDeviceInfoDS, std::unique_ptr<NikonCamera>>> getNikonCameras(bool onlyOn = true);
 		NEK_API static size_t countNikonCameras(bool onlyOn = true);
 
 		NEK_API NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, bool autoConnect = true);
@@ -51,6 +52,16 @@ namespace nek {
 		std::jthread eventPolling;
 
 		NikonDeviceInfoDS deviceInfo_;
+
+
+		void StartDeviceReadyPolling();
+		std::jthread deviceReadyPolling;
+		std::atomic<size_t> deviceReadyPollingSleepTimems;
+		std::atomic<size_t> deviceReadyWorkerCount;
+		std::condition_variable_any deviceReadyPollingCv;
+		std::shared_mutex deviceReadyPollingMutex;
+		uint32_t deviceReadyPollingResponseCode;
+		std::exception_ptr deviceReadyPollingException;
 	};
 
 }

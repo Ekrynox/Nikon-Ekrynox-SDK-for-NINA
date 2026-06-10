@@ -21,11 +21,11 @@ public:
 
 
 //NikonCamera
-System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ NEKCS::NikonCamera::listNikonCameras(System::Boolean onlyOn) {
+System::Collections::Generic::List<MtpConnectionInfo^>^ NEKCS::NikonCamera::listNikonCameras(System::Boolean onlyOn) {
 	try {
-		System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ result = gcnew System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>(0);
+		System::Collections::Generic::List<MtpConnectionInfo^>^ result = gcnew System::Collections::Generic::List<MtpConnectionInfo^>(0);
 		for (auto& camera : nek::NikonCamera::listNikonCameras(onlyOn)) {
-			result->Add(System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>(gcnew MtpConnectionInfo(camera.first), gcnew NikonDeviceInfoDS(camera.second)));
+			result->Add(gcnew MtpConnectionInfo(camera));
 		}
 		return result;
 	}
@@ -33,13 +33,13 @@ System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonD
 		throw gcnew MtpDeviceException(e);
 	}
 }
-System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ NEKCS::NikonCamera::listNikonCameras() { return listNikonCameras(true); }
+System::Collections::Generic::List<MtpConnectionInfo^>^ NEKCS::NikonCamera::listNikonCameras() { return listNikonCameras(true); }
 
-System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ NEKCS::NikonCamera::getNikonCameras(System::Boolean onlyOn) {
+System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>^ NEKCS::NikonCamera::getNikonCameras(System::Boolean onlyOn) {
 	try {
-		System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ result = gcnew System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>(0);
+		System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>^ result = gcnew System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>(0);
 		for (auto& camera : nek::NikonCamera::getNikonCameras(onlyOn)) {
-			result->Add(System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>(gcnew NikonCamera(std::move(camera.first)), gcnew NikonDeviceInfoDS(camera.second)));
+			result->Add(System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>(gcnew MtpConnectionInfo(std::get<0>(camera)), gcnew NikonDeviceInfoDS(std::get<1>(camera)), gcnew NikonCamera(std::move(std::get<2>(camera)))));
 		}
 		return result;
 	}
@@ -47,7 +47,7 @@ System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceI
 		throw gcnew MtpDeviceException(e);
 	}
 }
-System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ NEKCS::NikonCamera::getNikonCameras() { return getNikonCameras(true); }
+System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>^ NEKCS::NikonCamera::getNikonCameras() { return getNikonCameras(true); }
 
 size_t NikonCamera::countNikonCameras(System::Boolean onlyOn) { return nek::NikonCamera::countNikonCameras(onlyOn); };
 size_t NikonCamera::countNikonCameras() { return countNikonCameras(true); };
@@ -62,9 +62,9 @@ NikonCamera::NikonCamera(MtpConnectionInfo^ connectionInfo) {
 		throw gcnew MtpDeviceException(e);
 	}
 };
-NikonCamera::NikonCamera(nek::NikonCamera&& camera) {
+NikonCamera::NikonCamera(std::unique_ptr<nek::NikonCamera> nativeCamera) {
 	try {
-		m_nativeClass = new nek::NikonCamera(std::move(camera));
+		m_nativeClass = nativeCamera.release();
 	}
 	catch (const nek::mtp::MtpDeviceException& e) {
 		throw gcnew MtpDeviceException(e);

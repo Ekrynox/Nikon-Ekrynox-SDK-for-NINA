@@ -14,15 +14,15 @@ int main() {
 
 	auto nikonCameras = nek::NikonCamera::getNikonCameras();
 	for (auto& pair : nikonCameras) {
-		wcout << pair.second.Manufacture << " " << pair.second.Model << " " << pair.second.SerialNumber << endl;
+		wcout << std::get<1>(pair).Manufacture << " " << std::get<1>(pair).Model << " " << std::get<1>(pair).SerialNumber << endl;
 	}
 	if (nikonCameras.size() == 0) return 0;
 
 
-	auto camT = std::move(nikonCameras.begin()->first);
-	camT.Connect();
+	auto camT = std::move(std::get<2>(*nikonCameras.begin()));
+	camT->Connect();
 	
-	auto res = camT.GetDeviceInfo();
+	auto res = camT->GetDeviceInfo();
 	res;
 
 	return 0;

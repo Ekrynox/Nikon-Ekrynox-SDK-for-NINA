@@ -2,7 +2,7 @@
   "profiles": {
     "NEKCS.TestApp": {
       "commandName": "Project",
-      "nativeDebugging": true
+      "debugEngines": "managed,native"
     }
   }
 }
