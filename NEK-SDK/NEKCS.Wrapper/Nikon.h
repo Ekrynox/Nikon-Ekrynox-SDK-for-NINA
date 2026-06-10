@@ -18,10 +18,10 @@ namespace NEKCS {
 		System::Collections::Generic::Dictionary<MtpEventHandler^, size_t> _callbackIds;
 
 	public:
-		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ listNikonCameras(System::Boolean onlyOn);
-		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^>>^ listNikonCameras();
-		static System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ getNikonCameras(System::Boolean onlyOn);
-		static System::Collections::Generic::List<System::ValueTuple<NikonCamera^, NikonDeviceInfoDS^>>^ getNikonCameras();
+		static System::Collections::Generic::List<MtpConnectionInfo^>^ listNikonCameras(System::Boolean onlyOn);
+		static System::Collections::Generic::List<MtpConnectionInfo^>^ listNikonCameras();
+		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>^ getNikonCameras(System::Boolean onlyOn);
+		static System::Collections::Generic::List<System::ValueTuple<MtpConnectionInfo^, NikonDeviceInfoDS^, NikonCamera^>>^ getNikonCameras();
 		static size_t countNikonCameras(System::Boolean onlyOn);
 		static size_t countNikonCameras();
 
@@ -99,7 +99,7 @@ namespace NEKCS {
 		void EndLiveView();
 
 	internal:
-		NikonCamera(nek::NikonCamera&& camera);
+		NikonCamera(std::unique_ptr<nek::NikonCamera> nativeCamera);
 	};
 
 }

@@ -719,14 +719,14 @@ namespace nek::mtp::backend::wpd {
 	std::unique_ptr<IMtpTransport> nek::mtp::backend::wpd::WpdMtpBackendProvider::tryCreateTransport(const MtpConnectionInfo& connectionInfo) {
 		if (!connectionInfo.usbPath.has_value()) return nullptr;
 		auto devices = listDevices();
-		auto device = std::find_if(devices.begin(), devices.end(), [&connectionInfo](const std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>& d) { return d.first.usbPath.value() == connectionInfo.usbPath.value(); });
+		auto device = std::find_if(devices.begin(), devices.end(), [&connectionInfo](const MtpConnectionInfo& d) { return d.usbPath.value() == connectionInfo.usbPath.value(); });
 		if (device == devices.end()) return nullptr;
 
-		return std::move(device->second);
+		return std::make_unique<WpdMtpTransport>(device->usbPath.value());
 	}
 
-	std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> WpdMtpBackendProvider::listDevices() {
-		auto result = std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>>();
+	std::vector<MtpConnectionInfo> WpdMtpBackendProvider::listDevices() {
+		auto result = std::vector<MtpConnectionInfo>();
 
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		bool weInitialized = (hr == S_OK);
@@ -758,10 +758,9 @@ namespace nek::mtp::backend::wpd {
 				}
 
 				for (DWORD i = 0; i < devicesNb; i++) {
-					std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>> info;
-					info.first.usbPath = devices[i];
-					info.second = std::make_unique<WpdMtpTransport>(devices[i]);
-					result.push_back(std::move(info));
+					MtpConnectionInfo info;
+					info.usbPath = devices[i];
+					result.push_back(info);
 
 					CoTaskMemFree(devices[i]);
 				}
@@ -774,6 +773,14 @@ namespace nek::mtp::backend::wpd {
 
 		if (weInitialized) CoUninitialize();
 
+		return result;
+	}
+
+	std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> WpdMtpBackendProvider::getDevices() {
+		auto result = std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>>();
+		for (const auto& info : listDevices()) {
+			result.push_back(std::make_pair(info, std::make_unique<WpdMtpTransport>(info.usbPath.value())));
+		}
 		return result;
 	}
 

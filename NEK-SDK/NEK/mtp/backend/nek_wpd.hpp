@@ -92,7 +92,8 @@ namespace nek::mtp::backend::wpd {
 		NEK_API ~WpdMtpBackendProvider() {};
 
 		NEK_API std::unique_ptr<IMtpTransport> tryCreateTransport(const MtpConnectionInfo& connectionInfo) override;
-		NEK_API std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> listDevices() override;
+		NEK_API std::vector<MtpConnectionInfo> listDevices() override;
+		NEK_API std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> getDevices() override;
 		NEK_API size_t countDevices() override;
 	};
 

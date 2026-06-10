@@ -43,7 +43,8 @@ namespace nek::mtp::backend {
 		virtual ~IMtpBackendProvider() = default;
 
 		virtual std::unique_ptr<IMtpTransport> tryCreateTransport(const MtpConnectionInfo& connectionInfo) = 0;
-		virtual std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> listDevices() = 0;
+		virtual std::vector<MtpConnectionInfo> listDevices() = 0;
+		virtual std::vector<std::pair<MtpConnectionInfo, std::unique_ptr<IMtpTransport>>> getDevices() = 0;
 		virtual size_t countDevices() = 0;
 	};
 
