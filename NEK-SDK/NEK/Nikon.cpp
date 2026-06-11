@@ -152,6 +152,11 @@ void NikonCamera::Connect() {
 }
 
 void NikonCamera::Disconnect() {
+	eventPolling.request_stop();
+	deviceReadyPolling.request_stop();
+	if (std::this_thread::get_id() != eventPolling.get_id() && eventPolling.joinable()) eventPolling.join();
+	if (std::this_thread::get_id() != deviceReadyPolling.get_id() && deviceReadyPolling.joinable()) deviceReadyPolling.join();
+
 	if (backend_) {
 		if (backendCallbackId_.has_value()) backend_->unsubscribe(backendCallbackId_.value());
 		backendCallbackId_ = std::nullopt;
@@ -159,20 +164,10 @@ void NikonCamera::Disconnect() {
 		OnEvent(nek::mtp::MtpEvent(NikonMtpEventCode::DeviceInfoChanged)); // Notify Disconnection: DeviceInfoChanged
 	}
 
-	if (eventPolling.joinable()) {
-		eventPolling.request_stop();
-		if(std::this_thread::get_id() != eventPolling.get_id()) eventPolling.join();
-	}
-
-	if (deviceReadyPolling.joinable()) {
-		deviceReadyPolling.request_stop();
-		if (std::this_thread::get_id() != deviceReadyPolling.get_id()) deviceReadyPolling.join();
-
-		std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
-		deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
-		deviceReadyPollingException = std::make_exception_ptr(mtp::MtpDeviceException(mtp::MtpExPhase::DEVICE_NOT_CONNECTED, mtp::MtpExCode::DEVICE_DISCONNECTED));
-		deviceReadyPollingCv.notify_all();
-	}
+	std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
+	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+	deviceReadyPollingException = std::make_exception_ptr(mtp::MtpDeviceException(mtp::MtpExPhase::DEVICE_NOT_CONNECTED, mtp::MtpExCode::DEVICE_DISCONNECTED));
+	deviceReadyPollingCv.notify_all();
 }
 
 
