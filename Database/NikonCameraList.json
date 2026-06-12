@@ -2389,7 +2389,7 @@
       }
     ]
   },
-  "Z 5_2": {
+  "Z5_2": {
     "Name": "Z5II",
     "Year": 2025,
     "Processor": "EXPEED 7",
@@ -2650,7 +2650,7 @@
       }
     ]
   },
-  "Z 6_3": {
+  "Z6_3": {
     "Name": "Z6III",
     "Year": 2024,
     "Processor": "EXPEED 7",
@@ -3125,7 +3125,7 @@
     "Processor": "EXPEED 6",
     "Sensor": {
       "Name": "",
-      "Type": "CMOS",
+      "Type": "CMOS (Without AA filter)",
       "Bayer": "",
       "BitDepth": 14,
       "ResX": 5568,
@@ -3411,6 +3411,163 @@
           "Size S": {
             "ResX": 2784,
             "ResY": 1560
+          }
+        }
+      }
+    ]
+  },
+  "Z 30": {
+    "Name": "Z30",
+    "Year": 2022,
+    "Processor": "EXPEED 6",
+    "Sensor": {
+      "Name": "",
+      "Type": "CMOS (Without AA filter)",
+      "Bayer": "",
+      "BitDepth": 14,
+      "ResX": 5568,
+      "ResY": 3712,
+      "SizeX": 23.5,
+      "SizeY": 15.7,
+      "PixelSizeX": 4.22,
+      "PixelSizeY": 4.22
+    },
+    "CropSubSampling": [
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 3712,
+            "ResY": 3712
+          },
+          "Size M": {
+            "ResX": 2784,
+            "ResY": 2784
+          },
+          "Size S": {
+            "ResX": 1856,
+            "ResY": 1856
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 5568,
+            "ResY": 3128
+          },
+          "Size M": {
+            "ResX": 4176,
+            "ResY": 2344
+          },
+          "Size S": {
+            "ResX": 2784,
+            "ResY": 1560
+          }
+        }
+      }
+    ]
+  },
+  "ZR": {
+    "Name": "ZR",
+    "Year": 2025,
+    "Processor": "EXPEED 7",
+    "Sensor": {
+      "Name": "Sony ?",
+      "Type": "Partially Stacked BSI-CMOS",
+      "Bayer": "",
+      "BitDepth": 14,
+      "ResX": 6048,
+      "ResY": 4032,
+      "SizeX": 35.9,
+      "SizeY": 23.9,
+      "PixelSizeX": 5.94,
+      "PixelSizeY": 5.94
+    },
+    "CropSubSampling": [
+      {
+        "Crop": "FX",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "DX",
+        "Subs": {
+          "Size L": {
+            "ResX": 3984,
+            "ResY": 2656
+          },
+          "Size M": {
+            "ResX": 2976,
+            "ResY": 1992
+          },
+          "Size S": {
+            "ResX": 1984,
+            "ResY": 1328
+          }
+        }
+      },
+      {
+        "Crop": "1:1",
+        "Subs": {
+          "Size L": {
+            "ResX": 4032,
+            "ResY": 4032
+          },
+          "Size M": {
+            "ResX": 3024,
+            "ResY": 3024
+          },
+          "Size S": {
+            "ResX": 2016,
+            "ResY": 2016
+          }
+        }
+      },
+      {
+        "Crop": "16:9",
+        "Subs": {
+          "Size L": {
+            "ResX": 6048,
+            "ResY": 3400
+          },
+          "Size M": {
+            "ResX": 4528,
+            "ResY": 2544
+          },
+          "Size S": {
+            "ResX": 3024,
+            "ResY": 1696
           }
         }
       }
