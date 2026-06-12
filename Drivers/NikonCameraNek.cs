@@ -206,6 +206,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this._cameraState = CameraStates.NoState;
             }
 
+            serialPort?.Close();
+            serialPort?.Dispose();
+            serialPort = null;
+            serialRelay?.Dispose();
+            serialRelay = null;
+
             //Ensure that the Nikon focuser get disconnected
             if (this.focuserMediator.GetDevice() != null && focuserMediator.GetDevice().Connected && focuserMediator.GetDevice() is NikonFocuserNek) {
                 this.focuserMediator.Disconnect();
@@ -790,9 +796,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public void RestoreExposureTime() {
             if (Connected) {
                 try {
-                    camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(_oldExposureTime)));
-                    if (_oldExposureTime == 0xFFFFFFFF) _exposureInfo.isBulb = true;
-                    else _exposureInfo.isBulb = false;
+                    if (_oldExposureTime == 0xFFFFFFFF) {
+                        camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ShutterSpeed, new MtpDatatypeVariant((UInt32)0xFFFFFFFF));
+                        _exposureInfo.isBulb = true;
+                    } else {
+                        camera.SetDevicePropValueTypesafe(NikonMtpDevicePropCode.ExposureTime, new MtpDatatypeVariant((UInt32)(_oldExposureTime)));
+                        _exposureInfo.isBulb = false;
+                    }
                     _exposureInfo.bulbTime = _oldBulbTime;
                 } catch (MtpDeviceException e) {
                     Logger.Error(Name, e, "RestoreExposureTime: " + _oldExposureTime, sourceFile);
