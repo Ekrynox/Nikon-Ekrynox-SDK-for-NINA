@@ -71,6 +71,7 @@ size_t NikonCamera::countNikonCameras(bool onlyOn) {
 
 NikonCamera::NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(std::move(backend), false) {
 	deviceReadyWorkerCount = 0;
+	deviceReadyPollingSleepTimems.clear();
 	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
 	deviceReadyPollingException = nullptr;
 	
@@ -78,6 +79,7 @@ NikonCamera::NikonCamera(std::unique_ptr<mtp::backend::IMtpTransport> backend, b
 }
 NikonCamera::NikonCamera(mtp::backend::MtpConnectionInfo connectionInfo, bool autoConnect) : nek::mtp::MtpDevice::MtpDevice(connectionInfo, false) {
 	deviceReadyWorkerCount = 0;
+	deviceReadyPollingSleepTimems.clear();
 	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
 	deviceReadyPollingException = nullptr;
 
@@ -400,16 +402,19 @@ void NikonCamera::SetDevicePropValueTypesafe(uint32_t devicePropCode, mtp::MtpDa
 
 uint32_t NikonCamera::DeviceReady() {
 	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	deviceReadyPollingSleepTimems.insert(1000);
 	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
 
 	deviceReadyPollingCv.wait(readlock);
 
 	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	deviceReadyPollingSleepTimems.erase(deviceReadyPollingSleepTimems.find(1000));
 	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
 	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(uint32_t whileResponseCode, std::stop_token stopToken, size_t sleepTimems) {
 	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	deviceReadyPollingSleepTimems.insert(sleepTimems);
 	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
 
 	deviceReadyPollingCv.wait(readlock);
@@ -419,11 +424,13 @@ uint32_t NikonCamera::DeviceReadyWhile(uint32_t whileResponseCode, std::stop_tok
 	});
 
 	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	deviceReadyPollingSleepTimems.erase(deviceReadyPollingSleepTimems.find(sleepTimems));
 	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
 	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhile(std::vector<uint32_t> whileResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
 	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	deviceReadyPollingSleepTimems.insert(sleepTimems);
 	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
 
 	deviceReadyPollingCv.wait(readlock);
@@ -433,11 +440,13 @@ uint32_t NikonCamera::DeviceReadyWhile(std::vector<uint32_t> whileResponseCodes,
 	});
 
 	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	deviceReadyPollingSleepTimems.erase(deviceReadyPollingSleepTimems.find(sleepTimems));
 	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
 	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(uint32_t whileNotResponseCode, std::stop_token stopToken, size_t sleepTimems) {
 	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	deviceReadyPollingSleepTimems.insert(sleepTimems);
 	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
 
 	deviceReadyPollingCv.wait(readlock);
@@ -447,11 +456,13 @@ uint32_t NikonCamera::DeviceReadyWhileNot(uint32_t whileNotResponseCode, std::st
 	});
 
 	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	deviceReadyPollingSleepTimems.erase(deviceReadyPollingSleepTimems.find(sleepTimems));
 	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
 	return deviceReadyPollingResponseCode;
 }
 uint32_t NikonCamera::DeviceReadyWhileNot(std::vector<uint32_t> whileNotResponseCodes, std::stop_token stopToken, size_t sleepTimems) {
 	std::shared_lock<std::shared_mutex> readlock(deviceReadyPollingMutex);
+	deviceReadyPollingSleepTimems.insert(sleepTimems);
 	if (deviceReadyWorkerCount.fetch_add(1) == 0) StartDeviceReadyPolling();
 
 	deviceReadyPollingCv.wait(readlock);
@@ -461,6 +472,7 @@ uint32_t NikonCamera::DeviceReadyWhileNot(std::vector<uint32_t> whileNotResponse
 	});
 
 	if (deviceReadyWorkerCount.fetch_sub(1) == 1) deviceReadyPolling.request_stop();
+	deviceReadyPollingSleepTimems.erase(deviceReadyPollingSleepTimems.find(sleepTimems));
 	if (deviceReadyPollingException) std::rethrow_exception(deviceReadyPollingException);
 	return deviceReadyPollingResponseCode;
 }
@@ -500,33 +512,25 @@ void nek::NikonCamera::StartDeviceReadyPolling() {
 		deviceReadyPolling.join();
 	}
 
-	deviceReadyPollingSleepTimems = 200;
 	deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
 	deviceReadyPollingException = nullptr;
 
 	deviceReadyPolling = std::jthread([this](std::stop_token stop_token) {
 		mtp::MtpResponse response;
 		while (!stop_token.stop_requested() && this->isConnected()) {
+			std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
 			try {
 				response = SendCommand(NikonMtpOperationCode::DeviceReady, {});
-
-				{
-					std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
-					deviceReadyPollingResponseCode = response.responseCode;
-					deviceReadyPollingException = nullptr;
-				}
-				deviceReadyPollingCv.notify_all();
+				deviceReadyPollingResponseCode = response.responseCode;
+				deviceReadyPollingException = nullptr;
 			}
 			catch (...) {
-				{
-					std::unique_lock<std::shared_mutex> lock(deviceReadyPollingMutex);
-					deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
-					deviceReadyPollingException = std::current_exception();
-				}
-				deviceReadyPollingCv.notify_all();
+				deviceReadyPollingResponseCode = mtp::MtpResponseCode::Undefined;
+				deviceReadyPollingException = std::current_exception();
 			}
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(deviceReadyPollingSleepTimems));
+			deviceReadyPollingCv.notify_all();
+			deviceReadyPollingCv.wait_for(lock, stop_token, std::chrono::milliseconds(*deviceReadyPollingSleepTimems.begin()), [stop_token] { return stop_token.stop_requested(); });
 		}
 	});
 }

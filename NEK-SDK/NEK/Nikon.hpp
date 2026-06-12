@@ -4,6 +4,7 @@
 #include "nikon_enum.hpp"
 #include "nikon_struct.hpp"
 
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <vector>
@@ -57,7 +58,7 @@ namespace nek {
 
 		void StartDeviceReadyPolling();
 		std::jthread deviceReadyPolling;
-		std::atomic<size_t> deviceReadyPollingSleepTimems;
+		std::multiset<size_t> deviceReadyPollingSleepTimems;
 		std::atomic<size_t> deviceReadyWorkerCount;
 		std::condition_variable_any deviceReadyPollingCv;
 		std::shared_mutex deviceReadyPollingMutex;
