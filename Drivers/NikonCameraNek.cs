@@ -1148,15 +1148,18 @@ namespace LucasAlias.NINA.NEK.Drivers {
             BackupExposureTime();
             try {
                 ExposureTime = sequence.ExposureTime;
-                if (!CanSetBulb && (ExposureTime != _oldExposureTime) && (ExposureTime > 1)) {
-                    Notification.ShowWarning("Nikon NEK: Bulb is not available!\nAre you in M mode?", TimeSpan.FromSeconds(10));
-                }
             } catch (MtpException) {
                 if (_exposureInfo.isBulb) {
-                    Notification.ShowError("Nikon NEK: Bulb could not be set!\nAre you in M mode?");
+                    Notification.ShowError("Nikon NEK: Bulb failed to be set!\nAre you in M mode?");
                 } else {
-                    Notification.ShowError("Nikon NEK: Shutter speed could not be set!\nAre you in M or S mode?");
+                    Notification.ShowError("Nikon NEK: Shutter speed failed to be set!\nAre you in M or S mode?");
                 }
+                _awaitersCameraState[CameraStates.Exposing].TrySetCanceled();
+                _awaitersCameraState[CameraStates.Download].TrySetCanceled();
+                lock (_gateCameraState) {
+                    _cameraState = CameraStates.Idle;
+                }
+                throw;
             }
 
             //Start the Liveview started to prevent AF (needed for the D7100, ...)
