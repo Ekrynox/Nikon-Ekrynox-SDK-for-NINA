@@ -253,8 +253,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
             }
 
-            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct) => this.MoveBy(distance, toInf, ct);
-            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit) { //Time limited deviceReady for when stucked
+            private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit = true) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
                     if (!Connected) return NikonMtpResponseCode.General_Error;
                     if (needInit) if (!InitFocusingProcess()) return NikonMtpResponseCode.General_Error;
