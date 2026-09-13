@@ -48,8 +48,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
             private NikonCameraNek cameraNek { get => this.cameraMediator.GetDevice() != null && this.cameraMediator.GetDevice() is NikonCameraNek cam && cam.Connected ? cam : null; }
 
             private readonly IProfileService profileService;
-            private readonly ICameraMediator cameraMediator;
-            private readonly IFocuserMediator focuserMediator;
+
+            //MfDrive can answer Device_Busy while the previous drive is still settling; bounded retries after DeviceReady.
+            private const int MfDriveMaxAttempts = 10;
 
             private bool _isConnected = false;
 
@@ -261,8 +262,15 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     MtpResponse response;
                     NikonMtpResponseCode result;
                     try {
-                        response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, [(UInt32)(toInf ? 2 : 1), distance]);
-                        result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, 20);
+                        //MfDrive is asynchronous: the camera can answer Device_Busy while the previous drive is still
+                        //settling (typically the confirmation drive sent right after MfDrive_Step_End). Device_Busy is
+                        //transient, so wait for the device to be ready and send the command again instead of failing.
+                        int attempt = 0;
+                        do {
+                            response = cameraNek.camera.SendCommand(NikonMtpOperationCode.MfDrive, [(UInt32)(toInf ? 2 : 1), distance]);
+                            result = cameraNek.camera.DeviceReadyWhile(NikonMtpResponseCode.Device_Busy, ct, 20);
+                            attempt++;
+                        } while (response.ResponseCode == NikonMtpResponseCode.Device_Busy && attempt < MfDriveMaxAttempts && !ct.IsCancellationRequested);
                     }
                     catch (NEKCS.MtpDeviceException e) {
                         Logger.Error("Nikon NEK: Error while moving Focus: " + Name, e, "MoveBy", sourceFile);
