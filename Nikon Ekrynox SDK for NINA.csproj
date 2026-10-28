@@ -1,58 +1,104 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <RootNamespace>LucasAlias.NINA.NEK</RootNamespace>
-    <AssemblyName>LucasAlias.NINA.NikonEkrynoxSdk</AssemblyName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="NEK-SDK\**" />
-    <Compile Remove="x64\**" />
-    <EmbeddedResource Remove="NEK-SDK\**" />
-    <EmbeddedResource Remove="x64\**" />
-    <None Remove="NEK-SDK\**" />
-    <None Remove="x64\**" />
-    <Page Remove="NEK-SDK\**" />
-    <Page Remove="x64\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Database\NikonCameraList.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Database\NikonCameraList.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="NINA.Plugin" Version="3.2.0.9001" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="NEK-SDK\NEKCS.Wrapper\NEKCS.Wrapper.vcxproj">
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.Settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Properties\Settings.Settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <WebView2LoaderPreference>Dynamic</WebView2LoaderPreference>
-  </PropertyGroup>
-  <PropertyGroup />
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="&#xD;&#xA;if not exist &quot;%25localappdata%25\NINA\Plugins\3.0.0&quot; (&#xD;&#xA;  echo &quot;Creating $(PlatformName) Plugins folder&quot;&#xD;&#xA;  mkdir &quot;%25localappdata%25\NINA\Plugins\3.0.0&quot;&#xD;&#xA;)&#xD;&#xA;if not exist &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot; (&#xD;&#xA;  echo &quot;Creating $(PlatformName) Plugins $(TargetName) folder&quot;&#xD;&#xA;  mkdir &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;echo &quot;Copying $(PlatformName) $(TargetFileName)&quot;&#xD;&#xA;xcopy &quot;$(TargetPath)&quot; &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot; /h/i/c/k/e/r/y&#xD;&#xA;  " />
-  </Target>
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>LucasAlias.NINA.NEK</RootNamespace>
+		<AssemblyName>LucasAlias.NINA.NikonEkrynoxSdk</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="NEK-SDK\**" />
+		<Compile Remove="x64\**" />
+		<EmbeddedResource Remove="NEK-SDK\**" />
+		<EmbeddedResource Remove="x64\**" />
+		<None Remove="NEK-SDK\**" />
+		<None Remove="x64\**" />
+		<Page Remove="NEK-SDK\**" />
+		<Page Remove="x64\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Database\NikonCameraList.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Database\NikonCameraList.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NINA.Plugin" Version="3.2.0.9001" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="NEK-SDK\NEKCS.Wrapper\NEKCS.Wrapper.vcxproj">
+			<Private>False</Private>
+		</ProjectReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.Settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Properties\Settings.Settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<PropertyGroup Label="Globals">
+		<WebView2LoaderPreference>Dynamic</WebView2LoaderPreference>
+	</PropertyGroup>
+
+	<!-- Copies C++ and C++/CLI binaries directly to runtimes\win-x64\native\ -->
+	<Target Name="DeployNativeBinariesToRuntime" AfterTargets="Build">
+		<PropertyGroup>
+			<CppSourceDir>$(SolutionDir)x64\$(Configuration)\</CppSourceDir>
+			<NativeDestDir>$(OutputPath)runtimes\win-x64\native\</NativeDestDir>
+		</PropertyGroup>
+
+		<MakeDir Directories="$(NativeDestDir)" />
+
+		<Copy SourceFiles="$(CppSourceDir)NEK.dll;
+                       $(CppSourceDir)NEKCS.Wrapper.dll;
+                       $(CppSourceDir)Ijwhost.dll"
+			  DestinationFolder="$(NativeDestDir)"
+			  SkipUnchangedFiles="true" />
+	</Target>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="
+				if not exist &quot;%25localappdata%25\NINA\Plugins\3.0.0&quot; (
+					echo &quot;Creating $(PlatformName) Plugins folder&quot;
+					mkdir &quot;%25localappdata%25\NINA\Plugins\3.0.0&quot;
+				)
+				if not exist &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot; (
+					echo &quot;Creating $(PlatformName) Plugins $(TargetName) folder&quot;
+					mkdir &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot;
+				)
+				
+				echo &quot;Copying $(PlatformName) $(TargetFileName)&quot;
+				xcopy &quot;$(TargetPath)&quot; &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(TargetName)&quot; /h/i/c/k/e/r/y
+			  
+				if exist &quot;$(TargetDir)Database&quot; (
+					echo &quot;Copying Database folder&quot;
+					xcopy &quot;$(TargetDir)Database&quot; &quot;%localappdata%\NINA\Plugins\3.0.0\$(TargetName)\Database\&quot; /s/h/i/c/k/e/r/y
+				)
+				
+				if exist &quot;$(TargetDir)runtimes&quot; (
+					echo &quot;Copying runtimes folder&quot;
+					xcopy &quot;$(TargetDir)runtimes&quot; &quot;%localappdata%\NINA\Plugins\3.0.0\$(TargetName)\runtimes\&quot; /s/h/i/c/k/e/r/y
+				)
+			  " />
+	</Target>
 </Project>
