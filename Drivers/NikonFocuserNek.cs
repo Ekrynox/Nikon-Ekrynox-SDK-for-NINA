@@ -163,7 +163,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
             private Task Move(int position, CancellationToken ct, int waitInMs, bool needInit) { //Manage Errors and the time limit
                 return Task.Run(() => {
                     if (!Connected) return;
-                    if (needInit) if (!InitFocusingProcess()) return;
+                    if (needInit) if (!InitFocusingProcess(ct)) return;
 
                     if (position <= 0) {
                         _position = _nbSteps;
@@ -224,20 +224,31 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public void Halt() => throw new NotImplementedException();
 
 
-            private bool InitFocusingProcess() {
-                if (this.cameraNek == null) return false;
-                lock (this.cameraNek._gateCameraState) {
-                    if (this.cameraNek._cameraState != CameraStates.Idle) {
-                        Logger.Warning("Could not Init Focusing process because camera is busy.", "InitFocusingProcess", sourceFile);
-                        Notification.ShowWarning("Nikon NEK: Could not Init Focusing process because camera is busy.", TimeSpan.FromSeconds(10));
-                        return false;
+            private bool InitFocusingProcess(CancellationToken token) {
+                if (this.cameraNek == null || token.IsCancellationRequested) return false;
+
+                this.cameraNek._operationMutex.Wait();
+                try {
+                    while (this.cameraNek != null && !token.IsCancellationRequested && this.cameraNek._operationState != CameraOperationStates.Idle) {
+                        this.cameraNek._operationMutex.Release();
+
+                        this.cameraNek._operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
+                        try {
+                            this.cameraNek._operationSignal.Wait(token);
+                        } finally {
+                            this.cameraNek._operationSignal.Wait();
+                        }
                     }
 
-                    this.cameraNek._awaitersCameraState[CameraStates.Waiting] = new();
-                    this.cameraNek._cameraState = CameraStates.Waiting;
+                    if (token.IsCancellationRequested) return false;
+
+                    this.cameraNek._operationState = CameraOperationStates.Focusing;
                     this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
                 }
+                finally { this.cameraNek._operationMutex.Release(); }
+
                 this.cameraNek.StartLiveViewBackground();
+
                 _ismoving = true;
                 RaisePropertyChanged(nameof(IsMoving));
                 return true;
@@ -245,18 +256,25 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
             private void StopFocusingProcess() {
                 if (this.cameraNek == null) return;
+
                 _ismoving = false;
                 RaisePropertyChanged(nameof(IsMoving));
+
                 this.cameraNek.StopLiveViewBackground(5000);
-                lock (this.cameraNek._gateCameraState) { if (this.cameraNek._cameraState == CameraStates.Waiting) this.cameraNek._cameraState = CameraStates.Idle; }
-                if (this.cameraNek._awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.TrySetResult(true);
-                this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
+
+                this.cameraNek._operationMutex.Wait();
+                try {
+                    if (this.cameraNek == null || this.cameraNek._operationState != CameraOperationStates.Focusing) return;
+
+                    this.cameraNek._operationState = CameraOperationStates.Idle;
+                    this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
+                } finally { this.cameraNek._operationMutex.Release(); }
             }
 
             private Task<NikonMtpResponseCode> MoveBy(UInt32 distance, bool toInf, CancellationToken ct, bool needInit = true) { //Time limited deviceReady for when stucked
                 return Task.Run(() => {
                     if (!Connected) return NikonMtpResponseCode.General_Error;
-                    if (needInit) if (!InitFocusingProcess()) return NikonMtpResponseCode.General_Error;
+                    if (needInit) if (!InitFocusingProcess(ct)) return NikonMtpResponseCode.General_Error;
 
                     MtpResponse response;
                     NikonMtpResponseCode result;
@@ -374,7 +392,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 UInt32 maxStepSize = _maxStepSize;
                 bool toInf = true;
 
-                InitFocusingProcess();
+                InitFocusingProcess(token);
 
                 while ((_minStepSize < maxStepSize) && (maxStepSize != stepSize)) {
                     var result = MoveBy(stepSize, toInf, token, false);
@@ -405,7 +423,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 bool toInf = true;
                 bool isOk = true;
 
-                if (!InitFocusingProcess()) return false;
+                if (!InitFocusingProcess(token)) return false;
 
                 while ((minStepSize < _maxStepSize) && (minStepSize != stepSize)) {
                     Move(!toInf ? (int)_nbSteps : 0, token, 1000, false).Wait(CancellationToken.None);
@@ -441,7 +459,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 UInt32 nbStepsInf = 0;
                 UInt32 stepSize = _maxStepSize;
 
-                if (!InitFocusingProcess()) return false;
+                if (!InitFocusingProcess(token)) return false;
 
                 while (stepSize >= 1) {
 

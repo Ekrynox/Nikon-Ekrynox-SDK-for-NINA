@@ -172,9 +172,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
                 //Set the default values for the camera
-                lock (_gateCameraState) {
-                    _cameraState = CameraStates.Idle;
+                _operationMutex.Wait();
+                try {
+                    _operationState = CameraOperationStates.Idle;
                 }
+                finally {
+                    _operationMutex.Release();
+                }
+                _operationSignal.Wait(TimeSpan.Zero);
 
                 _imageInfo = null;
                 _imageStream = null;
@@ -202,9 +207,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public void Disconnect() {
             Logger.Info("Start diconnecting from the Camera: " + this.Name, "Disconnect", sourceFile);
-            lock (_gateCameraState) {
-                this._cameraState = CameraStates.NoState;
+            
+            _operationMutex.Wait();
+            try {
+                _operationState = CameraOperationStates.Idle;
             }
+            finally { _operationMutex.Release(); }
+            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
 
             serialPort?.Close();
             serialPort?.Dispose();
@@ -248,10 +257,6 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 this.camera = null;
             }
 
-            //Cancel all Token
-            foreach (var i in this._awaitersCameraState) {
-                if (i.Value != null) i.Value.TrySetCanceled();
-            }
             RaiseAllPropertiesChanged();
         }
 
@@ -1058,11 +1063,22 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
 
-        private CameraStates _cameraState;
-        private readonly object _gateCameraState = new();
-        private readonly Dictionary<CameraStates, TaskCompletionSource<bool>> _awaitersCameraState = new();
+        private CameraOperationStates _operationState = CameraOperationStates.Idle;
+        private readonly SemaphoreSlim _operationMutex = new(1, 1);
+        private readonly SemaphoreSlim _operationSignal = new(0, 1);
+        private enum CameraOperationStates {
+            Idle,
+            Exposing, Downloading,
+            Focusing,
+            Faulted
+        }
+
         private CancellationTokenSource bulbToken;
         private ExposureInfo currentExposureInfo;
+
+        private MemoryStream _imageStream;
+        private NikonObjectInfoDS _imageInfo;
+        private UInt32 sdramHandle;
 
         private SerialPortInteraction serialPort;
         private SerialRelayInteraction serialRelay;
@@ -1075,74 +1091,82 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (!serialRelay.Open()) throw new Exception("Unable to open SerialRelay " + profileService.ActiveProfile.CameraSettings.SerialPort);
         }
 
-        private MemoryStream _imageStream;
-        private NikonObjectInfoDS _imageInfo;
-        private UInt32 sdramHandle;
+
         public CameraStates CameraState {
             get {
                 if (Connected) {
-                    lock (_gateCameraState) {
-                        return _cameraState;
+                    switch(_operationState) {
+                        case CameraOperationStates.Idle:
+                            return CameraStates.Idle;
+                        case CameraOperationStates.Exposing:
+                            return CameraStates.Exposing;
+                        case CameraOperationStates.Downloading:
+                            return CameraStates.Download;
+                        case CameraOperationStates.Focusing:
+                            return CameraStates.Waiting;
+                        case CameraOperationStates.Faulted:
+                            return CameraStates.Error;
                     }
                 }
-                return CameraStates.Error;
+                return CameraStates.NoState;
             }
         }
 
         private void camStateEvent(NEKCS.NikonCamera cam, NEKCS.MtpEvent e) {
             if (e.EventCode == NikonMtpEventCode.ObjectAddedInSdram) {
-                lock (_gateCameraState) {
-                    _cameraState = CameraStates.Download;
-                }
-                if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var exp)) {
-                    exp.TrySetResult(true);
-                }
-
-                RaisePropertyChanged(nameof(CameraState));
-
+                _operationMutex.Wait();
                 try {
-                    if (e.Parameters.Length > 0) {
-                        sdramHandle = e.Parameters[0] == 0 ? 0xFFFF0001 : e.Parameters[0];
-                    }
-
-                    //Retreive the Image Metadata (needed for the D80, ...)
-                    _imageInfo = camera.GetObjectInfo(sdramHandle);
-
-                    var response = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, [sdramHandle]);
-                    _imageStream = new(response.Data);
-
-                    //Stop the Liveview started to prevent AF (needed for the D7100, ...)
-                    if (CanShowLiveView) StopLiveViewBackground();
-                    RestoreExposureTime();
-
-                    if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) {
-                        dl.SetResult(true);
-                    }
-                } catch (Exception ex) {
-                    Logger.Error(this.Name, ex, "camStateEvent", sourceFile);
-                    if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var dl)) dl.TrySetCanceled();
-                } finally {
-                    lock (_gateCameraState) _cameraState = CameraStates.Idle;
+                    _operationState = CameraOperationStates.Downloading;
                     RaisePropertyChanged(nameof(CameraState));
+
+                    try {
+                        if (e.Parameters.Length > 0) {
+                            sdramHandle = e.Parameters[0] == 0 ? 0xFFFF0001 : e.Parameters[0];
+                        }
+
+                        //Retreive the Image Metadata (needed for the D80, ...)
+                        _imageInfo = camera.GetObjectInfo(sdramHandle);
+
+                        var response = this.camera.SendCommandAndRead(NikonMtpOperationCode.GetObject, [sdramHandle]);
+                        _imageStream = new(response.Data);
+
+                        //Stop the Liveview started to prevent AF (needed for the D7100, ...)
+                        if (CanShowLiveView) StopLiveViewBackground();
+                        RestoreExposureTime();
+                    } catch (Exception ex) {
+                        Logger.Error(this.Name, ex, "camStateEvent", sourceFile);
+
+                        _operationState = CameraOperationStates.Faulted;
+                        RaisePropertyChanged(nameof(CameraState));
+                    }
+                }
+                finally {
+                    _operationMutex.Release();
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 }
             }
         }
 
         public void StartExposure(CaptureSequence sequence) {
-            if (!Connected || _cameraState == CameraStates.Error || _cameraState == CameraStates.NoState) return;
+            _operationMutex.Wait();
+            try {
+                while (Connected && _operationState != CameraOperationStates.Idle && _operationState == CameraOperationStates.Faulted) {
+                    _operationMutex.Release();
 
-            if (_cameraState == CameraStates.Waiting && _awaitersCameraState.TryGetValue(CameraStates.Waiting, out var wtcs)) wtcs.Task.Wait();
+                    _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
+                    _operationSignal.Wait();
 
-            if (_cameraState != CameraStates.Idle) AbortExposure();
+                    _operationMutex.Wait();
+                }
 
-            if (_cameraState == CameraStates.Exposing && _awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) etcs.Task.Wait();
-            if (_cameraState == CameraStates.Download && _awaitersCameraState.TryGetValue(CameraStates.Download, out var dtcs)) dtcs.Task.Wait();
+                if (!Connected || _operationState == CameraOperationStates.Faulted) {
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                    return;
+                }
 
-            lock (_gateCameraState) {
-                _awaitersCameraState[CameraStates.Exposing] = new();
-                _awaitersCameraState[CameraStates.Download] = new();
-                _cameraState = CameraStates.Exposing;
-            }
+                _operationState = CameraOperationStates.Exposing;
+                if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+            } finally { _operationMutex.Release(); }
 
             //Backup Exposure time & set the new Exposure
             BackupExposureTime();
@@ -1154,11 +1178,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 } else {
                     Notification.ShowError("Nikon NEK: Shutter speed failed to be set!\nAre you in M or S mode?");
                 }
-                _awaitersCameraState[CameraStates.Exposing].TrySetCanceled();
-                _awaitersCameraState[CameraStates.Download].TrySetCanceled();
-                lock (_gateCameraState) {
-                    _cameraState = CameraStates.Idle;
+
+                _operationMutex.Wait();
+                try {
+                    _operationState = CameraOperationStates.Idle;
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 }
+                finally { _operationMutex.Release(); }
+
                 throw;
             }
 
@@ -1200,11 +1227,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 }
             } catch (Exception e) {
                 Logger.Error(Name, e, "StartExposure", sourceFile);
-                _awaitersCameraState[CameraStates.Exposing].TrySetCanceled();
-                _awaitersCameraState[CameraStates.Download].TrySetCanceled();
-                lock (_gateCameraState) {
-                    _cameraState = CameraStates.Idle;
+
+                _operationMutex.Wait();
+                try {
+                    _operationState = CameraOperationStates.Idle;
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 }
+                finally { _operationMutex.Release(); }
+
                 throw;
             }
 
@@ -1220,23 +1250,33 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public async Task WaitUntilExposureIsReady(CancellationToken token) {
             if (!Connected) return;
 
-            lock (_gateCameraState) {
-                if (_cameraState != CameraStates.Exposing && _cameraState != CameraStates.Idle) return;
-            }
+            await _operationMutex.WaitAsync();
+            try {
+                while (Connected && !token.IsCancellationRequested && _operationState == CameraOperationStates.Exposing) {
+                    _operationMutex.Release();
 
-            using (token.Register(() => AbortExposure())) {
-                if (_awaitersCameraState.TryGetValue(CameraStates.Exposing, out var etcs)) {
-                    await etcs.Task;
+                    _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
+                    try {
+                        await _operationSignal.WaitAsync(token);
+                    }
+                    finally {
+                        await _operationMutex.WaitAsync();
+                    }
                 }
             }
+            finally { _operationMutex.Release(); }
+
+            if (token.IsCancellationRequested) AbortExposure();
         }
 
         public void StopExposure() {
             if (!Connected) return;
 
             if (currentExposureInfo.isBulb) {
-                lock (_gateCameraState) {
-                    if (_cameraState == CameraStates.Exposing) {
+                _operationMutex.Wait();
+
+                try {
+                    if (_operationState == CameraOperationStates.Exposing) {
                         bulbToken.Cancel();
                         try {
                             if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
@@ -1257,9 +1297,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             }
                         } catch (Exception e) {
                             Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
+
+                            _operationState = CameraOperationStates.Faulted;
+                            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                         }
                     }
                 }
+                finally { _operationMutex.Release(); }
             } 
         }
 
@@ -1268,27 +1312,40 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public async Task<IExposureData> DownloadExposure(CancellationToken token) {
             if (!Connected) return null;
 
-            if (_awaitersCameraState.TryGetValue(CameraStates.Download, out var tcs)) {
-                await tcs.Task;
-                if (tcs.Task.IsCanceled) return null;
-            }
-
-            if (_imageStream == null) {
-                return null;
-            }
-
+            await _operationMutex.WaitAsync();
             try {
-                var rawImageData = _imageStream.ToArray();
-                var metaData = new ImageMetaData();
-                metaData.FromCamera(this);
-                if (_imageStream != null) {
-                    _imageStream.Dispose();
-                    _imageStream = null;
+                while (Connected && !token.IsCancellationRequested && _operationState != CameraOperationStates.Downloading && _operationState != CameraOperationStates.Faulted) {
+                    _operationMutex.Release();
+
+                    _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
+                    try {
+                        await _operationSignal.WaitAsync(token);
+                    } finally {
+                        await _operationMutex.WaitAsync();
+                    }
                 }
-                return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef", 
-                    bitDepth: profileService.ActiveProfile.CameraSettings.RawConverter == RawConverterEnum.FREEIMAGE ? this.BitDepth : (int)profileService.ActiveProfile.CameraSettings.BitDepth, 
-                    metaData: metaData);
-            } catch { throw; }
+
+                if (token.IsCancellationRequested || _operationState == CameraOperationStates.Faulted) return null;
+                if (_imageStream == null) return null;
+
+                try {
+                    var rawImageData = _imageStream.ToArray();
+                    var metaData = new ImageMetaData();
+                    metaData.FromCamera(this);
+                    if (_imageStream != null) {
+                        _imageStream.Dispose();
+                        _imageStream = null;
+                    }
+                    return exposureDataFactory.CreateRAWExposureData(converter: profileService.ActiveProfile.CameraSettings.RawConverter, rawBytes: rawImageData, rawType: "nef",
+                        bitDepth: profileService.ActiveProfile.CameraSettings.RawConverter == RawConverterEnum.FREEIMAGE ? this.BitDepth : (int)profileService.ActiveProfile.CameraSettings.BitDepth,
+                        metaData: metaData);
+                } catch { throw; }
+            } finally {
+                _operationState = CameraOperationStates.Idle;
+                _operationMutex.Release();
+                if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                RaisePropertyChanged(nameof(CameraState));
+            }
         }
 
 
