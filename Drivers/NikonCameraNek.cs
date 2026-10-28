@@ -1284,13 +1284,13 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public void StopExposure() {
             if (!Connected) return;
 
-            if (currentExposureInfo.isBulb) {
-                _operationMutex.Wait();
+            _operationMutex.Wait();
 
-                try {
-                    if (_operationState == CameraOperationStates.Exposing) {
-                        bulbToken.Cancel();
-                        try {
+            try {
+                if (_operationState == CameraOperationStates.Exposing) {
+                    try {
+                        if (currentExposureInfo.isBulb) {
+                            bulbToken?.Cancel();
                             if (currentExposureInfo.bulbMode == CameraBulbModeEnum.NATIVE) {
                                 var response = camera.SendCommand(NikonMtpOperationCode.TerminateCapture, [0, 0]);
                                 if (response.ResponseCode != NikonMtpResponseCode.OK) {
@@ -1307,30 +1307,30 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             } else {
                                 throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
                             }
-
-                            _operationState = CameraOperationStates.Idle;
-                            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-                            RaisePropertyChanged(nameof(CameraState));
-                        } catch (Exception e) {
-                            Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
-
-                            _operationState = CameraOperationStates.Faulted;
-                            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-                            RaisePropertyChanged(nameof(CameraState));
-                        }                        
-                    }
-                    else if (_operationState == CameraOperationStates.Downloading) {
-                        _imageStream?.Dispose();
-                        _imageStream = null;
+                        }
 
                         _operationState = CameraOperationStates.Idle;
                         if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                         RaisePropertyChanged(nameof(CameraState));
-                    }
+                    } catch (Exception e) {
+                        Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
+
+                        _operationState = CameraOperationStates.Faulted;
+                        if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                        RaisePropertyChanged(nameof(CameraState));
+                    }                        
                 }
-                finally {
-                    _operationMutex.Release();
+                else if (_operationState == CameraOperationStates.Downloading) {
+                    _imageStream?.Dispose();
+                    _imageStream = null;
+
+                    _operationState = CameraOperationStates.Idle;
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                    RaisePropertyChanged(nameof(CameraState));
                 }
+            }
+            finally {
+                _operationMutex.Release();
             } 
         }
 
