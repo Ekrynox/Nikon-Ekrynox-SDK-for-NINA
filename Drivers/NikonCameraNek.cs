@@ -1354,10 +1354,16 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     }
                 }
 
-                if (_imageStream == null) return null;
-                if (token.IsCancellationRequested || _operationState != CameraOperationStates.Downloading) {
+                if (_imageStream == null || token.IsCancellationRequested || _operationState != CameraOperationStates.Downloading) {
                     _imageStream?.Dispose();
                     _imageStream = null;
+
+                    if (_operationState != CameraOperationStates.Idle && _operationState != CameraOperationStates.Faulted) {
+                        _operationState = CameraOperationStates.Idle;
+                        if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                        RaisePropertyChanged(nameof(CameraState));
+                    }
+
                     return null;
                 }
 
