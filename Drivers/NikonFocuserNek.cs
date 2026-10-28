@@ -236,7 +236,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         try {
                             this.cameraNek._operationSignal.Wait(token);
                         } catch (OperationCanceledException) {
-                            return false;
+                            break;
                         } finally {
                             this.cameraNek._operationMutex.Wait();
                         }
@@ -245,6 +245,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (token.IsCancellationRequested) return false;
 
                     this.cameraNek._operationState = CameraOperationStates.Focusing;
+                    if (this.cameraNek._operationSignal.CurrentCount == 0) this.cameraNek._operationSignal.Release();
                     this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
                 }
                 finally { this.cameraNek._operationMutex.Release(); }
@@ -269,6 +270,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (this.cameraNek == null || this.cameraNek._operationState != CameraOperationStates.Focusing) return;
 
                     this.cameraNek._operationState = CameraOperationStates.Idle;
+                    if (this.cameraNek._operationSignal.CurrentCount == 0) this.cameraNek._operationSignal.Release();
                     this.cameraNek.RaisePropertyChanged(nameof(this.cameraNek.CameraState));
                 } finally { this.cameraNek._operationMutex.Release(); }
             }
@@ -343,7 +345,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
             public bool Calibrate(CancellationToken token) {
                 this._minStepSize = 32;
                 this._maxStepSize = 32767;
+                RaisePropertyChanged(nameof(this.MaxIncrement));
                 this._nbSteps = int.MaxValue;
+                RaisePropertyChanged(nameof(this.MaxStep));
                 this._position = 0;
                 bool isOk = true;
 

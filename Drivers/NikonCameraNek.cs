@@ -210,10 +210,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
             
             _operationMutex.Wait();
             try {
-                _operationState = CameraOperationStates.Idle;
+                _operationState = CameraOperationStates.Faulted;
+                if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                RaisePropertyChanged(nameof(CameraState));
             }
             finally { _operationMutex.Release(); }
-            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
 
             serialPort?.Close();
             serialPort?.Dispose();
@@ -1136,15 +1137,19 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         if (CanShowLiveView) StopLiveViewBackground();
                         RestoreExposureTime();
                     } catch (Exception ex) {
+                        _imageStream?.Dispose();
+                        _imageStream = null;
+
                         Logger.Error(this.Name, ex, "camStateEvent", sourceFile);
 
-                        _operationState = CameraOperationStates.Idle;
+                        _operationState = CameraOperationStates.Faulted;
                         RaisePropertyChanged(nameof(CameraState));
                     }
+
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 }
                 finally {
                     _operationMutex.Release();
-                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 }
             }
         }
@@ -1152,7 +1157,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
         public void StartExposure(CaptureSequence sequence) {
             _operationMutex.Wait();
             try {
-                while (Connected && _operationState != CameraOperationStates.Idle && _operationState == CameraOperationStates.Faulted) {
+                while (Connected && _operationState != CameraOperationStates.Idle && _operationState != CameraOperationStates.Faulted) {
                     _operationMutex.Release();
 
                     _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
@@ -1161,14 +1166,14 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _operationMutex.Wait();
                 }
 
-                if (!Connected || _operationState == CameraOperationStates.Faulted) {
-                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-                    return;
-                }
+                if (!Connected || _operationState == CameraOperationStates.Faulted) return;
 
                 _operationState = CameraOperationStates.Exposing;
                 if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-            } finally { _operationMutex.Release(); }
+                RaisePropertyChanged(nameof(CameraState));
+            } finally {
+                _operationMutex.Release();
+            }
 
             //Backup Exposure time & set the new Exposure
             BackupExposureTime();
@@ -1185,8 +1190,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 try {
                     _operationState = CameraOperationStates.Idle;
                     if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                    RaisePropertyChanged(nameof(CameraState));
                 }
-                finally { _operationMutex.Release(); }
+                finally {
+                    _operationMutex.Release();
+                }
 
                 throw;
             }
@@ -1220,12 +1228,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
                         }
                     }
-
-                    RaisePropertyChanged(nameof(CameraState));
                 } else {
                     result = camera.SendCommand(NikonMtpOperationCode.InitiateCaptureRecInSdram, [0xFFFFFFFF]);
                     if (result.ResponseCode != NikonMtpResponseCode.OK) throw new NEKCS.MtpException(NikonMtpOperationCode.InitiateCaptureRecInSdram, result.ResponseCode);
-                    RaisePropertyChanged(nameof(CameraState));
                 }
             } catch (Exception e) {
                 Logger.Error(Name, e, "StartExposure", sourceFile);
@@ -1234,8 +1239,11 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 try {
                     _operationState = CameraOperationStates.Idle;
                     if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                    RaisePropertyChanged(nameof(CameraState));
                 }
-                finally { _operationMutex.Release(); }
+                finally {
+                    _operationMutex.Release();
+                }
 
                 throw;
             }
@@ -1260,7 +1268,9 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
                     try {
                         await _operationSignal.WaitAsync(token);
-                    } catch (OperationCanceledException) {}
+                    } catch (OperationCanceledException) {
+                        break;
+                    }
                     finally {
                         await _operationMutex.WaitAsync();
                     }
@@ -1297,15 +1307,30 @@ namespace LucasAlias.NINA.NEK.Drivers {
                             } else {
                                 throw new ArgumentException("Unknown Bulb Mode: " + currentExposureInfo.bulbMode.ToString());
                             }
-                        } catch (Exception e) {
-                            Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
 
                             _operationState = CameraOperationStates.Idle;
                             if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-                        }
+                            RaisePropertyChanged(nameof(CameraState));
+                        } catch (Exception e) {
+                            Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
+
+                            _operationState = CameraOperationStates.Faulted;
+                            if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                            RaisePropertyChanged(nameof(CameraState));
+                        }                        
+                    }
+                    else if (_operationState == CameraOperationStates.Downloading) {
+                        _imageStream?.Dispose();
+                        _imageStream = null;
+
+                        _operationState = CameraOperationStates.Idle;
+                        if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                        RaisePropertyChanged(nameof(CameraState));
                     }
                 }
-                finally { _operationMutex.Release(); }
+                finally {
+                    _operationMutex.Release();
+                }
             } 
         }
 
@@ -1323,14 +1348,18 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     try {
                         await _operationSignal.WaitAsync(token);
                     } catch (OperationCanceledException) {
-                        return null;
+                        break;
                     } finally {
                         await _operationMutex.WaitAsync();
                     }
                 }
 
-                if (token.IsCancellationRequested || _operationState != CameraOperationStates.Downloading) return null;
                 if (_imageStream == null) return null;
+                if (token.IsCancellationRequested || _operationState != CameraOperationStates.Downloading) {
+                    _imageStream?.Dispose();
+                    _imageStream = null;
+                    return null;
+                }
 
                 try {
                     var rawImageData = _imageStream.ToArray();
@@ -1346,9 +1375,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
                 } catch { throw; }
             } finally {
                 _operationState = CameraOperationStates.Idle;
-                _operationMutex.Release();
                 if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 RaisePropertyChanged(nameof(CameraState));
+
+                _operationMutex.Release();
             }
         }
 
