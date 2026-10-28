@@ -1373,13 +1373,12 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         bitDepth: profileService.ActiveProfile.CameraSettings.RawConverter == RawConverterEnum.FREEIMAGE ? this.BitDepth : (int)profileService.ActiveProfile.CameraSettings.BitDepth,
                         metaData: metaData);
                 } catch { throw; }
-            } finally {
-                _operationState = CameraOperationStates.Idle;
-                if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
-                RaisePropertyChanged(nameof(CameraState));
-
-                _operationMutex.Release();
-            }
+                finally {
+                    _operationState = CameraOperationStates.Idle;
+                    if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
+                    RaisePropertyChanged(nameof(CameraState));
+                }
+            } finally { _operationMutex.Release(); }
         }
 
 
