@@ -1063,7 +1063,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
 
 
-        private CameraOperationStates _operationState = CameraOperationStates.Idle;
+        private volatile CameraOperationStates _operationState = CameraOperationStates.Idle;
         private readonly SemaphoreSlim _operationMutex = new(1, 1);
         private readonly SemaphoreSlim _operationSignal = new(0, 1);
         private enum CameraOperationStates {
@@ -1116,8 +1116,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
             if (e.EventCode == NikonMtpEventCode.ObjectAddedInSdram) {
                 _operationMutex.Wait();
                 try {
-                    _operationState = CameraOperationStates.Downloading;
-                    RaisePropertyChanged(nameof(CameraState));
+                    if (_operationState == CameraOperationStates.Exposing) {
+                        _operationState = CameraOperationStates.Downloading;
+                        RaisePropertyChanged(nameof(CameraState));
+                    }
 
                     try {
                         if (e.Parameters.Length > 0) {
@@ -1136,7 +1138,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     } catch (Exception ex) {
                         Logger.Error(this.Name, ex, "camStateEvent", sourceFile);
 
-                        _operationState = CameraOperationStates.Faulted;
+                        _operationState = CameraOperationStates.Idle;
                         RaisePropertyChanged(nameof(CameraState));
                     }
                 }
@@ -1258,7 +1260,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
                     try {
                         await _operationSignal.WaitAsync(token);
-                    }
+                    } catch (OperationCanceledException) {}
                     finally {
                         await _operationMutex.WaitAsync();
                     }
@@ -1298,7 +1300,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         } catch (Exception e) {
                             Logger.Error(this.Name, e, "StopAbortExposure", sourceFile);
 
-                            _operationState = CameraOperationStates.Faulted;
+                            _operationState = CameraOperationStates.Idle;
                             if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                         }
                     }
@@ -1314,18 +1316,20 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
             await _operationMutex.WaitAsync();
             try {
-                while (Connected && !token.IsCancellationRequested && _operationState != CameraOperationStates.Downloading && _operationState != CameraOperationStates.Faulted) {
+                while (Connected && !token.IsCancellationRequested && _operationState != CameraOperationStates.Downloading && _operationState != CameraOperationStates.Idle && _operationState != CameraOperationStates.Faulted) {
                     _operationMutex.Release();
 
                     _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
                     try {
                         await _operationSignal.WaitAsync(token);
+                    } catch (OperationCanceledException) {
+                        return null;
                     } finally {
                         await _operationMutex.WaitAsync();
                     }
                 }
 
-                if (token.IsCancellationRequested || _operationState == CameraOperationStates.Faulted) return null;
+                if (token.IsCancellationRequested || _operationState != CameraOperationStates.Downloading) return null;
                 if (_imageStream == null) return null;
 
                 try {

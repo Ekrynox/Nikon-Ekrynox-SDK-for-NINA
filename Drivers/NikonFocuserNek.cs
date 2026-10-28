@@ -235,8 +235,10 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         this.cameraNek._operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
                         try {
                             this.cameraNek._operationSignal.Wait(token);
+                        } catch (OperationCanceledException) {
+                            return false;
                         } finally {
-                            this.cameraNek._operationSignal.Wait();
+                            this.cameraNek._operationMutex.Wait();
                         }
                     }
 
