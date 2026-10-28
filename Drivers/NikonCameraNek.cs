@@ -207,14 +207,25 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
         public void Disconnect() {
             Logger.Info("Start diconnecting from the Camera: " + this.Name, "Disconnect", sourceFile);
-            
+
+
             _operationMutex.Wait();
             try {
+                while (Connected && _operationState != CameraOperationStates.Idle && _operationState != CameraOperationStates.Faulted) {
+                    _operationMutex.Release();
+
+                    _operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
+                    _operationSignal.Wait();
+
+                    _operationMutex.Wait();
+                }
+
                 _operationState = CameraOperationStates.Faulted;
                 if (_operationSignal.CurrentCount == 0) _operationSignal.Release();
                 RaisePropertyChanged(nameof(CameraState));
+            } finally {
+                _operationMutex.Release();
             }
-            finally { _operationMutex.Release(); }
 
             serialPort?.Close();
             serialPort?.Dispose();

@@ -165,59 +165,61 @@ namespace LucasAlias.NINA.NEK.Drivers {
                     if (!Connected) return;
                     if (needInit) if (!InitFocusingProcess(ct)) return;
 
-                    if (position <= 0) {
-                        _position = _nbSteps;
-                        while (true) {
-                            var result = MoveBy(_maxStepSize, false, ct, false).Result;
-                            if (ct.IsCancellationRequested) break;
-                            if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
-                                _ = MoveBy(_maxStepSize, false, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
-                                break;
-                            }
-                        }
-                    } else if (position >= (int)_nbSteps) {
-                        _position = 0;
-                        while (true) {
-                            var result = MoveBy(_maxStepSize, true, ct, false).Result;
-                            if (ct.IsCancellationRequested) break;
-                            if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
-                                _ = MoveBy(_maxStepSize, true, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
-                                break;
-                            }
-                        }
-                    } else {
-                        while (position != (int)_position && !ct.IsCancellationRequested) {
-                            int steps = position - (int)_position;
-                            bool toInf = steps >= 0;
-                            steps = Math.Abs(steps);
-                            steps = Math.Min(steps, (int)_maxStepSize);
-
-                            if (steps < _minStepSize) {
-                                if (toInf) {
-                                    if (_position >= _minStepSize) {
-                                        steps = (int)_minStepSize;
-                                        toInf = false;
-                                    } else {
-                                        steps += (int)_minStepSize;
-                                    }
-                                }
-                                else {
-                                    if (_position + _minStepSize <= _nbSteps) {
-                                        steps = (int)_minStepSize;
-                                        toInf = true;
-                                    } else {
-                                        steps += (int)_minStepSize;
-                                    }
+                    try {
+                        if (position <= 0) {
+                            _position = _nbSteps;
+                            while (true) {
+                                var result = MoveBy(_maxStepSize, false, ct, false).Result;
+                                if (ct.IsCancellationRequested) break;
+                                if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                                    _ = MoveBy(_maxStepSize, false, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
+                                    break;
                                 }
                             }
+                        } else if (position >= (int)_nbSteps) {
+                            _position = 0;
+                            while (true) {
+                                var result = MoveBy(_maxStepSize, true, ct, false).Result;
+                                if (ct.IsCancellationRequested) break;
+                                if (result == NikonMtpResponseCode.MfDrive_Step_End || result == NikonMtpResponseCode.MfDrive_Step_Insufficiency) {
+                                    _ = MoveBy(_maxStepSize, true, ct, false).Result; //To Ensure we are at the End on older Camera (TO RECHECK)
+                                    break;
+                                }
+                            }
+                        } else {
+                            while (position != (int)_position && !ct.IsCancellationRequested) {
+                                int steps = position - (int)_position;
+                                bool toInf = steps >= 0;
+                                steps = Math.Abs(steps);
+                                steps = Math.Min(steps, (int)_maxStepSize);
 
-                            var result = MoveBy((uint)steps, toInf, ct, false).Result;
-                            if ((result != NikonMtpResponseCode.OK)) break;
-                            if (ct.IsCancellationRequested) break;
+                                if (steps < _minStepSize) {
+                                    if (toInf) {
+                                        if (_position >= _minStepSize) {
+                                            steps = (int)_minStepSize;
+                                            toInf = false;
+                                        } else {
+                                            steps += (int)_minStepSize;
+                                        }
+                                    } else {
+                                        if (_position + _minStepSize <= _nbSteps) {
+                                            steps = (int)_minStepSize;
+                                            toInf = true;
+                                        } else {
+                                            steps += (int)_minStepSize;
+                                        }
+                                    }
+                                }
+
+                                var result = MoveBy((uint)steps, toInf, ct, false).Result;
+                                if ((result != NikonMtpResponseCode.OK)) break;
+                                if (ct.IsCancellationRequested) break;
+                            }
                         }
                     }
-
-                    if (needInit) StopFocusingProcess();
+                    finally {
+                        if (needInit) StopFocusingProcess();
+                    }
                 });
             }
 
@@ -229,7 +231,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 this.cameraNek._operationMutex.Wait();
                 try {
-                    while (this.cameraNek != null && !token.IsCancellationRequested && this.cameraNek._operationState != CameraOperationStates.Idle) {
+                    while (this.cameraNek != null && !token.IsCancellationRequested && this.cameraNek._operationState != CameraOperationStates.Idle && this.cameraNek._operationState != CameraOperationStates.Faulted) {
                         this.cameraNek._operationMutex.Release();
 
                         this.cameraNek._operationSignal.Wait(TimeSpan.Zero); //Fantom wait to prevent deadlock if the signal is already set
@@ -242,7 +244,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
                         }
                     }
 
-                    if (token.IsCancellationRequested) return false;
+                    if (this.cameraNek == null || token.IsCancellationRequested || this.cameraNek._operationState == CameraOperationStates.Faulted) return false;
 
                     this.cameraNek._operationState = CameraOperationStates.Focusing;
                     if (this.cameraNek._operationSignal.CurrentCount == 0) this.cameraNek._operationSignal.Release();
@@ -254,6 +256,7 @@ namespace LucasAlias.NINA.NEK.Drivers {
 
                 _ismoving = true;
                 RaisePropertyChanged(nameof(IsMoving));
+
                 return true;
             }
 
